@@ -1,0 +1,52 @@
+{
+  "name": "BatchWatt V9 pilot automation workflow",
+  "nodes": [
+    {
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {"path": "batchwatt-whatsapp", "httpMethod": "POST"}
+    },
+    {
+      "name": "Forward to BatchWatt WhatsApp Parser",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {"method": "POST", "url": "https://YOUR_DOMAIN/api/whatsapp-webhook", "sendBody": true}
+    },
+    {
+      "name": "Stock Sheet Cron",
+      "type": "n8n-nodes-base.cron",
+      "parameters": {"triggerTimes": {"item": [{"hour": 7, "minute": 30}]}}
+    },
+    {
+      "name": "Send Stock CSV",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {"method": "POST", "url": "https://YOUR_DOMAIN/api/ingest-stock", "sendBody": true}
+    },
+    {
+      "name": "Bills Inbox Trigger",
+      "type": "n8n-nodes-base.emailReadImap",
+      "parameters": {"mailbox": "INBOX"}
+    },
+    {
+      "name": "Send Bill Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {"method": "POST", "url": "https://YOUR_DOMAIN/api/ingest-bill", "sendBody": true}
+    },
+    {
+      "name": "Generate Morning Plan",
+      "type": "n8n-nodes-base.cron",
+      "parameters": {"triggerTimes": {"item": [{"hour": 8, "minute": 0}]}}
+    },
+    {
+      "name": "Call BatchWatt Planner",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {"method": "POST", "url": "https://YOUR_DOMAIN/api/generate-plan", "sendBody": true}
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {"main": [[{"node": "Forward to BatchWatt WhatsApp Parser", "type": "main", "index": 0}]]},
+    "Stock Sheet Cron": {"main": [[{"node": "Send Stock CSV", "type": "main", "index": 0}]]},
+    "Bills Inbox Trigger": {"main": [[{"node": "Send Bill Text", "type": "main", "index": 0}]]},
+    "Generate Morning Plan": {"main": [[{"node": "Call BatchWatt Planner", "type": "main", "index": 0}]]}
+  },
+  "notes": "Pilot workflow sketch. Replace YOUR_DOMAIN and add credentials for Gmail/Sheets/WhatsApp/Supabase."
+}
