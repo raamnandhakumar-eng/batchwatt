@@ -1,0 +1,16 @@
+{
+  "name": "batchwatt",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Dispatch-first daily production planner for small food factories, with peak-load energy insights.",
+  "scripts": {
+    "dev": "vercel dev",
+    "test:plan": "node samples/test_plan.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest"
+  },
+  "devDependencies": {
+    "vercel": "latest"
+  }
+}
