@@ -6,7 +6,43 @@
   <title>BatchWatt V9 | Monthly-peak-aware factory planning</title>
   <style>
     :root{--bg:#08111f;--card:#101827;--muted:#94a3b8;--text:#e5e7eb;--line:#263247;--green:#22c55e;--warn:#f59e0b;--red:#ef4444;--blue:#38bdf8;--soft:#0f172a;}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif} header,main{max-width:1180px;margin:auto;padding:28px 22px} .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:var(--green)} h1{font-size:42px;line-height:1.05;margin:10px 0 12px;max-width:980px} .sub{font-size:18px;line-height:1.5;color:var(--muted);max-width:980px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.triple{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 22px 45px rgba(0,0,0,.22)}.hero{background:linear-gradient(180deg,#111827,#0b1424);border-color:#334155}h2{font-size:19px;margin:0 0 10px}h3{font-size:14px;margin:16px 0 7px;color:#cbd5e1}.note{color:var(--muted);font-size:13px;line-height:1.45}.pill{display:inline-block;border:1px solid #334155;border-radius:999px;padding:5px 9px;margin:4px 5px 4px 0;font-size:12px;background:#172033;color:#cbd5e1}.ok{background:#052e16;color:#bbf7d0;border-color:#166534}.warn{background:#2a1c09;color:#fde68a;border-color:#92400e}.bad{background:#2a0d0d;color:#fecaca;border-color:#7f1d1d}button{border:0;border-radius:12px;background:var(--green);color:#052e16;font-weight:900;padding:12px 16px;cursor:pointer;margin-top:12px}button.secondary{background:#1f2937;color:#d1d5db;border:1px solid #374151}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.kpi{background:var(--soft);border:1px solid #263244;border-radius:14px;padding:14px}.label{color:var(--muted);font-size:12px}.value{font-size:24px;font-weight:900;margin-top:4px}table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}td,th{border-bottom:1px solid #293548;padding:9px 8px;text-align:left}th{background:#0f172a;color:#cbd5e1}.output{white-space:pre-wrap;background:#07111f;border:1px solid #253044;border-radius:14px;padding:14px;line-height:1.5}.rowline{display:grid;grid-template-columns:95px 1fr 64px;gap:10px;align-items:center;font-size:12px;margin:8px 0}.bar{height:20px;background:#1f2937;border:1px solid #334155;border-radius:999px;overflow:hidden}.bar span{display:block;height:100%;background:#38bdf8}.bar.stagger span{background:#22c55e}.source{background:#0f172a;border:1px solid #293548;border-radius:14px;padding:13px;min-height:120px}.source strong{display:block;margin-bottom:8px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#cbd5e1}.copy{float:right;margin-top:0;padding:8px 10px;font-size:12px}@media(max-width:920px){.grid,.triple{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}h1{font-size:31px}}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+    header,main{max-width:1180px;margin:auto;padding:28px 22px}
+    .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:var(--green)}
+    h1{font-size:42px;line-height:1.05;margin:10px 0 12px;max-width:980px}
+    .sub{font-size:18px;line-height:1.5;color:var(--muted);max-width:980px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .triple{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 22px 45px rgba(0,0,0,.22)}
+    .hero{background:linear-gradient(180deg,#111827,#0b1424);border-color:#334155}
+    h2{font-size:19px;margin:0 0 10px}
+    h3{font-size:14px;margin:16px 0 7px;color:#cbd5e1}
+    .note{color:var(--muted);font-size:13px;line-height:1.45}
+    .pill{display:inline-block;border:1px solid #334155;border-radius:999px;padding:5px 9px;margin:4px 5px 4px 0;font-size:12px;background:#172033;color:#cbd5e1}
+    .ok{background:#052e16;color:#bbf7d0;border-color:#166534}
+    .warn{background:#2a1c09;color:#fde68a;border-color:#92400e}
+    .bad{background:#2a0d0d;color:#fecaca;border-color:#7f1d1d}
+    button{border:0;border-radius:12px;background:var(--green);color:#052e16;font-weight:900;padding:12px 16px;cursor:pointer;margin-top:12px}
+    button.secondary{background:#1f2937;color:#d1d5db;border:1px solid #374151}
+    select{width:100%;margin-top:8px;padding:12px 13px;border-radius:12px;border:1px solid #374151;background:#0f172a;color:var(--text);font:inherit}
+    .control-label{display:block;margin-top:14px;color:#cbd5e1;font-size:13px;font-weight:800}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+    .kpi{background:var(--soft);border:1px solid #263244;border-radius:14px;padding:14px}
+    .label{color:var(--muted);font-size:12px}
+    .value{font-size:24px;font-weight:900;margin-top:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+    td,th{border-bottom:1px solid #293548;padding:9px 8px;text-align:left}
+    th{background:#0f172a;color:#cbd5e1}
+    .output{white-space:pre-wrap;background:#07111f;border:1px solid #253044;border-radius:14px;padding:14px;line-height:1.5}
+    .rowline{display:grid;grid-template-columns:95px 1fr 64px;gap:10px;align-items:center;font-size:12px;margin:8px 0}
+    .bar{height:20px;background:#1f2937;border:1px solid #334155;border-radius:999px;overflow:hidden}
+    .bar span{display:block;height:100%;background:#38bdf8}
+    .bar.stagger span{background:#22c55e}
+    .source{background:#0f172a;border:1px solid #293548;border-radius:14px;padding:13px;min-height:120px}
+    .source strong{display:block;margin-bottom:8px}
+    .copy{float:right;margin-top:0;padding:8px 10px;font-size:12px}
+    @media(max-width:920px){.grid,.triple{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}h1{font-size:31px}}
   </style>
 </head>
 <body>
@@ -20,6 +56,12 @@
     <div class="card hero">
       <h2>Automation run</h2>
       <p class="note"><b>Daily input:</b> none typed from scratch. Orders arrive through WhatsApp. Stock comes from the existing sheet. Bills and LPG receipts are parsed when they arrive. Manual work only happens when confidence is low.</p>
+      <label class="control-label" for="datasetSelect">Choose a factory demo</label>
+      <select id="datasetSelect" onchange="resetDemo()">
+        <option value="ghee">Ghee manufacturer</option>
+        <option value="bakery">Commercial bakery</option>
+        <option value="snacks">Snack manufacturer</option>
+      </select>
       <button onclick="runAutomation()">Run automated sync</button>
       <button class="secondary" onclick="resetDemo()">Reset demo</button>
       <div id="runStatus" style="margin-top:12px"><span class="pill warn">Waiting for sync</span></div>
@@ -72,28 +114,140 @@
   </section>
 </main>
 <script>
-const currency='INR';
-const result={confidence:'review needed',atRiskOrders:3,energyReceipt:{lpgNeededKg:63.0,electricityKwh:81.0,fastPeakKw:84,staggeredPeakKw:72,monthlyPeakSoFarKw:78,hasDemandChargeTariff:true,wouldSetNewMonthlyPeak:true,usageSavingsRange:'~900 INR to 1,300 INR',demandChargeSavingsRange:'~4,000 INR to 6,000 INR',demandChargeNote:'Avoids ~4,000 INR to 6,000 INR per billing month if this run would set the monthly peak.',energyCostPerKg:17.2,calibrationNote:'Modeled. Usage estimates sharpen after bills, LPG refills, meter readings, and production logs. Demand-charge savings apply only when today would set a new billing-month peak.'},dispatchPlan:[{customer:'Ravi stores',productName:'500 ml ghee',orderUnits:300,dispatchFromStock:80,produceUnits:220,dueDays:0,packagingShortageUnits:0},{customer:'Anand Mart',productName:'250 ml ghee',orderUnits:120,dispatchFromStock:120,produceUnits:0,dueDays:0,packagingShortageUnits:0},{customer:'Amazon refill',productName:'1 L ghee',orderUnits:120,dispatchFromStock:50,produceUnits:70,dueDays:1,packagingShortageUnits:0},{customer:'Distributor B',productName:'500 ml ghee',orderUnits:240,dispatchFromStock:0,produceUnits:240,dueDays:1,packagingShortageUnits:20}],exceptions:[{source:'whatsapp',message:"Couldn't read this line: voice note from shop says 'same like last time'. Please confirm product and quantity."},{source:'stock',message:'PREMIUM_TIN stock is last-known. Confirm before production.'}],fastProfile:[{hour:8,kw:84},{hour:9,kw:68},{hour:10,kw:68},{hour:11,kw:38},{hour:12,kw:26},{hour:13,kw:18},{hour:14,kw:0}],staggeredProfile:[{hour:8,kw:40},{hour:9,kw:30},{hour:10,kw:30},{hour:11,kw:26},{hour:12,kw:34},{hour:13,kw:30},{hour:14,kw:41},{hour:15,kw:38},{hour:16,kw:18},{hour:17,kw:8}]};
-function runAutomation(){document.getElementById('runStatus').innerHTML='<span class="pill ok">Synced</span><span class="pill ok">Plan generated</span><span class="pill warn">2 items need review</span>';document.getElementById('sources').innerHTML=`<div class="source"><strong>WhatsApp</strong><span class="pill ok">6 messages parsed</span><p class="note">1 messy line flagged for correction.</p></div><div class="source"><strong>Stock sheet</strong><span class="pill ok">4 SKUs imported</span><p class="note">1 last-known row flagged.</p></div><div class="source"><strong>Bills/receipts</strong><span class="pill ok">Bill + LPG receipt parsed</span><p class="note">Demand-charge tariff detected. Month peak so far extracted.</p></div>`;render(result)}
-function resetDemo(){location.reload()}
-function render(r){document.getElementById('confidence').textContent=r.confidence;document.getElementById('risk').textContent=r.atRiskOrders;document.getElementById('monthPeak').textContent=`${r.energyReceipt.monthlyPeakSoFarKw} kW`;document.getElementById('demandToday').textContent=r.energyReceipt.demandChargeSavingsRange;document.getElementById('exceptions').innerHTML=r.exceptions.map(e=>`<div class="pill warn">${e.message}</div>`).join('');document.getElementById('dispatch').innerHTML='<table><thead><tr><th>Priority</th><th>Customer</th><th>Plan</th><th>Risk</th></tr></thead><tbody>'+r.dispatchPlan.map((x,i)=>`<tr><td>${i+1}</td><td>${x.customer}</td><td>Dispatch ${x.dispatchFromStock} from stock. Produce ${x.produceUnits} ${x.productName}.</td><td>${x.packagingShortageUnits?'<span class="pill bad">packaging short</span>':(x.dueDays===0?'<span class="pill warn">today</span>':'<span class="pill ok">ok</span>')}</td></tr>`).join('')+'</tbody></table>';document.getElementById('receipt').innerHTML=`<div class="output">LPG needed: ${r.energyReceipt.lpgNeededKg} kg
-Electricity: ${r.energyReceipt.electricityKwh} kWh
+const datasets={
+  ghee:{
+    name:'Ghee manufacturer',
+    currency:'INR',
+    sourceSummary:{whatsapp:'6 messages parsed',whatsappNote:'1 messy line flagged for correction.',stock:'4 SKUs imported',stockNote:'1 last-known row flagged.',energy:'Bill + LPG receipt parsed',energyNote:'Demand-charge tariff detected. Month peak so far extracted.'},
+    confidence:'review needed',
+    atRiskOrders:3,
+    energyReceipt:{lpgNeededKg:63.0,electricityKwh:81.0,fastPeakKw:84,staggeredPeakKw:72,monthlyPeakSoFarKw:78,usageSavingsRange:'~900 INR to 1,300 INR',demandChargeSavingsRange:'~4,000 INR to 6,000 INR',demandChargeNote:'Avoids ~4,000 INR to 6,000 INR per billing month if this run would set the monthly peak.',energyCostPerKg:17.2,calibrationNote:'Modeled. Usage estimates sharpen after bills, LPG refills, meter readings, and production logs. Demand-charge savings apply only when today would set a new billing-month peak.'},
+    dispatchPlan:[
+      {customer:'Ravi Stores',productName:'500 ml ghee',orderUnits:300,dispatchFromStock:80,produceUnits:220,dueDays:0,packagingShortageUnits:0},
+      {customer:'Anand Mart',productName:'250 ml ghee',orderUnits:120,dispatchFromStock:120,produceUnits:0,dueDays:0,packagingShortageUnits:0},
+      {customer:'Amazon refill',productName:'1 L ghee',orderUnits:120,dispatchFromStock:50,produceUnits:70,dueDays:1,packagingShortageUnits:0},
+      {customer:'Distributor B',productName:'500 ml ghee',orderUnits:240,dispatchFromStock:0,produceUnits:240,dueDays:1,packagingShortageUnits:20}
+    ],
+    exceptions:[
+      {message:"Couldn't read this line: voice note from shop says 'same like last time'. Please confirm product and quantity."},
+      {message:'PREMIUM_TIN stock is last-known. Confirm before production.'}
+    ],
+    fastProfile:[{hour:8,kw:84},{hour:9,kw:68},{hour:10,kw:68},{hour:11,kw:38},{hour:12,kw:26},{hour:13,kw:18},{hour:14,kw:0}],
+    staggeredProfile:[{hour:8,kw:40},{hour:9,kw:30},{hour:10,kw:30},{hour:11,kw:26},{hour:12,kw:34},{hour:13,kw:30},{hour:14,kw:41},{hour:15,kw:38},{hour:16,kw:18},{hour:17,kw:8}]
+  },
+  bakery:{
+    name:'Commercial bakery',
+    currency:'USD',
+    sourceSummary:{whatsapp:'9 orders parsed',whatsappNote:'All customer and due-date fields matched.',stock:'7 ingredients imported',stockNote:'Flour stock is below safety level.',energy:'Utility bill + meter log parsed',energyNote:'Time-of-use and demand-charge rates detected.'},
+    confidence:'high',
+    atRiskOrders:2,
+    energyReceipt:{lpgNeededKg:0,electricityKwh:146,fastPeakKw:112,staggeredPeakKw:86,monthlyPeakSoFarKw:96,usageSavingsRange:'~$120 to $170',demandChargeSavingsRange:'~$540 to $760',demandChargeNote:'Avoids roughly $540 to $760 this billing month because the fast schedule would set a new monthly peak.',energyCostPerKg:0.31,calibrationNote:'Modeled from the latest utility bill and meter log. Savings improve as BatchWatt learns actual oven cycle times.'},
+    dispatchPlan:[
+      {customer:'Central Cafe',productName:'sourdough loaves',orderUnits:180,dispatchFromStock:40,produceUnits:140,dueDays:0,packagingShortageUnits:0},
+      {customer:'Northside Grocer',productName:'burger buns',orderUnits:420,dispatchFromStock:120,produceUnits:300,dueDays:0,packagingShortageUnits:0},
+      {customer:'Hotel Linden',productName:'croissants',orderUnits:160,dispatchFromStock:0,produceUnits:160,dueDays:1,packagingShortageUnits:0},
+      {customer:'Campus Market',productName:'muffin trays',orderUnits:90,dispatchFromStock:30,produceUnits:60,dueDays:1,packagingShortageUnits:15}
+    ],
+    exceptions:[
+      {message:'Bread flour is 18 kg below the safety-stock threshold.'}
+    ],
+    fastProfile:[{hour:5,kw:112},{hour:6,kw:104},{hour:7,kw:90},{hour:8,kw:62},{hour:9,kw:44},{hour:10,kw:22}],
+    staggeredProfile:[{hour:5,kw:54},{hour:6,kw:72},{hour:7,kw:86},{hour:8,kw:74},{hour:9,kw:65},{hour:10,kw:42},{hour:11,kw:24}]
+  },
+  snacks:{
+    name:'Snack manufacturer',
+    currency:'INR',
+    sourceSummary:{whatsapp:'12 orders parsed',whatsappNote:'2 distributor messages merged into one order.',stock:'9 SKUs imported',stockNote:'Carton inventory needs confirmation.',energy:'Bill + LPG receipt parsed',energyNote:'Demand tariff and current-month peak detected.'},
+    confidence:'review needed',
+    atRiskOrders:4,
+    energyReceipt:{lpgNeededKg:88,electricityKwh:119,fastPeakKw:102,staggeredPeakKw:79,monthlyPeakSoFarKw:94,usageSavingsRange:'~1,400 INR to 2,000 INR',demandChargeSavingsRange:'~5,000 INR to 7,500 INR',demandChargeNote:'Avoids ~5,000 INR to 7,500 INR per billing month if this run would set the monthly peak.',energyCostPerKg:11.8,calibrationNote:'Modeled from the latest bill, fryer cycles, LPG receipts, and production logs. Confirm carton stock before release.'},
+    dispatchPlan:[
+      {customer:'Metro Distributor',productName:'masala chips cartons',orderUnits:220,dispatchFromStock:60,produceUnits:160,dueDays:0,packagingShortageUnits:0},
+      {customer:'City Supermarket',productName:'banana chips cartons',orderUnits:140,dispatchFromStock:40,produceUnits:100,dueDays:0,packagingShortageUnits:20},
+      {customer:'Online channel',productName:'mixed snack packs',orderUnits:180,dispatchFromStock:80,produceUnits:100,dueDays:1,packagingShortageUnits:0},
+      {customer:'Regional wholesaler',productName:'peanut snack cartons',orderUnits:260,dispatchFromStock:20,produceUnits:240,dueDays:1,packagingShortageUnits:30}
+    ],
+    exceptions:[
+      {message:'Two distributor messages referenced the same purchase order and were merged.'},
+      {message:'Carton stock was last updated yesterday. Confirm 50 cartons before production.'}
+    ],
+    fastProfile:[{hour:7,kw:102},{hour:8,kw:96},{hour:9,kw:74},{hour:10,kw:62},{hour:11,kw:38},{hour:12,kw:24}],
+    staggeredProfile:[{hour:7,kw:48},{hour:8,kw:62},{hour:9,kw:79},{hour:10,kw:74},{hour:11,kw:68},{hour:12,kw:50},{hour:13,kw:31}]
+  }
+};
+
+function selectedDataset(){
+  return datasets[document.getElementById('datasetSelect').value];
+}
+
+function runAutomation(){
+  const r=selectedDataset();
+  const reviewCount=r.exceptions.length;
+  document.getElementById('runStatus').innerHTML=`<span class="pill ok">Synced</span><span class="pill ok">Plan generated</span>${reviewCount?`<span class="pill warn">${reviewCount} item${reviewCount===1?'':'s'} need review</span>`:'<span class="pill ok">No review needed</span>'}`;
+  document.getElementById('sources').innerHTML=`
+    <div class="source"><strong>WhatsApp</strong><span class="pill ok">${r.sourceSummary.whatsapp}</span><p class="note">${r.sourceSummary.whatsappNote}</p></div>
+    <div class="source"><strong>Stock sheet</strong><span class="pill ok">${r.sourceSummary.stock}</span><p class="note">${r.sourceSummary.stockNote}</p></div>
+    <div class="source"><strong>Bills/receipts</strong><span class="pill ok">${r.sourceSummary.energy}</span><p class="note">${r.sourceSummary.energyNote}</p></div>`;
+  render(r);
+}
+
+function resetDemo(){
+  document.getElementById('runStatus').innerHTML='<span class="pill warn">Waiting for sync</span>';
+  document.getElementById('sources').innerHTML='<div class="source"><strong>WhatsApp</strong><span class="pill warn">not synced</span><p class="note">Inbound order messages via webhook.</p></div><div class="source"><strong>Stock sheet</strong><span class="pill warn">not synced</span><p class="note">Existing Excel or Google Sheet.</p></div><div class="source"><strong>Bills/receipts</strong><span class="pill warn">not synced</span><p class="note">Electricity bill, LPG receipt, meter logs.</p></div>';
+  document.getElementById('confidence').textContent='—';
+  document.getElementById('risk').textContent='—';
+  document.getElementById('monthPeak').textContent='—';
+  document.getElementById('demandToday').textContent='—';
+  document.getElementById('exceptions').innerHTML='<span class="pill warn">No sync yet</span>';
+  document.getElementById('dispatch').innerHTML='<span class="note">Run automated sync.</span>';
+  document.getElementById('receipt').innerHTML='<span class="note">Usage savings, LPG kg, kWh, monthly peak, and gated demand-charge savings appear here.</span>';
+  document.getElementById('bars').innerHTML='';
+  document.getElementById('copyblock').textContent='No plan yet.';
+}
+
+function render(r){
+  document.getElementById('confidence').textContent=r.confidence;
+  document.getElementById('risk').textContent=r.atRiskOrders;
+  document.getElementById('monthPeak').textContent=`${r.energyReceipt.monthlyPeakSoFarKw} kW`;
+  document.getElementById('demandToday').textContent=r.energyReceipt.demandChargeSavingsRange;
+  document.getElementById('exceptions').innerHTML=r.exceptions.length?r.exceptions.map(e=>`<div class="pill warn">${e.message}</div>`).join(''):'<span class="pill ok">No exceptions</span>';
+  document.getElementById('dispatch').innerHTML='<table><thead><tr><th>Priority</th><th>Customer</th><th>Plan</th><th>Risk</th></tr></thead><tbody>'+r.dispatchPlan.map((x,i)=>`<tr><td>${i+1}</td><td>${x.customer}</td><td>Dispatch ${x.dispatchFromStock} from stock. Produce ${x.produceUnits} ${x.productName}.</td><td>${x.packagingShortageUnits?'<span class="pill bad">packaging short</span>':(x.dueDays===0?'<span class="pill warn">today</span>':'<span class="pill ok">ok</span>')}</td></tr>`).join('')+'</tbody></table>';
+
+  const fuelLine=r.energyReceipt.lpgNeededKg>0?`LPG needed: ${r.energyReceipt.lpgNeededKg} kg\n`:'';
+  document.getElementById('receipt').innerHTML=`<div class="output">${fuelLine}Electricity: ${r.energyReceipt.electricityKwh} kWh
 Usage saving this run: ${r.energyReceipt.usageSavingsRange}
-Energy cost per kg: ${r.energyReceipt.energyCostPerKg} ${currency}/kg
+Energy cost per kg: ${r.energyReceipt.energyCostPerKg} ${r.currency}/kg
 
 Month peak so far: ${r.energyReceipt.monthlyPeakSoFarKw} kW
 Peak load: ${r.energyReceipt.fastPeakKw} kW fast -> ${r.energyReceipt.staggeredPeakKw} kW staggered
 Demand-charge saving today: ${r.energyReceipt.demandChargeSavingsRange}
 ${r.energyReceipt.demandChargeNote}
-${r.energyReceipt.calibrationNote}</div>`;renderBars(r);const msg=`BatchWatt plan
-1. Make first: 220 units of 500 ml ghee for Ravi stores.
-2. Dispatch from stock: 80 units of 500 ml ghee and 120 units of 250 ml ghee.
-3. At-risk today: 3 order(s) still need production.
-4. Energy receipt: LPG 63 kg, electricity 81 kWh. Usage saving this run: ${r.energyReceipt.usageSavingsRange}.
-5. Peak load: 84 kW fast schedule -> 72 kW staggered schedule. Month peak so far: 78 kW.
-6. Demand-charge saving: ${r.energyReceipt.demandChargeNote} Review flagged items before running.`;document.getElementById('copyblock').textContent=msg}
-function renderBars(r){const max=Math.max(...r.fastProfile.map(x=>x.kw),...r.staggeredProfile.map(x=>x.kw),r.energyReceipt.monthlyPeakSoFarKw,1);function row(label,kw,cls){return `<div class="rowline"><div>${label}</div><div class="bar ${cls}"><span style="width:${kw/max*100}%"></span></div><div>${kw} kW</div></div>`}document.getElementById('bars').innerHTML='<h3>Current month peak so far</h3>'+row('Month',r.energyReceipt.monthlyPeakSoFarKw,'')+'<h3>Fast schedule</h3>'+r.fastProfile.map(x=>row(x.hour+':00',x.kw,'')).join('')+'<h3>Peak-aware schedule</h3>'+r.staggeredProfile.map(x=>row(x.hour+':00',x.kw,'stagger')).join('')}
-function copyOut(){navigator.clipboard.writeText(document.getElementById('copyblock').innerText)}
+${r.energyReceipt.calibrationNote}</div>`;
+
+  renderBars(r);
+
+  const firstProduction=r.dispatchPlan.find(x=>x.produceUnits>0);
+  const stockDispatch=r.dispatchPlan.filter(x=>x.dispatchFromStock>0).slice(0,2).map(x=>`${x.dispatchFromStock} ${x.productName}`).join(' and ');
+  const fuelSummary=r.energyReceipt.lpgNeededKg>0?`LPG ${r.energyReceipt.lpgNeededKg} kg, `:'';
+  const msg=`BatchWatt plan: ${r.name}
+1. Make first: ${firstProduction.produceUnits} ${firstProduction.productName} for ${firstProduction.customer}.
+2. Dispatch from stock: ${stockDispatch}.
+3. At-risk today: ${r.atRiskOrders} order(s) still need attention.
+4. Energy receipt: ${fuelSummary}electricity ${r.energyReceipt.electricityKwh} kWh. Usage saving this run: ${r.energyReceipt.usageSavingsRange}.
+5. Peak load: ${r.energyReceipt.fastPeakKw} kW fast schedule -> ${r.energyReceipt.staggeredPeakKw} kW staggered schedule. Month peak so far: ${r.energyReceipt.monthlyPeakSoFarKw} kW.
+6. Demand-charge saving: ${r.energyReceipt.demandChargeNote}${r.exceptions.length?' Review flagged items before running.':''}`;
+  document.getElementById('copyblock').textContent=msg;
+}
+
+function renderBars(r){
+  const max=Math.max(...r.fastProfile.map(x=>x.kw),...r.staggeredProfile.map(x=>x.kw),r.energyReceipt.monthlyPeakSoFarKw,1);
+  function row(label,kw,cls){return `<div class="rowline"><div>${label}</div><div class="bar ${cls}"><span style="width:${kw/max*100}%"></span></div><div>${kw} kW</div></div>`}
+  document.getElementById('bars').innerHTML='<h3>Current month peak so far</h3>'+row('Month',r.energyReceipt.monthlyPeakSoFarKw,'')+'<h3>Fast schedule</h3>'+r.fastProfile.map(x=>row(x.hour+':00',x.kw,'')).join('')+'<h3>Peak-aware schedule</h3>'+r.staggeredProfile.map(x=>row(x.hour+':00',x.kw,'stagger')).join('');
+}
+
+function copyOut(){
+  navigator.clipboard.writeText(document.getElementById('copyblock').innerText);
+}
 </script>
 </body>
 </html>
