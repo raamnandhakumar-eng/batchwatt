@@ -1,0 +1,11 @@
+{
+  "whatsappText": "Ravi stores: need 300 x 500ml ghee urgent today\nAnand Mart - 120 jars 250 ml by evening\nAmazon refill 5 cases 1L tomorrow\nDistributor B: 240 500ml next day\n???? voice note from shop: send same like last time",
+  "stockCsv": "sku,finished_units,packaging_units,last_known\nGHEE_500ML,80,220,false\nGHEE_250ML,150,600,false\nGHEE_1L,50,300,false\nPREMIUM_TIN,20,50,true",
+  "billText": "Electricity bill: currency INR, total kWh 6240, rate 10 per kWh, monthly peak so far 78 kW, demand charge 350 per kW, contracted demand 75 kW, penalty 500 per kW above contract. LPG receipt: delivered 300 kg at 110 per kg. Stock after refill 300 kg. Batches since refill 4.",
+  "setup": {
+    "currencyCode": "INR",
+    "lpgKgPerOutputKg": 0.14,
+    "kwhPerOutputKg": 0.18,
+    "lpgSafetyStockKg": 80
+  }
+}
