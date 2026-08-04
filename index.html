@@ -3,196 +3,201 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="BatchWatt turns factory orders, stock and production data into a dispatch-ready production plan and WhatsApp summary.">
-  <title>BatchWatt | Simple factory planning</title>
+  <meta name="description" content="BatchWatt turns factory orders into a clear production priority and a WhatsApp-ready floor plan.">
+  <title>BatchWatt | What should we produce today?</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#top"><span class="brand-mark">BW</span><span>BatchWatt</span></a>
-    <nav aria-label="Primary navigation">
-      <a href="#workspace">Plan</a>
-      <a href="#whatsapp">WhatsApp</a>
-      <a href="#upload">Upload</a>
-      <a href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub</a>
-    </nav>
+    <a class="brand" href="#top" aria-label="BatchWatt home"><span class="brand-mark">BW</span><span>BatchWatt</span></a>
+    <a class="github-link" href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub</a>
   </header>
 
   <main id="top">
     <section class="hero">
-      <p class="eyebrow">Daily factory planning</p>
-      <h1>Know what to produce next.</h1>
-      <p class="hero-copy">Choose an existing pilot, paste WhatsApp orders, or upload an Excel file. BatchWatt shows dispatch risks, production priorities and a message the floor team can use immediately.</p>
-      <div class="hero-actions">
-        <a class="button button-primary" href="#workspace">Open today’s plan</a>
-        <a class="button button-secondary" href="#whatsapp">Paste WhatsApp orders</a>
-      </div>
-      <p class="privacy-note">Files and pasted messages are processed in your browser. Raw data is not sent to a BatchWatt server.</p>
+      <p class="eyebrow">Simple factory planning</p>
+      <h1>What should we produce today?</h1>
+      <p>Choose a pilot, paste WhatsApp orders, or upload a spreadsheet. BatchWatt returns one prioritized production plan and a message for the floor team.</p>
     </section>
 
-    <section id="workspace" class="section section-bordered">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">1 · Choose a workspace</p>
-          <h2>Today’s operating view</h2>
+    <section class="step-card" aria-labelledby="input-title">
+      <div class="step-number">1</div>
+      <div class="step-content">
+        <div class="step-heading">
+          <div>
+            <p class="eyebrow">Input</p>
+            <h2 id="input-title">Choose how to start</h2>
+          </div>
+          <span class="future-note">WhatsApp API integration planned</span>
         </div>
-        <div class="workspace-actions">
-          <label for="workspace-select">Factory or pilot</label>
-          <select id="workspace-select"></select>
-          <button id="download-summary" class="text-button" type="button">Download summary</button>
+
+        <div class="primary-input">
+          <label for="workspace-select">Use an existing workspace</label>
+          <div class="select-row">
+            <select id="workspace-select"></select>
+            <button id="download-summary" class="button button-secondary" type="button">Download summary</button>
+          </div>
+        </div>
+
+        <div class="alternate-inputs">
+          <details id="whatsapp">
+            <summary>Paste WhatsApp orders</summary>
+            <div class="details-body two-column">
+              <div>
+                <label for="whatsapp-factory">Factory name</label>
+                <input id="whatsapp-factory" type="text" placeholder="Example: Krishna Foods">
+                <label for="whatsapp-input">One order per line</label>
+                <textarea id="whatsapp-input" rows="8" placeholder="Ravi Stores | Cow Ghee 1 L | 40 | tomorrow | high | stock 10"></textarea>
+                <p class="help"><strong>Best format:</strong> Customer | Product | Quantity | Due date | Priority | Stock</p>
+                <div class="button-row">
+                  <button id="sample-whatsapp" class="button button-secondary" type="button">Use sample</button>
+                  <button id="process-whatsapp" class="button button-primary" type="button">Generate plan</button>
+                </div>
+                <p id="whatsapp-status" class="status-line" aria-live="polite">No WhatsApp orders processed yet.</p>
+              </div>
+              <div class="explain-box">
+                <strong>What happens</strong>
+                <ol>
+                  <li>Orders are read from the pasted text.</li>
+                  <li>Shortages and urgent dispatches are flagged.</li>
+                  <li>A draft production sequence is created.</li>
+                </ol>
+              </div>
+            </div>
+          </details>
+
+          <details id="upload">
+            <summary>Upload Excel or CSV</summary>
+            <div class="details-body two-column">
+              <div>
+                <label for="upload-factory">Factory or pilot name</label>
+                <input id="upload-factory" type="text" placeholder="Optional name override">
+                <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Choose Excel or CSV file">
+                  <input id="file-input" type="file" accept=".xlsx,.xls,.csv" hidden>
+                  <strong>Drop a file here or click to choose</strong>
+                  <span>.xlsx, .xls or .csv</span>
+                </div>
+                <div class="button-row">
+                  <button id="process-file" class="button button-primary" type="button" disabled>Process file</button>
+                  <button id="clear-uploads" class="button button-secondary" type="button">Clear uploads</button>
+                </div>
+                <p id="upload-status" class="status-line" aria-live="polite">No file selected.</p>
+              </div>
+              <div class="explain-box">
+                <strong>Useful columns</strong>
+                <ul>
+                  <li>Customer, product, quantity, due date</li>
+                  <li>Priority, stock and shortage</li>
+                  <li>Line, recommendation and status</li>
+                </ul>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
+    </section>
 
-      <div class="workspace-title">
-        <div>
+    <section id="workspace" class="step-card" aria-labelledby="plan-title">
+      <div class="step-number">2</div>
+      <div class="step-content">
+        <div class="step-heading plan-heading">
+          <div>
+            <p class="eyebrow">Plan</p>
+            <h2 id="plan-title">Review today’s production decision</h2>
+          </div>
+          <span id="workspace-badge" class="badge">Operational pilot record</span>
+        </div>
+
+        <div class="workspace-header">
           <h3 id="workspace-name">RKG Ghee</h3>
           <p id="workspace-meta"></p>
         </div>
-        <span id="workspace-badge" class="badge">Operational pilot record</span>
-      </div>
 
-      <div class="kpi-row">
-        <article><span>Orders</span><strong id="kpi-orders">—</strong></article>
-        <article><span>At risk</span><strong id="kpi-risk">—</strong></article>
-        <article><span>SKUs</span><strong id="kpi-skus">—</strong></article>
-        <article><span>Planning time saved</span><strong id="kpi-planning">—</strong></article>
-        <article><span>Estimated energy reduction</span><strong id="kpi-energy">—</strong></article>
-        <article><span>Peak-load reduction</span><strong id="kpi-peak">—</strong></article>
-      </div>
-
-      <div class="summary-grid">
-        <article class="summary-card">
-          <p class="eyebrow">Recommended action</p>
-          <h3 id="next-action">Review the highest-risk order first.</h3>
+        <div class="decision-card">
+          <span>Recommended next action</span>
+          <strong id="next-action">Review the highest-risk order first.</strong>
           <p id="workspace-workflow"></p>
-        </article>
-        <article class="summary-card soft-card">
-          <p class="eyebrow">Plan details</p>
-          <dl>
-            <div><dt>Planning cycles</dt><dd id="detail-cycles">—</dd></div>
-            <div><dt>Machines / stages</dt><dd id="detail-lines">—</dd></div>
-            <div><dt>Sequence changes</dt><dd id="detail-sequences">—</dd></div>
-            <div><dt>Operator rating</dt><dd id="detail-rating">—</dd></div>
-          </dl>
-        </article>
-      </div>
+        </div>
 
-      <div class="table-section">
-        <div class="table-heading">
-          <div><p class="eyebrow">Orders requiring attention</p><h3>Dispatch risk queue</h3></div>
-          <span id="order-source" class="small-label"></span>
+        <div class="kpi-row">
+          <article><span>Orders</span><strong id="kpi-orders">—</strong></article>
+          <article><span>At risk</span><strong id="kpi-risk">—</strong></article>
+          <article><span>Planning time saved</span><strong id="kpi-planning">—</strong></article>
+          <article><span>Estimated energy reduction</span><strong id="kpi-energy">—</strong></article>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Due / priority</th><th>Shortage / risk</th><th>Action</th></tr></thead>
-            <tbody id="order-rows"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <div class="table-section">
-        <div class="table-heading">
-          <div><p class="eyebrow">Production sequence</p><h3>What the floor team should do</h3></div>
-          <span id="plan-source" class="small-label"></span>
+        <div class="table-section main-table">
+          <div class="table-heading">
+            <div><p class="eyebrow">Run order</p><h3>What the floor team should do</h3></div>
+            <span id="plan-source" class="small-label"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Priority</th><th>Product</th><th>Line / machine</th><th>Action</th><th>Status</th></tr></thead>
+              <tbody id="plan-rows"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Priority</th><th>Product</th><th>Line / machine</th><th>Recommendation</th><th>Status</th></tr></thead>
-            <tbody id="plan-rows"></tbody>
-          </table>
-        </div>
+
+        <details class="more-details">
+          <summary>See order details and pilot metrics</summary>
+          <div class="details-body">
+            <div class="secondary-kpis">
+              <article><span>SKUs</span><strong id="kpi-skus">—</strong></article>
+              <article><span>Peak-load reduction</span><strong id="kpi-peak">—</strong></article>
+              <article><span>Planning cycles</span><strong id="detail-cycles">—</strong></article>
+              <article><span>Machines / stages</span><strong id="detail-lines">—</strong></article>
+              <article><span>Sequence changes</span><strong id="detail-sequences">—</strong></article>
+              <article><span>Operator rating</span><strong id="detail-rating">—</strong></article>
+            </div>
+            <div class="table-section">
+              <div class="table-heading">
+                <div><p class="eyebrow">Order details</p><h3>Dispatch risk queue</h3></div>
+                <span id="order-source" class="small-label"></span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Due / priority</th><th>Risk</th><th>Action</th></tr></thead>
+                  <tbody id="order-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
 
-    <section id="whatsapp" class="section section-bordered">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">2 · WhatsApp input and output</p>
-          <h2>Paste orders. Send back the plan.</h2>
+    <section class="step-card" aria-labelledby="send-title">
+      <div class="step-number">3</div>
+      <div class="step-content">
+        <div class="step-heading">
+          <div>
+            <p class="eyebrow">Output</p>
+            <h2 id="send-title">Send the plan to the floor team</h2>
+          </div>
+          <span class="badge badge-neutral">Supervisor review required</span>
         </div>
-        <p class="section-description">Paste one order per line. A simple pipe-separated format gives the best result, but common message-style orders are also accepted.</p>
-      </div>
 
-      <div class="two-column">
-        <article class="input-panel">
-          <label for="whatsapp-factory">Factory name</label>
-          <input id="whatsapp-factory" type="text" placeholder="Example: Krishna Foods">
-
-          <label for="whatsapp-input">Incoming WhatsApp orders</label>
-          <textarea id="whatsapp-input" rows="12" placeholder="Ravi Stores | Cow Ghee 1 L | 40 | tomorrow | high | stock 10&#10;Anand Mart needs 25 packs of Sambar Powder by Friday, urgent, stock 5"></textarea>
-
-          <p class="field-help"><strong>Best format:</strong> Customer | Product | Quantity | Due date | Priority | Stock</p>
-          <div class="button-row">
-            <button id="sample-whatsapp" class="button button-secondary" type="button">Use sample</button>
-            <button id="process-whatsapp" class="button button-primary" type="button">Generate plan</button>
-          </div>
-          <p id="whatsapp-status" class="status-line" aria-live="polite">No WhatsApp orders processed yet.</p>
-        </article>
-
-        <article class="output-panel">
-          <div class="output-heading">
-            <div><p class="eyebrow">Copy-ready output</p><h3>Floor-team WhatsApp message</h3></div>
-            <span class="badge badge-neutral">Supervisor review required</span>
-          </div>
-          <textarea id="whatsapp-output" rows="15" readonly>Choose a workspace or process WhatsApp orders to generate a message.</textarea>
-          <div class="button-row">
-            <button id="copy-whatsapp" class="button button-primary" type="button">Copy message</button>
-            <a id="open-whatsapp" class="button button-secondary disabled" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
-          </div>
-        </article>
+        <textarea id="whatsapp-output" class="output-message" rows="14" readonly>Choose a workspace or process new orders to generate a message.</textarea>
+        <div class="button-row output-actions">
+          <button id="copy-whatsapp" class="button button-primary" type="button">Copy WhatsApp message</button>
+          <a id="open-whatsapp" class="button button-secondary disabled" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
+        </div>
+        <p class="help">Today this opens a prepared message for manual sending. Direct WhatsApp Business API delivery is planned for a future release.</p>
       </div>
     </section>
 
-    <section id="upload" class="section section-bordered">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">3 · Upload factory data</p>
-          <h2>Add another factory from Excel or CSV.</h2>
-        </div>
-        <p class="section-description">BatchWatt looks for order, daily-metric, production-plan and pilot-summary sheets. It can also work with a basic order-only file.</p>
-      </div>
-
-      <div class="upload-grid">
-        <article class="input-panel">
-          <label for="upload-factory">Factory or pilot name</label>
-          <input id="upload-factory" type="text" placeholder="Optional name override">
-          <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Choose Excel or CSV file">
-            <input id="file-input" type="file" accept=".xlsx,.xls,.csv" hidden>
-            <strong>Drop a file here or click to choose</strong>
-            <span>.xlsx, .xls or .csv</span>
-          </div>
-          <div class="button-row">
-            <button id="process-file" class="button button-primary" type="button" disabled>Process file</button>
-            <button id="clear-uploads" class="button button-secondary" type="button">Clear uploaded workspaces</button>
-          </div>
-          <p id="upload-status" class="status-line" aria-live="polite">No file selected.</p>
-        </article>
-
-        <article class="format-card">
-          <p class="eyebrow">Useful columns</p>
-          <h3>Minimum input</h3>
-          <ul>
-            <li><strong>Orders:</strong> customer, product, quantity, due date, priority and stock</li>
-            <li><strong>Metrics:</strong> planning time, kWh, peak load and operator rating</li>
-            <li><strong>Plan:</strong> product, line, recommendation and status</li>
-          </ul>
-          <p>Only the calculated workspace is kept in local browser storage. The raw file is not published.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section final-note">
-      <p class="eyebrow">Current product boundary</p>
-      <h2>WhatsApp is supported as browser input and copy-ready output.</h2>
-      <p>This version does not yet connect directly to the Meta WhatsApp Business API. A live connection would require a verified business number, webhook, authentication, message templates and a production database.</p>
+    <section class="proof-note">
+      <strong>Pilot evidence</strong>
+      <p>RKG Ghee and PR Food Products are preloaded from the supplied pilot workbook. Results are workbook-derived; external company confirmation and publication permission are tracked separately.</p>
     </section>
   </main>
 
   <footer>
-    <span>BatchWatt · Dispatch-first production planning</span>
-    <span>Operational calculations require supervisor review</span>
+    <span>BatchWatt</span>
+    <span>Choose input → review plan → send output</span>
   </footer>
 </body>
 </html>
