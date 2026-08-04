@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="BatchWatt turns factory orders, stock, production constraints, and energy data into dispatch-first production plans.">
-  <title>BatchWatt | Dispatch-first factory planning</title>
+  <title>BatchWatt | Operational factory planning</title>
   <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
@@ -13,8 +14,8 @@
     <header class="nav">
       <a class="brand" href="/" aria-label="BatchWatt home"><span class="brand-mark">BW</span><span>BatchWatt</span></a>
       <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#product">Product</a>
-        <a href="#pilots">Pilot console</a>
+        <a href="#operations">Operations</a>
+        <a href="#upload">Upload data</a>
         <a href="#evidence">Evidence</a>
         <a href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub</a>
       </nav>
@@ -23,69 +24,64 @@
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Factory planning before ERP</p>
-          <h1>Turn messy orders into a dispatch-ready production plan.</h1>
-          <p>BatchWatt combines customer orders, stock sheets, line constraints, and energy data to show what to produce first, which dispatches are at risk, and how to sequence equipment without creating avoidable peak load.</p>
+          <p class="eyebrow">Operational planning before ERP</p>
+          <h1>Turn factory data into the next production decision.</h1>
+          <p>Use the two recorded pilot workspaces or upload a new Excel/CSV file. BatchWatt detects orders, daily metrics, production recommendations, and evidence tables, then builds a dispatch-first operational dashboard.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#pilots">Explore pilot workspaces</a>
-            <a class="btn" href="https://github.com/raamnandhakumar-eng/batchwatt">View repository</a>
+            <a class="btn btn-primary" href="#operations">Open operations console</a>
+            <a class="btn" href="#upload">Upload new data</a>
           </div>
+          <div class="privacy-line"><span class="privacy-dot"></span>Uploaded files are processed in your browser. Raw data is not sent to BatchWatt or stored on a server.</div>
         </div>
 
         <aside class="hero-card" aria-label="BatchWatt workflow preview">
           <div class="hero-card-head">
-            <div><p class="eyebrow">Daily planning run</p><strong>Order-to-production workflow</strong></div>
-            <span class="status">Pilot data loaded</span>
+            <div><p class="eyebrow">Operational workflow</p><strong>File → risk → plan → outcome</strong></div>
+            <span class="status">Ready</span>
           </div>
           <div class="workflow">
-            <div class="workflow-step"><span class="step-index">1</span><div><strong>Orders consolidated</strong><small>Customer order book and due dates</small></div><span>READY</span></div>
-            <div class="workflow-step"><span class="step-index">2</span><div><strong>Stock and shortages checked</strong><small>Finished goods, materials, packaging</small></div><span>READY</span></div>
-            <div class="workflow-step"><span class="step-index">3</span><div><strong>Production sequence generated</strong><small>Lines, batches, changeovers, urgency</small></div><span>READY</span></div>
-            <div class="workflow-step"><span class="step-index">4</span><div><strong>Energy and peak compared</strong><small>Baseline versus optimized plan</small></div><span>READY</span></div>
+            <div class="workflow-step"><span class="step-index">1</span><div><strong>Load factory records</strong><small>BatchWatt workbook, Excel, XLS or CSV</small></div><span>INPUT</span></div>
+            <div class="workflow-step"><span class="step-index">2</span><div><strong>Detect operational tables</strong><small>Orders, metrics, production plans, evidence</small></div><span>MAP</span></div>
+            <div class="workflow-step"><span class="step-index">3</span><div><strong>Calculate pilot KPIs</strong><small>Planning time, risk, energy and peak load</small></div><span>MEASURE</span></div>
+            <div class="workflow-step"><span class="step-index">4</span><div><strong>Prioritize production</strong><small>Near-due shortages and sequencing actions</small></div><span>ACT</span></div>
           </div>
         </aside>
       </section>
 
       <section class="proof-strip" aria-label="Pilot scope summary">
-        <div><strong>2</strong><span>operational pilot datasets</span></div>
-        <div><strong>19</strong><span>planning cycles recorded</span></div>
-        <div><strong>73</strong><span>orders processed</span></div>
-        <div><strong>14</strong><span>sequencing changes recorded</span></div>
+        <div><strong id="portfolio-pilots">2</strong><span>pilot workspaces</span></div>
+        <div><strong id="portfolio-cycles">19</strong><span>planning cycles recorded</span></div>
+        <div><strong id="portfolio-orders">73</strong><span>orders processed</span></div>
+        <div><strong id="portfolio-risks">16</strong><span>dispatch risks surfaced</span></div>
       </section>
 
-      <section id="product" class="section">
+      <section id="operations" class="section">
         <div class="section-head">
-          <div><p class="eyebrow">The product</p><h2>One planning layer across dispatch, production, and energy.</h2></div>
-          <p>BatchWatt does not replace a factory's current workflow. It reads the order book and stock sheet already in use, then produces an actionable daily plan and a traceable explanation.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="card"><span class="card-number">01</span><h3>Order and stock intake</h3><p>Normalize WhatsApp orders and spreadsheet records while flagging missing quantities, ambiguous lines, and stale inventory.</p></article>
-          <article class="card"><span class="card-number">02</span><h3>Dispatch-risk detection</h3><p>Compare due dates, finished-goods stock, shortages, and line availability before an order becomes a failed dispatch.</p></article>
-          <article class="card"><span class="card-number">03</span><h3>Production sequencing</h3><p>Prioritize near-due orders, combine compatible SKU families, reserve material, and reduce avoidable cleaning or idle time.</p></article>
-          <article class="card"><span class="card-number">04</span><h3>Energy-aware planning</h3><p>Compare baseline and optimized kWh and peak demand, while keeping modeled energy estimates distinct from metered savings.</p></article>
-        </div>
-      </section>
-
-      <section id="pilots" class="section">
-        <div class="section-head">
-          <div><p class="eyebrow">Pilot console</p><h2>Review the two operational pilot datasets.</h2></div>
-          <p>All metrics below are calculated from the supplied BatchWatt pilot workbook. Source-file attachments and company confirmations are tracked separately.</p>
+          <div><p class="eyebrow">Operations console</p><h2>Review a pilot or a newly uploaded factory dataset.</h2></div>
+          <p>The two pilot records are preloaded. New workbooks are analyzed locally and become selectable workspaces in this browser.</p>
         </div>
 
         <div class="console">
           <div class="console-bar">
-            <strong>Pilot workspace</strong>
-            <select id="pilot-select" aria-label="Select pilot">
-              <option value="rkg">RKG Ghee</option>
-              <option value="pr">PR Food Products</option>
-            </select>
+            <div>
+              <strong>Factory workspace</strong>
+              <small id="workspace-source">Preloaded operational pilot record</small>
+            </div>
+            <div class="console-actions">
+              <select id="pilot-select" aria-label="Select factory workspace">
+                <option value="rkg">RKG Ghee</option>
+                <option value="pr">PR Food Products</option>
+              </select>
+              <button class="btn btn-compact" id="download-report" type="button">Download summary</button>
+            </div>
           </div>
+
           <div class="console-content">
             <div class="pilot-head">
               <div><h3 id="pilot-name">RKG Ghee</h3><p id="pilot-meta"></p></div>
-              <span class="badge">Operational pilot data · external proof pending</span>
+              <span class="badge" id="workspace-badge">Operational pilot data · external proof pending</span>
             </div>
-            <p id="pilot-workflow" style="color:var(--muted);line-height:1.6"></p>
+            <p id="pilot-workflow" class="workflow-description"></p>
 
             <div class="kpi-grid">
               <div class="kpi"><span>Planning cycles</span><strong id="kpi-cycles">—</strong></div>
@@ -105,44 +101,104 @@
                 <div class="metric-row"><div class="metric-label"><span>Sequencing response</span><b id="sequence-value"></b></div></div>
               </div>
               <div class="panel">
-                <h4>Factory participation</h4>
-                <p id="team-text" style="color:var(--muted);line-height:1.55"></p>
-                <h4 style="margin-top:22px">Recorded operator notes</h4>
-                <ul id="operator-notes" style="color:var(--muted);line-height:1.7;padding-left:20px"></ul>
+                <h4>Operational participation</h4>
+                <p id="team-text" class="muted-copy"></p>
+                <h4 class="subhead">Recorded notes and exceptions</h4>
+                <ul id="operator-notes" class="notes-list"></ul>
               </div>
             </div>
 
-            <div class="panel" style="margin-top:16px">
-              <div class="table-head"><h4>Sample production recommendations</h4><span class="status">Workbook-derived</span></div>
+            <div class="panel panel-spaced">
+              <div class="table-head"><h4>Orders requiring attention</h4><span class="status" id="order-table-status">Risk-prioritized</span></div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th>Product</th><th>Line / machine</th><th>Recommendation reason</th><th>Factory response</th></tr></thead>
+                  <thead><tr><th>Order</th><th>Product</th><th>Due / priority</th><th>Shortage / risk</th><th>Recommended action</th></tr></thead>
+                  <tbody id="order-rows"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel panel-spaced">
+              <div class="table-head"><h4>Production recommendations</h4><span class="status" id="plan-table-status">Workbook-derived</span></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Product</th><th>Line / machine</th><th>Recommendation reason</th><th>Factory response / status</th></tr></thead>
                   <tbody id="plan-rows"></tbody>
                 </table>
               </div>
             </div>
+
+            <div class="data-quality" id="data-quality"></div>
           </div>
+        </div>
+      </section>
+
+      <section id="upload" class="section">
+        <div class="section-head">
+          <div><p class="eyebrow">Upload new operational data</p><h2>Add another factory without rebuilding the website.</h2></div>
+          <p>BatchWatt recognizes the current pilot-workbook structure and can also calculate a useful dashboard from order, daily-metrics, or production-plan sheets with matching column names.</p>
+        </div>
+
+        <div class="upload-layout">
+          <div class="upload-card">
+            <label class="field-label" for="company-name">Factory or pilot name</label>
+            <input id="company-name" class="text-input" type="text" placeholder="Example: Southside Foods Pilot">
+
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Upload an Excel or CSV file">
+              <input id="file-input" type="file" accept=".xlsx,.xls,.csv" hidden>
+              <div class="upload-icon">↑</div>
+              <strong>Drop an Excel or CSV file here</strong>
+              <span>or click to choose a file</span>
+              <small>.xlsx, .xls or .csv · processed locally</small>
+            </div>
+
+            <div class="upload-actions">
+              <button class="btn btn-primary" id="process-file" type="button" disabled>Process factory data</button>
+              <button class="btn" id="clear-uploads" type="button">Clear uploaded workspaces</button>
+            </div>
+            <div id="upload-status" class="upload-status" aria-live="polite">No file selected.</div>
+          </div>
+
+          <div class="panel format-panel">
+            <h4>Best-supported workbook structure</h4>
+            <div class="format-row"><strong>Pilot Summary</strong><span>Company, dates, cycles, orders, SKUs, planning time, energy, peak, rating</span></div>
+            <div class="format-row"><strong>Orders</strong><span>Order ID, product/SKU, quantity, due date, priority, stock, shortage, line, risk</span></div>
+            <div class="format-row"><strong>Daily Metrics</strong><span>Cycle, orders reviewed, risk count, sequence changes, planning time, kWh, peak, rating</span></div>
+            <div class="format-row"><strong>Production Plan</strong><span>Product, line, baseline/recommended sequence, reason, response and status</span></div>
+            <div class="format-row"><strong>Evidence Checklist</strong><span>Evidence item, status, owner and external-use approval</span></div>
+            <div class="privacy-box"><strong>Privacy design</strong><br>The workbook remains in browser memory. Only a compact calculated summary is saved in local browser storage so the workspace can be reopened on this device.</div>
+          </div>
+        </div>
+
+        <div id="upload-preview" class="upload-preview hidden">
+          <div class="section-head compact-head">
+            <div><p class="eyebrow">Detected file structure</p><h3 id="preview-title">Workbook preview</h3></div>
+            <span id="preview-confidence" class="badge">Ready for review</span>
+          </div>
+          <div id="detected-sheets" class="sheet-chips"></div>
+          <div id="preview-summary" class="preview-grid"></div>
+          <div id="preview-warnings" class="warning-list"></div>
         </div>
       </section>
 
       <section id="evidence" class="section">
         <div class="section-head">
-          <div><p class="eyebrow">Evidence status</p><h2>What the workbook supports—and what is still required.</h2></div>
-          <p>The operational dataset supports pilot scope and calculated outcomes. A public claim should also retain original source files, timestamped logs, screenshots, and written confirmation.</p>
+          <div><p class="eyebrow">Evidence status</p><h2>Separate operational calculations from public proof.</h2></div>
+          <p>The app can calculate and display a pilot immediately. Public claims still require source-file retention, run logs, screenshots, written company confirmation, and permission to publish names.</p>
         </div>
         <div class="evidence">
           <div class="panel"><ul id="evidence-list" class="evidence-list"></ul></div>
-          <div class="disclaimer"><strong>Claim boundary</strong><br><br>The repository may state that BatchWatt contains records for two operational pilots using order, stock, production, and energy data. Do not describe the results as independently verified, customer-approved, or fully production-integrated until the pending evidence is obtained. The raw uploaded workbook is intentionally not published in this public repository.</div>
+          <div class="disclaimer"><strong>Claim boundary</strong><br><br>The two preloaded workspaces come from the supplied pilot workbook. Uploaded workspaces are calculated from files selected by the current browser user. Do not describe a workspace as independently verified, customer-approved, or fully production-integrated until the supporting evidence is attached and approved.</div>
         </div>
       </section>
 
       <section class="cta">
-        <div><h2>Dispatch first. Energy insight second.</h2><p>BatchWatt focuses on the immediate factory decision—what must be produced next—then quantifies the operational and energy effect of that plan.</p></div>
-        <a class="btn btn-primary" href="https://github.com/raamnandhakumar-eng/batchwatt">Open GitHub</a>
+        <div><h2>Upload. Review. Decide what runs next.</h2><p>BatchWatt creates a shared operational view of dispatch risk, production sequence, and energy implications without forcing a small factory to replace its current spreadsheets.</p></div>
+        <a class="btn btn-primary" href="#upload">Add factory data</a>
       </section>
     </main>
 
-    <footer><span>BatchWatt · Production planning and energy-aware sequencing</span><span>Pilot metrics derived from supplied workbook · August 2026</span></footer>
+    <footer><span>BatchWatt · Production planning and energy-aware sequencing</span><span>Files processed locally · Raw uploads are not published</span></footer>
   </div>
 </body>
 </html>
