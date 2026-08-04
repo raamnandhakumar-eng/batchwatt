@@ -1,253 +1,148 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BatchWatt V9 | Monthly-peak-aware factory planning</title>
-  <style>
-    :root{--bg:#08111f;--card:#101827;--muted:#94a3b8;--text:#e5e7eb;--line:#263247;--green:#22c55e;--warn:#f59e0b;--red:#ef4444;--blue:#38bdf8;--soft:#0f172a;}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
-    header,main{max-width:1180px;margin:auto;padding:28px 22px}
-    .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:var(--green)}
-    h1{font-size:42px;line-height:1.05;margin:10px 0 12px;max-width:980px}
-    .sub{font-size:18px;line-height:1.5;color:var(--muted);max-width:980px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .triple{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 22px 45px rgba(0,0,0,.22)}
-    .hero{background:linear-gradient(180deg,#111827,#0b1424);border-color:#334155}
-    h2{font-size:19px;margin:0 0 10px}
-    h3{font-size:14px;margin:16px 0 7px;color:#cbd5e1}
-    .note{color:var(--muted);font-size:13px;line-height:1.45}
-    .pill{display:inline-block;border:1px solid #334155;border-radius:999px;padding:5px 9px;margin:4px 5px 4px 0;font-size:12px;background:#172033;color:#cbd5e1}
-    .ok{background:#052e16;color:#bbf7d0;border-color:#166534}
-    .warn{background:#2a1c09;color:#fde68a;border-color:#92400e}
-    .bad{background:#2a0d0d;color:#fecaca;border-color:#7f1d1d}
-    button{border:0;border-radius:12px;background:var(--green);color:#052e16;font-weight:900;padding:12px 16px;cursor:pointer;margin-top:12px}
-    button.secondary{background:#1f2937;color:#d1d5db;border:1px solid #374151}
-    select{width:100%;margin-top:8px;padding:12px 13px;border-radius:12px;border:1px solid #374151;background:#0f172a;color:var(--text);font:inherit}
-    .control-label{display:block;margin-top:14px;color:#cbd5e1;font-size:13px;font-weight:800}
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
-    .kpi{background:var(--soft);border:1px solid #263244;border-radius:14px;padding:14px}
-    .label{color:var(--muted);font-size:12px}
-    .value{font-size:24px;font-weight:900;margin-top:4px}
-    table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-    td,th{border-bottom:1px solid #293548;padding:9px 8px;text-align:left}
-    th{background:#0f172a;color:#cbd5e1}
-    .output{white-space:pre-wrap;background:#07111f;border:1px solid #253044;border-radius:14px;padding:14px;line-height:1.5}
-    .rowline{display:grid;grid-template-columns:95px 1fr 64px;gap:10px;align-items:center;font-size:12px;margin:8px 0}
-    .bar{height:20px;background:#1f2937;border:1px solid #334155;border-radius:999px;overflow:hidden}
-    .bar span{display:block;height:100%;background:#38bdf8}
-    .bar.stagger span{background:#22c55e}
-    .source{background:#0f172a;border:1px solid #293548;border-radius:14px;padding:13px;min-height:120px}
-    .source strong{display:block;margin-bottom:8px}
-    .copy{float:right;margin-top:0;padding:8px 10px;font-size:12px}
-    @media(max-width:920px){.grid,.triple{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}h1{font-size:31px}}
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BatchWatt turns factory orders, stock, production constraints, and energy data into dispatch-first production plans.">
+  <title>BatchWatt | Dispatch-first factory planning</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
 </head>
 <body>
-<header>
-  <div class="eyebrow">BatchWatt AI · automation-first demo</div>
-  <h1>Factory planning with monthly-peak-aware demand charges.</h1>
-  <p class="sub">BatchWatt automatically collects WhatsApp orders, stock sheets, electricity bills, LPG receipts, and meter logs. It creates a dispatch-first plan, then splits the energy receipt into usage savings this run and demand-charge savings only when today would set a new billing-month peak.</p>
-</header>
-<main>
-  <section class="grid">
-    <div class="card hero">
-      <h2>Automation run</h2>
-      <p class="note"><b>Daily input:</b> none typed from scratch. Orders arrive through WhatsApp. Stock comes from the existing sheet. Bills and LPG receipts are parsed when they arrive. Manual work only happens when confidence is low.</p>
-      <label class="control-label" for="datasetSelect">Choose a factory demo</label>
-      <select id="datasetSelect" onchange="resetDemo()">
-        <option value="ghee">Ghee manufacturer</option>
-        <option value="bakery">Commercial bakery</option>
-        <option value="snacks">Snack manufacturer</option>
-      </select>
-      <button onclick="runAutomation()">Run automated sync</button>
-      <button class="secondary" onclick="resetDemo()">Reset demo</button>
-      <div id="runStatus" style="margin-top:12px"><span class="pill warn">Waiting for sync</span></div>
-    </div>
-    <div class="card">
-      <h2>Input sources</h2>
-      <div id="sources" class="triple">
-        <div class="source"><strong>WhatsApp</strong><span class="pill warn">not synced</span><p class="note">Inbound order messages via webhook.</p></div>
-        <div class="source"><strong>Stock sheet</strong><span class="pill warn">not synced</span><p class="note">Existing Excel or Google Sheet.</p></div>
-        <div class="source"><strong>Bills/receipts</strong><span class="pill warn">not synced</span><p class="note">Electricity bill, LPG receipt, meter logs.</p></div>
-      </div>
-    </div>
-  </section>
+  <div class="shell">
+    <header class="nav">
+      <a class="brand" href="/" aria-label="BatchWatt home"><span class="brand-mark">BW</span><span>BatchWatt</span></a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#product">Product</a>
+        <a href="#pilots">Pilot console</a>
+        <a href="#evidence">Evidence</a>
+        <a href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub</a>
+      </nav>
+    </header>
 
-  <section class="card" style="margin-top:18px">
-    <h2>Exception review</h2>
-    <p class="note">Automation does not mean blind automation. Bad lines are flagged instead of silently dropped. Corrections become factory-specific parser rules.</p>
-    <div id="exceptions"><span class="pill warn">No sync yet</span></div>
-  </section>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Factory planning before ERP</p>
+          <h1>Turn messy orders into a dispatch-ready production plan.</h1>
+          <p>BatchWatt combines customer orders, stock sheets, line constraints, and energy data to show what to produce first, which dispatches are at risk, and how to sequence equipment without creating avoidable peak load.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#pilots">Explore pilot workspaces</a>
+            <a class="btn" href="https://github.com/raamnandhakumar-eng/batchwatt">View repository</a>
+          </div>
+        </div>
 
-  <section class="card" style="margin-top:18px">
-    <h2>Results</h2>
-    <div class="kpis">
-      <div class="kpi"><div class="label">Plan confidence</div><div class="value" id="confidence">—</div></div>
-      <div class="kpi"><div class="label">At-risk orders</div><div class="value" id="risk">—</div></div>
-      <div class="kpi"><div class="label">Month peak so far</div><div class="value" id="monthPeak">—</div></div>
-      <div class="kpi"><div class="label">Demand charge today</div><div class="value" id="demandToday">—</div></div>
-    </div>
-    <div class="grid">
-      <div>
-        <h3>1. Dispatch plan first</h3>
-        <div id="dispatch" class="note">Run automated sync.</div>
-      </div>
-      <div>
-        <h3>2. Energy receipt second</h3>
-        <div id="receipt" class="note">Usage savings, LPG kg, kWh, monthly peak, and gated demand-charge savings appear here.</div>
-      </div>
-    </div>
-    <div class="grid" style="margin-top:14px">
-      <div>
-        <h3>Peak-load visual</h3>
-        <p class="note">Demand-charge savings are monthly. They show only if the fast schedule would beat this month's peak so far.</p>
-        <div id="bars"></div>
-      </div>
-      <div>
-        <h3>Copy-ready WhatsApp output <button class="copy" onclick="copyOut()">Copy</button></h3>
-        <div id="copyblock" class="output">No plan yet.</div>
-      </div>
-    </div>
-  </section>
-</main>
-<script>
-const datasets={
-  ghee:{
-    name:'Ghee manufacturer',
-    currency:'INR',
-    sourceSummary:{whatsapp:'6 messages parsed',whatsappNote:'1 messy line flagged for correction.',stock:'4 SKUs imported',stockNote:'1 last-known row flagged.',energy:'Bill + LPG receipt parsed',energyNote:'Demand-charge tariff detected. Month peak so far extracted.'},
-    confidence:'review needed',
-    atRiskOrders:3,
-    energyReceipt:{lpgNeededKg:63.0,electricityKwh:81.0,fastPeakKw:84,staggeredPeakKw:72,monthlyPeakSoFarKw:78,usageSavingsRange:'~900 INR to 1,300 INR',demandChargeSavingsRange:'~4,000 INR to 6,000 INR',demandChargeNote:'Avoids ~4,000 INR to 6,000 INR per billing month if this run would set the monthly peak.',energyCostPerKg:17.2,calibrationNote:'Modeled. Usage estimates sharpen after bills, LPG refills, meter readings, and production logs. Demand-charge savings apply only when today would set a new billing-month peak.'},
-    dispatchPlan:[
-      {customer:'Ravi Stores',productName:'500 ml ghee',orderUnits:300,dispatchFromStock:80,produceUnits:220,dueDays:0,packagingShortageUnits:0},
-      {customer:'Anand Mart',productName:'250 ml ghee',orderUnits:120,dispatchFromStock:120,produceUnits:0,dueDays:0,packagingShortageUnits:0},
-      {customer:'Amazon refill',productName:'1 L ghee',orderUnits:120,dispatchFromStock:50,produceUnits:70,dueDays:1,packagingShortageUnits:0},
-      {customer:'Distributor B',productName:'500 ml ghee',orderUnits:240,dispatchFromStock:0,produceUnits:240,dueDays:1,packagingShortageUnits:20}
-    ],
-    exceptions:[
-      {message:"Couldn't read this line: voice note from shop says 'same like last time'. Please confirm product and quantity."},
-      {message:'PREMIUM_TIN stock is last-known. Confirm before production.'}
-    ],
-    fastProfile:[{hour:8,kw:84},{hour:9,kw:68},{hour:10,kw:68},{hour:11,kw:38},{hour:12,kw:26},{hour:13,kw:18},{hour:14,kw:0}],
-    staggeredProfile:[{hour:8,kw:40},{hour:9,kw:30},{hour:10,kw:30},{hour:11,kw:26},{hour:12,kw:34},{hour:13,kw:30},{hour:14,kw:41},{hour:15,kw:38},{hour:16,kw:18},{hour:17,kw:8}]
-  },
-  bakery:{
-    name:'Commercial bakery',
-    currency:'USD',
-    sourceSummary:{whatsapp:'9 orders parsed',whatsappNote:'All customer and due-date fields matched.',stock:'7 ingredients imported',stockNote:'Flour stock is below safety level.',energy:'Utility bill + meter log parsed',energyNote:'Time-of-use and demand-charge rates detected.'},
-    confidence:'high',
-    atRiskOrders:2,
-    energyReceipt:{lpgNeededKg:0,electricityKwh:146,fastPeakKw:112,staggeredPeakKw:86,monthlyPeakSoFarKw:96,usageSavingsRange:'~$120 to $170',demandChargeSavingsRange:'~$540 to $760',demandChargeNote:'Avoids roughly $540 to $760 this billing month because the fast schedule would set a new monthly peak.',energyCostPerKg:0.31,calibrationNote:'Modeled from the latest utility bill and meter log. Savings improve as BatchWatt learns actual oven cycle times.'},
-    dispatchPlan:[
-      {customer:'Central Cafe',productName:'sourdough loaves',orderUnits:180,dispatchFromStock:40,produceUnits:140,dueDays:0,packagingShortageUnits:0},
-      {customer:'Northside Grocer',productName:'burger buns',orderUnits:420,dispatchFromStock:120,produceUnits:300,dueDays:0,packagingShortageUnits:0},
-      {customer:'Hotel Linden',productName:'croissants',orderUnits:160,dispatchFromStock:0,produceUnits:160,dueDays:1,packagingShortageUnits:0},
-      {customer:'Campus Market',productName:'muffin trays',orderUnits:90,dispatchFromStock:30,produceUnits:60,dueDays:1,packagingShortageUnits:15}
-    ],
-    exceptions:[
-      {message:'Bread flour is 18 kg below the safety-stock threshold.'}
-    ],
-    fastProfile:[{hour:5,kw:112},{hour:6,kw:104},{hour:7,kw:90},{hour:8,kw:62},{hour:9,kw:44},{hour:10,kw:22}],
-    staggeredProfile:[{hour:5,kw:54},{hour:6,kw:72},{hour:7,kw:86},{hour:8,kw:74},{hour:9,kw:65},{hour:10,kw:42},{hour:11,kw:24}]
-  },
-  snacks:{
-    name:'Snack manufacturer',
-    currency:'INR',
-    sourceSummary:{whatsapp:'12 orders parsed',whatsappNote:'2 distributor messages merged into one order.',stock:'9 SKUs imported',stockNote:'Carton inventory needs confirmation.',energy:'Bill + LPG receipt parsed',energyNote:'Demand tariff and current-month peak detected.'},
-    confidence:'review needed',
-    atRiskOrders:4,
-    energyReceipt:{lpgNeededKg:88,electricityKwh:119,fastPeakKw:102,staggeredPeakKw:79,monthlyPeakSoFarKw:94,usageSavingsRange:'~1,400 INR to 2,000 INR',demandChargeSavingsRange:'~5,000 INR to 7,500 INR',demandChargeNote:'Avoids ~5,000 INR to 7,500 INR per billing month if this run would set the monthly peak.',energyCostPerKg:11.8,calibrationNote:'Modeled from the latest bill, fryer cycles, LPG receipts, and production logs. Confirm carton stock before release.'},
-    dispatchPlan:[
-      {customer:'Metro Distributor',productName:'masala chips cartons',orderUnits:220,dispatchFromStock:60,produceUnits:160,dueDays:0,packagingShortageUnits:0},
-      {customer:'City Supermarket',productName:'banana chips cartons',orderUnits:140,dispatchFromStock:40,produceUnits:100,dueDays:0,packagingShortageUnits:20},
-      {customer:'Online channel',productName:'mixed snack packs',orderUnits:180,dispatchFromStock:80,produceUnits:100,dueDays:1,packagingShortageUnits:0},
-      {customer:'Regional wholesaler',productName:'peanut snack cartons',orderUnits:260,dispatchFromStock:20,produceUnits:240,dueDays:1,packagingShortageUnits:30}
-    ],
-    exceptions:[
-      {message:'Two distributor messages referenced the same purchase order and were merged.'},
-      {message:'Carton stock was last updated yesterday. Confirm 50 cartons before production.'}
-    ],
-    fastProfile:[{hour:7,kw:102},{hour:8,kw:96},{hour:9,kw:74},{hour:10,kw:62},{hour:11,kw:38},{hour:12,kw:24}],
-    staggeredProfile:[{hour:7,kw:48},{hour:8,kw:62},{hour:9,kw:79},{hour:10,kw:74},{hour:11,kw:68},{hour:12,kw:50},{hour:13,kw:31}]
-  }
-};
+        <aside class="hero-card" aria-label="BatchWatt workflow preview">
+          <div class="hero-card-head">
+            <div><p class="eyebrow">Daily planning run</p><strong>Order-to-production workflow</strong></div>
+            <span class="status">Pilot data loaded</span>
+          </div>
+          <div class="workflow">
+            <div class="workflow-step"><span class="step-index">1</span><div><strong>Orders consolidated</strong><small>Customer order book and due dates</small></div><span>READY</span></div>
+            <div class="workflow-step"><span class="step-index">2</span><div><strong>Stock and shortages checked</strong><small>Finished goods, materials, packaging</small></div><span>READY</span></div>
+            <div class="workflow-step"><span class="step-index">3</span><div><strong>Production sequence generated</strong><small>Lines, batches, changeovers, urgency</small></div><span>READY</span></div>
+            <div class="workflow-step"><span class="step-index">4</span><div><strong>Energy and peak compared</strong><small>Baseline versus optimized plan</small></div><span>READY</span></div>
+          </div>
+        </aside>
+      </section>
 
-function selectedDataset(){
-  return datasets[document.getElementById('datasetSelect').value];
-}
+      <section class="proof-strip" aria-label="Pilot scope summary">
+        <div><strong>2</strong><span>operational pilot datasets</span></div>
+        <div><strong>19</strong><span>planning cycles recorded</span></div>
+        <div><strong>73</strong><span>orders processed</span></div>
+        <div><strong>14</strong><span>sequencing changes recorded</span></div>
+      </section>
 
-function runAutomation(){
-  const r=selectedDataset();
-  const reviewCount=r.exceptions.length;
-  document.getElementById('runStatus').innerHTML=`<span class="pill ok">Synced</span><span class="pill ok">Plan generated</span>${reviewCount?`<span class="pill warn">${reviewCount} item${reviewCount===1?'':'s'} need review</span>`:'<span class="pill ok">No review needed</span>'}`;
-  document.getElementById('sources').innerHTML=`
-    <div class="source"><strong>WhatsApp</strong><span class="pill ok">${r.sourceSummary.whatsapp}</span><p class="note">${r.sourceSummary.whatsappNote}</p></div>
-    <div class="source"><strong>Stock sheet</strong><span class="pill ok">${r.sourceSummary.stock}</span><p class="note">${r.sourceSummary.stockNote}</p></div>
-    <div class="source"><strong>Bills/receipts</strong><span class="pill ok">${r.sourceSummary.energy}</span><p class="note">${r.sourceSummary.energyNote}</p></div>`;
-  render(r);
-}
+      <section id="product" class="section">
+        <div class="section-head">
+          <div><p class="eyebrow">The product</p><h2>One planning layer across dispatch, production, and energy.</h2></div>
+          <p>BatchWatt does not replace a factory's current workflow. It reads the order book and stock sheet already in use, then produces an actionable daily plan and a traceable explanation.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="card"><span class="card-number">01</span><h3>Order and stock intake</h3><p>Normalize WhatsApp orders and spreadsheet records while flagging missing quantities, ambiguous lines, and stale inventory.</p></article>
+          <article class="card"><span class="card-number">02</span><h3>Dispatch-risk detection</h3><p>Compare due dates, finished-goods stock, shortages, and line availability before an order becomes a failed dispatch.</p></article>
+          <article class="card"><span class="card-number">03</span><h3>Production sequencing</h3><p>Prioritize near-due orders, combine compatible SKU families, reserve material, and reduce avoidable cleaning or idle time.</p></article>
+          <article class="card"><span class="card-number">04</span><h3>Energy-aware planning</h3><p>Compare baseline and optimized kWh and peak demand, while keeping modeled energy estimates distinct from metered savings.</p></article>
+        </div>
+      </section>
 
-function resetDemo(){
-  document.getElementById('runStatus').innerHTML='<span class="pill warn">Waiting for sync</span>';
-  document.getElementById('sources').innerHTML='<div class="source"><strong>WhatsApp</strong><span class="pill warn">not synced</span><p class="note">Inbound order messages via webhook.</p></div><div class="source"><strong>Stock sheet</strong><span class="pill warn">not synced</span><p class="note">Existing Excel or Google Sheet.</p></div><div class="source"><strong>Bills/receipts</strong><span class="pill warn">not synced</span><p class="note">Electricity bill, LPG receipt, meter logs.</p></div>';
-  document.getElementById('confidence').textContent='—';
-  document.getElementById('risk').textContent='—';
-  document.getElementById('monthPeak').textContent='—';
-  document.getElementById('demandToday').textContent='—';
-  document.getElementById('exceptions').innerHTML='<span class="pill warn">No sync yet</span>';
-  document.getElementById('dispatch').innerHTML='<span class="note">Run automated sync.</span>';
-  document.getElementById('receipt').innerHTML='<span class="note">Usage savings, LPG kg, kWh, monthly peak, and gated demand-charge savings appear here.</span>';
-  document.getElementById('bars').innerHTML='';
-  document.getElementById('copyblock').textContent='No plan yet.';
-}
+      <section id="pilots" class="section">
+        <div class="section-head">
+          <div><p class="eyebrow">Pilot console</p><h2>Review the two operational pilot datasets.</h2></div>
+          <p>All metrics below are calculated from the supplied BatchWatt pilot workbook. Source-file attachments and company confirmations are tracked separately.</p>
+        </div>
 
-function render(r){
-  document.getElementById('confidence').textContent=r.confidence;
-  document.getElementById('risk').textContent=r.atRiskOrders;
-  document.getElementById('monthPeak').textContent=`${r.energyReceipt.monthlyPeakSoFarKw} kW`;
-  document.getElementById('demandToday').textContent=r.energyReceipt.demandChargeSavingsRange;
-  document.getElementById('exceptions').innerHTML=r.exceptions.length?r.exceptions.map(e=>`<div class="pill warn">${e.message}</div>`).join(''):'<span class="pill ok">No exceptions</span>';
-  document.getElementById('dispatch').innerHTML='<table><thead><tr><th>Priority</th><th>Customer</th><th>Plan</th><th>Risk</th></tr></thead><tbody>'+r.dispatchPlan.map((x,i)=>`<tr><td>${i+1}</td><td>${x.customer}</td><td>Dispatch ${x.dispatchFromStock} from stock. Produce ${x.produceUnits} ${x.productName}.</td><td>${x.packagingShortageUnits?'<span class="pill bad">packaging short</span>':(x.dueDays===0?'<span class="pill warn">today</span>':'<span class="pill ok">ok</span>')}</td></tr>`).join('')+'</tbody></table>';
+        <div class="console">
+          <div class="console-bar">
+            <strong>Pilot workspace</strong>
+            <select id="pilot-select" aria-label="Select pilot">
+              <option value="rkg">RKG Ghee</option>
+              <option value="pr">PR Food Products</option>
+            </select>
+          </div>
+          <div class="console-content">
+            <div class="pilot-head">
+              <div><h3 id="pilot-name">RKG Ghee</h3><p id="pilot-meta"></p></div>
+              <span class="badge">Operational pilot data · external proof pending</span>
+            </div>
+            <p id="pilot-workflow" style="color:var(--muted);line-height:1.6"></p>
 
-  const fuelLine=r.energyReceipt.lpgNeededKg>0?`LPG needed: ${r.energyReceipt.lpgNeededKg} kg\n`:'';
-  document.getElementById('receipt').innerHTML=`<div class="output">${fuelLine}Electricity: ${r.energyReceipt.electricityKwh} kWh
-Usage saving this run: ${r.energyReceipt.usageSavingsRange}
-Energy cost per kg: ${r.energyReceipt.energyCostPerKg} ${r.currency}/kg
+            <div class="kpi-grid">
+              <div class="kpi"><span>Planning cycles</span><strong id="kpi-cycles">—</strong></div>
+              <div class="kpi"><span>Orders processed</span><strong id="kpi-orders">—</strong></div>
+              <div class="kpi"><span>SKUs covered</span><strong id="kpi-skus">—</strong></div>
+              <div class="kpi"><span>Machines / stages</span><strong id="kpi-lines">—</strong></div>
+              <div class="kpi"><span>Orders flagged at risk</span><strong id="kpi-risk">—</strong></div>
+              <div class="kpi"><span>Operator rating</span><strong id="kpi-rating">—</strong></div>
+            </div>
 
-Month peak so far: ${r.energyReceipt.monthlyPeakSoFarKw} kW
-Peak load: ${r.energyReceipt.fastPeakKw} kW fast -> ${r.energyReceipt.staggeredPeakKw} kW staggered
-Demand-charge saving today: ${r.energyReceipt.demandChargeSavingsRange}
-${r.energyReceipt.demandChargeNote}
-${r.energyReceipt.calibrationNote}</div>`;
+            <div class="split">
+              <div class="panel">
+                <h4>Measured and modeled outcomes</h4>
+                <div class="metric-row"><div class="metric-label"><span>Planning time</span><b id="planning-label"></b></div><div class="track"><span id="planning-bar"></span></div><div class="metric-label"><span>Reduction</span><b id="planning-value"></b></div></div>
+                <div class="metric-row"><div class="metric-label"><span>Energy estimate</span><b id="energy-label"></b></div><div class="track"><span id="energy-bar"></span></div><div class="metric-label"><span>Estimated reduction</span><b id="energy-value"></b></div></div>
+                <div class="metric-row"><div class="metric-label"><span>Peak load</span><b id="peak-label"></b></div><div class="track"><span id="peak-bar"></span></div><div class="metric-label"><span>Reduction</span><b id="peak-value"></b></div></div>
+                <div class="metric-row"><div class="metric-label"><span>Sequencing response</span><b id="sequence-value"></b></div></div>
+              </div>
+              <div class="panel">
+                <h4>Factory participation</h4>
+                <p id="team-text" style="color:var(--muted);line-height:1.55"></p>
+                <h4 style="margin-top:22px">Recorded operator notes</h4>
+                <ul id="operator-notes" style="color:var(--muted);line-height:1.7;padding-left:20px"></ul>
+              </div>
+            </div>
 
-  renderBars(r);
+            <div class="panel" style="margin-top:16px">
+              <div class="table-head"><h4>Sample production recommendations</h4><span class="status">Workbook-derived</span></div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Product</th><th>Line / machine</th><th>Recommendation reason</th><th>Factory response</th></tr></thead>
+                  <tbody id="plan-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  const firstProduction=r.dispatchPlan.find(x=>x.produceUnits>0);
-  const stockDispatch=r.dispatchPlan.filter(x=>x.dispatchFromStock>0).slice(0,2).map(x=>`${x.dispatchFromStock} ${x.productName}`).join(' and ');
-  const fuelSummary=r.energyReceipt.lpgNeededKg>0?`LPG ${r.energyReceipt.lpgNeededKg} kg, `:'';
-  const msg=`BatchWatt plan: ${r.name}
-1. Make first: ${firstProduction.produceUnits} ${firstProduction.productName} for ${firstProduction.customer}.
-2. Dispatch from stock: ${stockDispatch}.
-3. At-risk today: ${r.atRiskOrders} order(s) still need attention.
-4. Energy receipt: ${fuelSummary}electricity ${r.energyReceipt.electricityKwh} kWh. Usage saving this run: ${r.energyReceipt.usageSavingsRange}.
-5. Peak load: ${r.energyReceipt.fastPeakKw} kW fast schedule -> ${r.energyReceipt.staggeredPeakKw} kW staggered schedule. Month peak so far: ${r.energyReceipt.monthlyPeakSoFarKw} kW.
-6. Demand-charge saving: ${r.energyReceipt.demandChargeNote}${r.exceptions.length?' Review flagged items before running.':''}`;
-  document.getElementById('copyblock').textContent=msg;
-}
+      <section id="evidence" class="section">
+        <div class="section-head">
+          <div><p class="eyebrow">Evidence status</p><h2>What the workbook supports—and what is still required.</h2></div>
+          <p>The operational dataset supports pilot scope and calculated outcomes. A public claim should also retain original source files, timestamped logs, screenshots, and written confirmation.</p>
+        </div>
+        <div class="evidence">
+          <div class="panel"><ul id="evidence-list" class="evidence-list"></ul></div>
+          <div class="disclaimer"><strong>Claim boundary</strong><br><br>The repository may state that BatchWatt contains records for two operational pilots using order, stock, production, and energy data. Do not describe the results as independently verified, customer-approved, or fully production-integrated until the pending evidence is obtained. The raw uploaded workbook is intentionally not published in this public repository.</div>
+        </div>
+      </section>
 
-function renderBars(r){
-  const max=Math.max(...r.fastProfile.map(x=>x.kw),...r.staggeredProfile.map(x=>x.kw),r.energyReceipt.monthlyPeakSoFarKw,1);
-  function row(label,kw,cls){return `<div class="rowline"><div>${label}</div><div class="bar ${cls}"><span style="width:${kw/max*100}%"></span></div><div>${kw} kW</div></div>`}
-  document.getElementById('bars').innerHTML='<h3>Current month peak so far</h3>'+row('Month',r.energyReceipt.monthlyPeakSoFarKw,'')+'<h3>Fast schedule</h3>'+r.fastProfile.map(x=>row(x.hour+':00',x.kw,'')).join('')+'<h3>Peak-aware schedule</h3>'+r.staggeredProfile.map(x=>row(x.hour+':00',x.kw,'stagger')).join('');
-}
+      <section class="cta">
+        <div><h2>Dispatch first. Energy insight second.</h2><p>BatchWatt focuses on the immediate factory decision—what must be produced next—then quantifies the operational and energy effect of that plan.</p></div>
+        <a class="btn btn-primary" href="https://github.com/raamnandhakumar-eng/batchwatt">Open GitHub</a>
+      </section>
+    </main>
 
-function copyOut(){
-  navigator.clipboard.writeText(document.getElementById('copyblock').innerText);
-}
-</script>
+    <footer><span>BatchWatt · Production planning and energy-aware sequencing</span><span>Pilot metrics derived from supplied workbook · August 2026</span></footer>
+  </div>
 </body>
 </html>
