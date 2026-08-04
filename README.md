@@ -1,94 +1,91 @@
 # BatchWatt
 
-BatchWatt reads a small food factory's existing WhatsApp orders and stock sheets, tells them what to produce first so dispatch doesn't fail, and shows the hidden energy cost of that plan, including peak-load spikes from starting heavy machines together. It's the daily planning layer before ERP.
+**Dispatch-first production planning for small food factories, with energy-aware sequencing and pilot evidence.**
+
+BatchWatt reads the order and stock records a factory already uses, identifies what must be produced first so dispatch does not fail, and compares the energy and peak-load effect of alternative production sequences. It is designed as the daily planning layer before ERP.
+
+## Product website
+
+The repository includes a pilot-ready static product website with selectable workspaces for:
+
+- **RKG Ghee**
+- **PR Food Products**
+
+The website presents pilot scope, planning-time results, dispatch-risk flags, production-sequencing decisions, modeled energy outcomes, operator feedback, and the current evidence status.
 
 ## What it does
 
-Small food factories often run production through WhatsApp, Excel, phone calls, and memory. Orders arrive in messy messages. Stock sits in spreadsheets. Electricity bills and LPG receipts are reviewed after the fact. The result is missed dispatches, rushed production, avoidable small batches, and hidden energy waste.
+BatchWatt ingests or models:
 
-BatchWatt automates that daily planning loop.
-
-It ingests:
-
-- WhatsApp order messages
-- Existing Excel or Google Sheets stock files
-- Electricity bills
-- LPG receipts
-- Optional meter logs and production records
+- customer orders from WhatsApp or order books;
+- finished-goods and material stock sheets;
+- production lines, machine capacities, and changeover constraints;
+- electricity bills, LPG records, and optional meter logs.
 
 It outputs:
 
-- What to make first today
-- What can be dispatched from finished stock
-- Which orders are at risk
-- A machine schedule
-- LPG needed
-- kWh estimate
-- Peak-load comparison
-- Usage savings for this run
-- Demand-charge savings only when today's run would set a new billing-month peak
-- A copy-ready WhatsApp summary for the floor team
+- a dispatch-prioritized production plan;
+- orders or dispatches at risk;
+- recommended batch and machine sequence;
+- material and packaging exceptions;
+- baseline versus optimized kWh;
+- baseline versus optimized peak load;
+- a floor-ready summary for the factory team.
 
-## Core insight
+## Operational pilot records
 
-The obvious problem is dispatch. The hidden problem is the energy cost created by bad sequencing.
+The supplied BatchWatt pilot workbook records two operational pilots using order, stock, production, and energy data.
 
-A factory owner may know which orders are urgent, but they usually cannot calculate the cost of starting the kettle, compressor, filler, and labeler together. BatchWatt makes that invisible peak-load risk visible.
+| Pilot | Period | Cycles | Orders | SKUs | Lines / stages | Planning-time reduction | Estimated energy reduction | Peak-load reduction | Operator rating |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| RKG Ghee | Jul 7–20, 2026 | 10 | 32 | 6 | 2 | 64.2% | 8.8% | 11.7% | 4.34 / 5 |
+| PR Food Products | Jul 14–25, 2026 | 9 | 41 | 8 | 3 | 62.3% | 6.7% | 9.0% | 4.26 / 5 |
 
-## Product flow
+Across the two datasets, BatchWatt records **19 planning cycles**, **73 orders**, **16 orders or dispatches flagged at risk**, and **14 production-sequencing changes**.
 
-1. **Setup once**
-   - Configure SKU names, machine loads, startup spikes, tariff rules, LPG assumptions, stock-sheet mapping, and currency code.
+### Pilot documentation
 
-2. **Automate daily inputs**
-   - Orders arrive through WhatsApp.
-   - Stock syncs from the existing sheet.
-   - Bills and receipts are parsed when received.
-   - The owner only reviews exceptions.
+- [`docs/pilots/rkg-ghee-pilot.md`](docs/pilots/rkg-ghee-pilot.md)
+- [`docs/pilots/pr-food-products-pilot.md`](docs/pilots/pr-food-products-pilot.md)
+- [`docs/pilots/pilot-methodology.md`](docs/pilots/pilot-methodology.md)
 
-3. **Generate the plan**
-   - Rank orders by dispatch deadline and available stock.
-   - Decide what to make first.
-   - Compare fast schedule vs peak-aware schedule.
-   - Split energy savings into usage savings and demand-charge savings.
+## Evidence and claim boundary
 
-4. **Send the floor-ready message**
-   - The result is a clean WhatsApp summary the owner or floor manager can copy and send.
+The supplied workbook contains anonymized order tables, daily metrics, production recommendations, and factory-team responses. It also records that the following evidence remains pending:
+
+- original anonymized source spreadsheets;
+- timestamped BatchWatt run logs;
+- screenshots tied to planning cycles;
+- written company confirmation;
+- permission to publish company names or feedback quotes.
+
+Therefore, the safe claim is:
+
+> BatchWatt contains operational pilot records for RKG Ghee and PR Food Products using order, stock, production, and energy data. Results shown are calculated from the supplied pilot workbook; external verification and publication permissions are tracked separately.
+
+Do not describe the results as independently verified, customer-approved, or a fully integrated production deployment until the supporting evidence is obtained.
 
 ## Energy model
 
-BatchWatt separates two types of savings:
+BatchWatt separates operational energy effects from tariff-specific demand-charge effects.
 
 | Savings type | Applies to | How it is shown |
 |---|---|---|
-| Usage savings | Most factories | LPG/kWh saved this run from smarter batching or sequencing |
-| Demand-charge savings | Only factories with demand-charge tariffs | Monthly avoided charge only if today's run would set a new billing-month peak |
+| Usage savings | Most factories | LPG or kWh reduction associated with batching and sequencing |
+| Peak-load reduction | Factories with concurrent high-load equipment | Baseline versus optimized maximum demand |
+| Demand-charge savings | Only factories with demand-charge tariffs | Monthly avoided charge only when the plan would otherwise set a new billing-month peak |
 
-Demand-charge savings are not shown as daily savings. The app tracks the billing month's peak so far and only flags avoided monthly demand charges when the fast schedule would exceed that peak.
+Energy reductions in the pilot summaries are labeled **estimated** unless independently supported by meter data.
 
-Example:
+## Repository components
 
-```text
-Peak load: 84 kW fast -> 72 kW staggered
-Month peak so far: 78 kW
-Usage saving this run: ~900 to 1,300 LOCAL
-Demand-charge saving: avoids ~4,000 to 6,000 LOCAL per billing month if this run would set the monthly peak
-```
-
-## Current status
-
-This repo contains a YC-ready MVP prototype:
-
-- Static Vercel demo
-- Serverless API route sketches
-- Core planning engine
+- Static Vercel-compatible product website
+- Core planning engine and sample test runner
 - Supabase schema
 - n8n automation workflow sketch
 - Sample payloads and outputs
 - Spreadsheet planning dashboard
-- YC application draft
-
-The current version is automation-ready, not fully production-integrated. To run with a real factory, connect Meta WhatsApp Cloud API, Supabase, stock-sheet sync, bill/receipt ingestion, and optional meter logs.
+- Operational pilot summaries and methodology
 
 ## Local development
 
@@ -98,10 +95,14 @@ npm run test:plan
 npm run dev
 ```
 
+## Current status
+
+BatchWatt is a pilot-ready product prototype with two operational pilot datasets. The public website and documentation are complete; live WhatsApp, stock-sheet, meter, and factory-system integrations remain deployment work.
+
 ## Repository About
 
-Dispatch-first daily production planner for small food factories, with peak-load energy insights.
+Dispatch-first production planner for small food factories, with energy-aware sequencing and documented operational pilots.
 
 ## Suggested GitHub topics
 
-`production-planning` `manufacturing` `food-industry` `energy-optimization` `whatsapp-automation` `streamlit` `smb` `scheduling` `demand-charge`
+`production-planning` `manufacturing` `food-industry` `energy-optimization` `whatsapp-automation` `smb` `scheduling` `demand-charge` `pilot-study`
