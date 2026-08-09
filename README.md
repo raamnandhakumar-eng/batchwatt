@@ -6,6 +6,8 @@ BatchWatt turns orders, stock and production information into a clear daily answ
 
 ## Operational website
 
+**Live app:** https://batchwatt.vercel.app/
+
 The browser application now supports three simple input paths:
 
 1. **Choose an existing pilot workspace**
