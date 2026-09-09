@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" }
-  ]
+  "framework": null,
+  "buildCommand": "node scripts/build.js",
+  "outputDirectory": "dist"
 }

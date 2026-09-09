@@ -1,0 +1,22 @@
+# V2 deployments contain application code and synthetic demo data only.
+README.md
+index.html
+app.js
+styles.css
+*.xlsx
+*.sql
+*.md
+docs/
+samples/
+tests/
+workflows/
+.github/
+output/
+lib/planner.js
+lib/insights.js
+api/ingest-bill.js
+api/ingest-stock.js
+api/exception-review.js
+api/whatsapp-webhook.js
+scripts/export-plan.js
+scripts/export-energy-plan.js

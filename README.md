@@ -1,48 +1,60 @@
-# BatchWatt
+# BatchWatt V2
 
-**Simple dispatch-first production planning for small food factories.**
+**Protect dispatch. Take control of peak demand.**
 
-BatchWatt turns orders, stock and production information into a clear daily answer: **what should the factory produce next?**
+BatchWatt is an energy-aware production planner for small factories. It compares an earliest-start schedule with a proposed schedule that staggers machine loads while protecting dispatch deadlines. The app makes peak demand, electricity-cost effects and production blockers visible in one workspace.
 
-## Project improvements
+## Version 1 is preserved
 
-The planner now reserves finished stock **and packaging once per SKU**, flags packaging shortages, and explains each dispatch decision. An order can be ready from stock, need production, or need packaging resolved first.
+The complete original project, including its workbook and documentation, is preserved in the [`archive/batchwatt-v1` branch](https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1), at commit `9f824fecd615cca292ea4a101e737263e6043dd6`. It is not overwritten by Version 2.
 
-The browser now includes:
+## The energy advantage
 
-- a downloadable **stock coverage chart** for every loaded order;
-- a separate chart for recorded planning, estimated energy and peak-load changes;
-- complete CSV and WhatsApp outputs without row limits;
-- row-level validation and clear warnings for missing stock or uncertain dates;
-- a distinction between loaded pilot examples and whole-pilot totals;
-- missing metrics shown as unavailable, including when a baseline has no after measurement.
+- **See the peak:** compare baseline and proposed 15-minute load profiles, background load, your demand target and the month’s peak so far.
+- **Stagger production:** schedule each order on its assigned line using operating power, throughput, changeovers and shift capacity.
+- **Understand the bill:** separate shift energy-charge changes from conditional monthly demand-charge savings. Timing shifts do not automatically save kWh.
+- **Protect dispatch:** retain the baseline if the candidate drops work, worsens any scheduled order’s lateness or raises modeled combined cost/exposure.
+- **Surface blockers:** allocate shared finished and packaging stock once per SKU; flag packaging shortages, insufficient shift capacity, late orders and target exceedance.
 
-**Example output from the repository's synthetic sample input:**
+## Working product features
 
-![Synthetic sample: stock coverage for four parsed orders](docs/examples/stock-coverage.svg)
+1. Editable orders, products, inventory, machines, shift times and energy tariffs.
+2. One engine shared by the browser and Vercel API.
+3. Paste validated WhatsApp-style order rows; unknown products and bad rows block import.
+4. Review line timelines, dispatch actions and energy comparisons.
+5. Save up to eight reviewed snapshots in this browser; restore or export them.
+6. Download a load chart (SVG), dispatch plan (CSV), complete report (JSON), or copy the floor message.
+7. Back up and restore factory inputs as JSON.
 
-This chart is a reproducible software demonstration, not a new pilot result. Bars use each order's own unit; unlike quantities are not summed together.
+The new workspace processes inputs locally and stores drafts and reviewed snapshots on the same browser. It does not sync factory data to a cloud database. The optional stateless API computes a result from a supplied request but does not store it.
 
-## Run a reproducible planning example
+## Reproducible energy demonstration
 
-Requires Node.js 22 or newer. The tests and local report command use only Node's built-in modules; no credentials or package installation are required.
+The synthetic example has four orders and three production lines. It models an **82 kW baseline peak versus 40 kW proposed peak**, with the same production work and no late dispatches. These are software-example estimates, not new pilot measurements.
+
+![Modeled demo load comparison](docs/examples/energy-load-comparison.svg)
 
 ```bash
+# Node.js 22+, no installation needed for these commands
 node --test tests/*.test.js
-node scripts/export-plan.js samples/sample_plan_payload.json output/demo
+node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo
 ```
 
-The report command writes `plan.json`, `dispatch-plan.csv`, `stock-coverage.svg`, and `floor-message.txt`. To use your own data:
+The energy report writes a complete JSON result, input snapshot, dispatch CSV, SVG chart and floor message. Inputs follow `samples/energy-demo.json`.
 
-```bash
-node scripts/export-plan.js path/to/input.json output/my-factory
-```
+## Vercel
 
-Use the sample JSON's `whatsappText`, `stockCsv`, and `billText` fields. The output folder is ignored by Git to keep local planning records out of commits. The browser and API input contracts differ: see [planning behavior and limitations](docs/planning-behavior.md).
+- Framework preset: Other. Keep the repository root as the project root.
+- `node scripts/build.js` copies only the V2 public assets to `dist/`; `vercel.json` publishes that directory. Company-specific pilot records and workbooks are excluded.
+- `POST /api/generate-plan` accepts the structured V2 input and returns `schemaVersion: "2.0"`.
+- Legacy text-input endpoints are retained in the V1 archive. The V2 planning API accepts the structured V2 contract.
+- The V2 planner needs no API keys or database credentials.
 
-## Operational website
+See [energy model and product boundaries](docs/energy-model.md), [V1 planning behavior](docs/planning-behavior.md), and [version history](docs/version-history.md).
 
-**Live app:** https://batchwatt.vercel.app/
+## Classic pilot workspace
+
+The original classic workspace is preserved in `archive/batchwatt-v1`. The V2 deployment includes only application code and synthetic demonstration inputs.
 
 The browser application now supports three simple input paths:
 
