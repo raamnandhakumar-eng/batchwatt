@@ -4,6 +4,42 @@
 
 BatchWatt turns orders, stock and production information into a clear daily answer: **what should the factory produce next?**
 
+## Project improvements
+
+The planner now reserves finished stock **and packaging once per SKU**, flags packaging shortages, and explains each dispatch decision. An order can be ready from stock, need production, or need packaging resolved first.
+
+The browser now includes:
+
+- a downloadable **stock coverage chart** for every loaded order;
+- a separate chart for recorded planning, estimated energy and peak-load changes;
+- complete CSV and WhatsApp outputs without row limits;
+- row-level validation and clear warnings for missing stock or uncertain dates;
+- a distinction between loaded pilot examples and whole-pilot totals;
+- missing metrics shown as unavailable, including when a baseline has no after measurement.
+
+**Example output from the repository's synthetic sample input:**
+
+![Synthetic sample: stock coverage for four parsed orders](docs/examples/stock-coverage.svg)
+
+This chart is a reproducible software demonstration, not a new pilot result. Bars use each order's own unit; unlike quantities are not summed together.
+
+## Run a reproducible planning example
+
+Requires Node.js 22 or newer. The tests and local report command use only Node's built-in modules; no credentials or package installation are required.
+
+```bash
+node --test tests/*.test.js
+node scripts/export-plan.js samples/sample_plan_payload.json output/demo
+```
+
+The report command writes `plan.json`, `dispatch-plan.csv`, `stock-coverage.svg`, and `floor-message.txt`. To use your own data:
+
+```bash
+node scripts/export-plan.js path/to/input.json output/my-factory
+```
+
+Use the sample JSON's `whatsappText`, `stockCsv`, and `billText` fields. The output folder is ignored by Git to keep local planning records out of commits. The browser and API input contracts differ: see [planning behavior and limitations](docs/planning-behavior.md).
+
 ## Operational website
 
 **Live app:** https://batchwatt.vercel.app/
@@ -16,7 +52,7 @@ The browser application now supports three simple input paths:
 
 2. **Paste WhatsApp orders**
    - One order per line
-   - Best format: `Customer | Product | Quantity | Due date | Priority | Stock`
+   - Best format: `Customer | Product | Quantity | Due date | Priority | Stock` (stock reserved for this order)
    - Common message-style orders are also parsed
 
 3. **Upload Excel or CSV data**
@@ -31,7 +67,7 @@ The website then shows:
 - planning-time, estimated energy and peak-load indicators when available;
 - a copy-ready WhatsApp message for the floor team;
 - an **Open in WhatsApp** action;
-- a downloadable JSON summary.
+- downloadable JSON and CSV summaries, plus an SVG stock coverage chart.
 
 ## WhatsApp input and output
 
@@ -114,7 +150,8 @@ Do not describe the pilot results as independently verified, customer-approved o
 
 ```bash
 npm install
-npm run test:plan
+npm test
+npm run demo
 npm run dev
 ```
 
