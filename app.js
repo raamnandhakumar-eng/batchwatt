@@ -70,30 +70,36 @@ let activeKey = "rkg";
 const $ = (id) => document.getElementById(id);
 const normalize = (value) => String(value ?? "").trim().toLowerCase().replace(/[\s_]+/g, " ").replace(/[^a-z0-9 /()&-]/g, "");
 const number = (value, fallback = 0) => {
+  if (value == null || String(value).trim() === "") return fallback;
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const parsed = Number(String(value ?? "").replace(/[,%₹$]/g, "").trim());
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 const percent = (value) => {
   const n = number(value, 0);
-  return n !== 0 && Math.abs(n) <= 1 ? n * 100 : n;
+  return !String(value).includes("%") && n !== 0 && Math.abs(n) <= 1 ? n * 100 : n;
 };
 const average = (values) => {
   const nums = values.map((value) => number(value, NaN)).filter(Number.isFinite);
-  return nums.length ? nums.reduce((total, value) => total + value, 0) / nums.length : 0;
+  return nums.length ? nums.reduce((total, value) => total + value, 0) / nums.length : NaN;
 };
-const total = (values) => values.reduce((sum, value) => sum + number(value, 0), 0);
+const total = (values) => { const nums = values.map(v => number(v, NaN)).filter(Number.isFinite); return nums.length ? nums.reduce((sum, v) => sum + v, 0) : NaN; };
 const maximum = (values) => {
   const nums = values.map((value) => number(value, NaN)).filter(Number.isFinite);
-  return nums.length ? Math.max(...nums) : 0;
+  return nums.length ? Math.max(...nums) : NaN;
 };
 const uniqueCount = (values) => new Set(values.map((value) => String(value ?? "").trim()).filter(Boolean)).size;
 const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-const pct = (value) => Number.isFinite(value) && value !== 0 ? `${value.toFixed(1)}%` : "—";
+const pct = (value) => Number.isFinite(value) ? `${value.toFixed(1)}%` : "—";
 
 function saveUploads() {
   const uploaded = Object.fromEntries(Object.entries(workspaces).filter(([, workspace]) => workspace.uploaded));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(uploaded));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(uploaded));
+    $("storage-status").textContent = "Saved on this browser.";
+  } catch {
+    $("storage-status").textContent = "Browser storage is unavailable or full. Download your summary before leaving.";
+  }
 }
 
 function restoreUploads() {
@@ -112,20 +118,15 @@ function refreshWorkspaceSelector(preferredKey = activeKey) {
   select.value = activeKey;
 }
 
-function riskRank(order) {
-  const priority = normalize(order.priority);
-  return (order.risk ? 0 : 10) + (priority.includes("urgent") ? 0 : priority.includes("high") ? 1 : 2) - Math.min(number(order.shortage, 0) / 1000, 0.9);
-}
-
 function topAction(workspace) {
-  const firstRisk = [...(workspace.orders || [])].sort((a, b) => riskRank(a) - riskRank(b))[0];
+  const firstRisk = BatchWattInsights.sortedOrders(workspace)[0];
   if (!firstRisk) return "No order data is available. Upload or paste new orders.";
   if (!firstRisk.risk) return `Dispatch ${firstRisk.product} from available stock.`;
   return `${firstRisk.action}.`;
 }
 
 function renderOrders(workspace) {
-  const rows = [...(workspace.orders || [])].sort((a, b) => riskRank(a) - riskRank(b));
+  const rows = BatchWattInsights.sortedOrders(workspace);
   $("order-rows").innerHTML = rows.length ? rows.map((order) => `
     <tr>
       <td><strong>${escapeHtml(order.id)}</strong></td>
@@ -150,14 +151,16 @@ function renderPlans(workspace) {
 }
 
 function createWhatsAppMessage(workspace) {
-  const orders = [...(workspace.orders || [])].sort((a, b) => riskRank(a) - riskRank(b));
+  const orders = BatchWattInsights.sortedOrders(workspace);
   const risks = orders.filter((order) => order.risk);
   const lines = [
     `*BATCHWATT PRODUCTION PLAN*`,
     `${workspace.name} · ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
     "",
-    `Orders reviewed: ${workspace.ordersCount ?? orders.length}`,
-    `Orders at risk: ${workspace.atRisk ?? risks.length}`,
+    `Order rows reviewed: ${orders.length}`,
+    `Loaded orders needing attention: ${risks.length}`,
+    "",
+    ...BatchWattInsights.warnings(workspace).map(note => `Review: ${note}`),
     "",
     "*Run order*"
   ];
@@ -165,7 +168,7 @@ function createWhatsAppMessage(workspace) {
   if (!orders.length) {
     lines.push("No order data is available.");
   } else {
-    orders.slice(0, 6).forEach((order, index) => {
+    orders.forEach((order, index) => {
       const tag = order.risk ? "⚠️" : "✅";
       const quantity = order.shortage ? `produce ${order.shortage} ${order.unit || "units"}` : "dispatch from stock";
       lines.push(`${index + 1}. ${tag} *${order.product}* — ${quantity}; ${order.action || "supervisor review"}. Due: ${order.due || "not supplied"}.`);
@@ -206,6 +209,7 @@ function renderWorkspace(key) {
   $("detail-rating").textContent = workspace.operatorRating ? `${number(workspace.operatorRating).toFixed(2)}/5` : "—";
   $("order-source").textContent = workspace.source || "Operational records";
   $("plan-source").textContent = workspace.planSource || (workspace.uploaded ? "Calculated / workbook-derived" : "Pilot workbook recommendations");
+  renderInsights(workspace);
   renderOrders(workspace);
   renderPlans(workspace);
   updateWhatsAppOutput(workspace);
@@ -225,7 +229,7 @@ function parseMessageLine(line, index) {
   const separators = clean.includes("|") ? clean.split("|") : clean.includes(";") ? clean.split(";") : null;
   let customer = "WhatsApp customer";
   let product = "Unspecified product";
-  let qty = 0;
+  let qty = NaN;
   let due = parseDue(clean);
   let priority = /urgent/i.test(clean) ? "Urgent" : /high/i.test(clean) ? "High" : "Standard";
   let stock = 0;
@@ -234,14 +238,15 @@ function parseMessageLine(line, index) {
   if (separators && separators.length >= 3) {
     customer = separators[0].trim() || customer;
     product = separators[1].trim() || product;
-    qty = number(separators[2], 0);
+    qty = number(separators[2], NaN);
     due = (separators[3] || due).trim() || due;
     priority = (separators[4] || priority).trim() || priority;
-    stock = number((separators[5] || "").replace(/stock/i, ""), 0);
+    stock = number((separators[5] || "").replace(/stock/i, ""), separators[5]?.trim() ? NaN : 0);
   } else {
     const customerMatch = clean.match(/^(.+?)(?:\s+needs|\s+wants|\s+ordered|\s*:\s*)/i);
     if (customerMatch) customer = customerMatch[1].trim();
-    const qtyMatch = clean.match(/(\d+(?:\.\d+)?)\s*(kg|packs?|bottles?|jars?|tins?|boxes?|cartons?|units?|pcs?)?/i);
+    const quantityText = clean.replace(/^.*?(?:needs|wants|ordered)\s+/i, "");
+    const qtyMatch = quantityText.match(/^(\d[\d,]*(?:\.\d+)?)(?![\d.,])\s*(?!(?:ml|litres?|liters?|l)\b)(kg|packs?|bottles?|jars?|tins?|boxes?|cartons?|units?|pcs?)?/i);
     if (qtyMatch) {
       qty = number(qtyMatch[1], 0);
       unit = qtyMatch[2] || unit;
@@ -269,17 +274,18 @@ function parseMessageLine(line, index) {
     stock,
     shortage,
     risk,
-    action
+    action,
+    stockAssumed: !(separators?.[5]?.trim() || /stock\s*(?:is|:)?\s*\d/i.test(clean))
   };
 }
 
 function createPlansFromOrders(orders) {
-  return [...orders].sort((a, b) => riskRank(a) - riskRank(b)).slice(0, 8).map((order, index) => ({
+  return BatchWattInsights.sortedOrders({ orders }).map((order, index) => ({
     priority: index + 1,
     product: order.product,
     line: "Supervisor assignment",
     recommendation: order.action,
-    status: "Draft from WhatsApp input · review required"
+    status: "Draft from order input · review required"
   }));
 }
 
@@ -299,6 +305,13 @@ function processWhatsAppOrders() {
     return;
   }
 
+  const errors = BatchWattInsights.validateOrders(orders);
+  if (errors.length) {
+    $("whatsapp-status").textContent = `Fix the input before generating: ${errors.join(" ")}`;
+    $("whatsapp-status").className = "status-line error";
+    return;
+  }
+
   const key = `whatsapp-${Date.now()}`;
   const workspace = {
     id: `BW-WA-${String(Date.now()).slice(-6)}`,
@@ -314,14 +327,16 @@ function processWhatsAppOrders() {
     skus: uniqueCount(orders.map((order) => order.product)),
     lines: 0,
     atRisk: orders.filter((order) => order.risk).length,
-    planningReduction: 0,
-    energyReduction: 0,
-    peakReduction: 0,
-    sequenceChanges: orders.filter((order) => order.risk).length,
+    planningReduction: null,
+    energyReduction: null,
+    peakReduction: null,
+    sequenceChanges: 0,
+    generatedAt: new Date().toISOString(),
     operatorRating: 0,
     orders,
     plans: createPlansFromOrders(orders),
     uploaded: true,
+    warnings: orders.some(o => o.stockAssumed) ? ["Missing stock was assumed to be zero. Confirm stock before release."] : [],
     intakeType: "whatsapp"
   };
 
@@ -417,13 +432,13 @@ function workbookToWorkspace(workbook, fileName, overrideName) {
   const metricsName = findSheetName(workbook, ["metric"]);
   const planName = findSheetName(workbook, ["production plan", "recommendation", "plan"]);
   const summary = sheetRows(workbook, summaryName)[0] || {};
-  const orderRows = sheetRows(workbook, ordersName || workbook.SheetNames[0]);
+  const orderRows = sheetRows(workbook, ordersName || (!summaryName && !planName && !metricsName ? workbook.SheetNames[0] : ""));
   const metricRows = sheetRows(workbook, metricsName);
   const planRows = sheetRows(workbook, planName);
 
   const orders = orderRows.map((row, index) => {
-    const qty = number(getField(row, aliases.qty), 0);
-    const stock = number(getField(row, aliases.stock), 0);
+    const qty = number(getField(row, aliases.qty), NaN);
+    const stock = number(getField(row, aliases.stock), getField(row, aliases.stock) === "" ? 0 : NaN);
     const explicitShortage = number(getField(row, aliases.shortage), NaN);
     const shortage = Number.isFinite(explicitShortage) ? explicitShortage : Math.max(qty - stock, 0);
     const priority = String(getField(row, aliases.priority) || "Standard");
@@ -444,9 +459,12 @@ function workbookToWorkspace(workbook, fileName, overrideName) {
       risk,
       action
     };
-  }).filter((order) => order.product !== "Unspecified product" || order.qty > 0);
+  });
 
-  const plans = planRows.length ? planRows.slice(0, 12).map((row, index) => ({
+  const errors = BatchWattInsights.validateOrders(orders);
+  if (errors.length) throw new Error(errors.join(" "));
+
+  const plans = planRows.length ? planRows.map((row, index) => ({
     priority: index + 1,
     product: String(getField(row, aliases.product) || "Unspecified product"),
     line: String(getField(row, aliases.line) || "Supervisor assignment"),
@@ -478,15 +496,17 @@ function workbookToWorkspace(workbook, fileName, overrideName) {
     ordersCount: number(getField(summary, aliases.orders), orders.length),
     skus: number(getField(summary, aliases.skus), uniqueCount(orders.map((order) => order.product))),
     lines: number(getField(summary, aliases.lines), uniqueCount(plans.map((plan) => plan.line))),
-    atRisk: number(getField(summary, aliases.risk), orders.filter((order) => order.risk).length || total(metricRows.map((row) => getField(row, aliases.metricRisk)))),
-    planningReduction: percent(getField(summary, aliases.planningReduction)) || (planningBefore > 0 ? ((planningBefore - planningAfter) / planningBefore) * 100 : 0),
-    energyReduction: percent(getField(summary, aliases.energyReduction)) || (baselineEnergy > 0 ? ((baselineEnergy - optimizedEnergy) / baselineEnergy) * 100 : 0),
-    peakReduction: percent(getField(summary, aliases.peakReduction)) || (baselinePeak > 0 ? ((baselinePeak - optimizedPeak) / baselinePeak) * 100 : 0),
-    sequenceChanges: number(getField(summary, aliases.sequences), total(metricRows.map((row) => getField(row, aliases.metricSequence))) || plans.length),
+    atRisk: number(getField(summary, aliases.risk), orders.length ? orders.filter((order) => order.risk).length : number(total(metricRows.map((row) => getField(row, aliases.metricRisk))), 0)),
+    planningReduction: metricReduction(getField(summary, aliases.planningReduction), planningBefore, planningAfter),
+    energyReduction: metricReduction(getField(summary, aliases.energyReduction), baselineEnergy, optimizedEnergy),
+    peakReduction: metricReduction(getField(summary, aliases.peakReduction), baselinePeak, optimizedPeak),
+    sequenceChanges: number(getField(summary, aliases.sequences), number(total(metricRows.map((row) => getField(row, aliases.metricSequence))), 0)),
     operatorRating: number(getField(summary, aliases.rating), average(metricRows.map((row) => getField(row, aliases.metricRating)))),
     orders,
     plans,
     uploaded: true,
+    generatedAt: new Date().toISOString(),
+    warnings: orderRows.some(row => getField(row, aliases.stock) === "") ? ["Missing stock was assumed to be zero. Confirm stock before release."] : [],
     intakeType: "file"
   };
 }
@@ -535,7 +555,9 @@ function downloadSummary() {
 
 function clearUploads() {
   Object.keys(workspaces).forEach((key) => { if (workspaces[key].uploaded) delete workspaces[key]; });
-  localStorage.removeItem(STORAGE_KEY);
+  try { localStorage.removeItem(STORAGE_KEY); } catch {
+    $("storage-status").textContent = "Could not clear browser storage. Clear this site’s data in browser settings.";
+  }
   refreshWorkspaceSelector("rkg");
   renderWorkspace("rkg");
   $("upload-status").textContent = "Uploaded and WhatsApp-created workspaces were cleared from this browser.";
@@ -544,6 +566,8 @@ function clearUploads() {
 
 function bindEvents() {
   $("workspace-select").addEventListener("change", (event) => renderWorkspace(event.target.value));
+  $("download-chart").addEventListener("click", () => downloadOutput(BatchWattInsights.coverageSvg(workspaces[activeKey]), "image/svg+xml", "stock-coverage.svg"));
+  $("download-csv").addEventListener("click", () => downloadOutput(BatchWattInsights.csv(workspaces[activeKey]), "text/csv;charset=utf-8", "dispatch-plan.csv"));
   $("download-summary").addEventListener("click", downloadSummary);
   $("sample-whatsapp").addEventListener("click", () => {
     $("whatsapp-factory").value = "New factory intake";
@@ -588,3 +612,28 @@ document.addEventListener("DOMContentLoaded", () => {
   bindEvents();
   renderWorkspace("rkg");
 });
+
+function metricReduction(explicit, before, after) {
+  if (explicit !== "" && explicit != null && Number.isFinite(number(explicit, NaN))) return percent(explicit);
+  return before > 0 && Number.isFinite(after) ? ((before - after) / before) * 100 : null;
+}
+
+function downloadOutput(content, type, suffix) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${workspaces[activeKey].name.replace(/[^a-z0-9]+/gi, "-")}-${suffix}`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function renderInsights(workspace) {
+  const notes = BatchWattInsights.warnings(workspace);
+  $("data-warnings").innerHTML = notes.length ? `<strong>Before you release the plan</strong><ul>${notes.map(note => `<li>${escapeHtml(note)}</li>`).join("")}</ul>` : "All loaded order rows are included. Confirm material and line availability before release.";
+  $("coverage-chart").innerHTML = BatchWattInsights.coverageSvg(workspace);
+  const rows = [["Planning time", workspace.planningReduction], ["Estimated energy", workspace.energyReduction], ["Peak load", workspace.peakReduction]];
+  $("performance-chart").innerHTML = rows.map(([label, value]) => `<div class="metric-bar"><span>${label}</span><div class="metric-track"><span style="width:${Number.isFinite(value) ? Math.min(Math.abs(value), 100) : 0}%;background:${value < 0 ? "var(--danger)" : "var(--good)"}"></span></div><strong>${pct(value)}</strong></div>`).join("");
+  $("performance-note").textContent = "Workbook-reported changes, relative to baseline. Negative values mean an increase. Missing measurements are shown as —. These are not savings predicted for this plan.";
+}

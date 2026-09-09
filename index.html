@@ -7,6 +7,7 @@
   <title>BatchWatt | What should we produce today?</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="/lib/insights.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
@@ -50,7 +51,7 @@
                 <input id="whatsapp-factory" type="text" placeholder="Example: Krishna Foods">
                 <label for="whatsapp-input">One order per line</label>
                 <textarea id="whatsapp-input" rows="8" placeholder="Ravi Stores | Cow Ghee 1 L | 40 | tomorrow | high | stock 10"></textarea>
-                <p class="help"><strong>Best format:</strong> Customer | Product | Quantity | Due date | Priority | Stock</p>
+                <p class="help"><strong>Best format:</strong> Customer | Product | Quantity | Due date | Priority | Stock</p><p class="help">Stock means units reserved for this order. Use YYYY-MM-DD for exact due dates.</p>
                 <div class="button-row">
                   <button id="sample-whatsapp" class="button button-secondary" type="button">Use sample</button>
                   <button id="process-whatsapp" class="button button-primary" type="button">Generate plan</button>
@@ -128,6 +129,20 @@
           <article><span>Estimated energy reduction</span><strong id="kpi-energy">—</strong></article>
         </div>
 
+        <section class="insights" aria-labelledby="insights-title">
+          <div class="table-heading"><h3 id="insights-title">Can we cover each order?</h3></div>
+          <p id="data-warnings" class="data-warnings" aria-live="polite"></p>
+          <p class="chart-legend"><span class="legend-stock">Covered from stock</span><span class="legend-short">Still to produce</span></p>
+          <div id="coverage-chart" class="chart-scroll"></div>
+          <div class="button-row">
+            <button id="download-chart" class="button button-secondary" type="button">Download chart</button>
+            <button id="download-csv" class="button button-secondary" type="button">Download full plan CSV</button>
+          </div>
+          <details class="more-details"><summary>Compare recorded performance</summary><div class="details-body">
+            <div id="performance-chart"></div><p id="performance-note" class="help"></p>
+          </div></details>
+        </section>
+
         <div class="table-section main-table">
           <div class="table-heading">
             <div><p class="eyebrow">Run order</p><h3>What the floor team should do</h3></div>
@@ -189,6 +204,7 @@
       </div>
     </section>
 
+    <p id="storage-status" class="help" aria-live="polite"></p>
     <section class="proof-note">
       <strong>Pilot evidence</strong>
       <p>RKG Ghee and PR Food Products are preloaded from the supplied pilot workbook. Results are workbook-derived; external company confirmation and publication permission are tracked separately.</p>
