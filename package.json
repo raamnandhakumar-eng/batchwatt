@@ -1,12 +1,12 @@
 {
   "name": "batchwatt",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "private": true,
   "description": "Simple factory operations console for daily production, buying, dispatch and energy-aware shift release.",
   "scripts": {
     "dev": "vercel dev",
     "test:plan": "node samples/test_plan.js",
-    "test": "node --check ops-app.js && node --check order-import-ui.js && node --check lib/order-import.js && node --check lib/operations.js && node --test tests/*.test.js",
+    "test": "node --check ops-app.js && node --check today-energy.js && node --check order-import-ui.js && node --check lib/order-import.js && node --check lib/operations.js && node --test tests/*.test.js",
     "demo": "node scripts/export-plan.js samples/sample_plan_payload.json output/demo",
     "demo:energy": "node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo",
     "build": "node scripts/build.js"
