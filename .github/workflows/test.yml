@@ -12,3 +12,5 @@ jobs:
           node-version: '22'
       - run: npm test
       - run: npm run demo
+      - run: node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo
+      - run: node scripts/build.js
