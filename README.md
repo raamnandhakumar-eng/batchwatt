@@ -4,7 +4,7 @@
 
 BatchWatt connects procurement, inventory, production and energy planning in one workspace for small factories.
 
-**[Open BatchWatt on Vercel](https://batchwatt-energy-ciel5.vercel.app)** · **[Vercel project](https://vercel.com/ciel5/batchwatt-energy)** · **[Import the repo into Vercel](https://vercel.com/new)**
+**[Open the latest verified Vercel preview](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)** · **[Vercel project](https://vercel.com/ciel5/batchwatt)** · **[Import the repo into Vercel](https://vercel.com/new)**
 
 ## Two pilots in the app
 
