@@ -20,6 +20,18 @@ The working demo and new factory workspaces use **US dollars (USD)** by default.
 - **Catch shortages:** see missing materials, packaging and capacity before releasing a plan.
 - **Save and share:** save reviewed plans, download charts and CSV reports, back up inputs, or copy a message for the floor team.
 
+## WhatsApp
+
+- **Incoming orders:** copy orders from WhatsApp and use **Paste WhatsApp orders** in the app. It shows the expected format and validates the rows.
+- **Floor plan:** click **Open in WhatsApp**, choose a contact or group, review the draft and send it.
+- Automatic inbox sync and unattended sending are not connected.
+
+## A simple daily routine
+
+The app opens on your **Shift plan**: orders ready from stock, orders needing attention, buying actions, first planned run and estimated electricity cost. Use **Add customer order**, follow the next-step buttons, then review and share the floor plan. Charts and detailed comparisons are under **Explore energy chart, costs and assumptions**.
+
+Set up machines, products, materials, recipes and USD electricity prices once. The setup checklist links straight to each form. Existing rupee demo prices update to the USD demo assumptions. Other saved currencies require an explicit exchange rate before price conversion; original inputs are backed up.
+
 ## Start in five steps
 
 1. Open the app and load the demo to explore.
