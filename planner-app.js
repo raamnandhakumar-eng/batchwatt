@@ -38,7 +38,7 @@ function renderInputs() {
   $v2('line-inputs').innerHTML = factoryData.lines.map(l => `<tr><td>${field('lines',l,'name')}</td><td>${field('lines',l,'kw','number','min="0.01" step="any"')}</td><td>${field('lines',l,'changeoverMinutes','number','min="0" step="1"')}</td><td>${removeButton('lines',l)}</td></tr>`).join('') || '<tr><td colspan="4">Add at least one machine or production line.</td></tr>';
   const fields = [
     ['baseKw','Background load (kW)','number'],['peakLimitKw','Peak demand target (kW)','number'],['monthlyPeakKw','Month peak so far (kW)','number'],
-    ['currency','Currency','text'],['rate','Off-peak rate / kWh','number'],['peakRate','Peak rate / kWh','number'],
+    ['currency','Currency code (USD = US dollars)','text'],['rate','Off-peak rate / kWh','number'],['peakRate','Peak rate / kWh','number'],
     ['demandRate','Monthly demand rate / kW','number'],['peakStart','Peak tariff starts','time'],['peakEnd','Peak tariff ends','time']
   ];
   $v2('energy-inputs').innerHTML = fields.map(([key,label,type]) => `<label>${label}<input data-energy="${key}" type="${type}" value="${esc2(factoryData.energy[key])}" ${type==='number'?'min="0" step="any"':type==='time'?'step="900"':'maxlength="3"'}></label>`).join('');
@@ -127,9 +127,9 @@ function bindV2() {
   $v2('add-line').onclick=()=>{factoryData.lines.push({id:newId('line'),name:'New line',kw:0,changeoverMinutes:0});renderInputs();recalculate();};
   $v2('add-product').onclick=()=>{factoryData.products.push({id:newId('sku'),name:'New product',unit:'units',lineId:factoryData.lines[0]?.id||'',rate:0,stock:0,packaging:0});renderInputs();recalculate();};
   $v2('add-order').onclick=()=>{factoryData.orders.push({id:newId('order'),customer:'',productId:factoryData.products[0]?.id||'',qty:1,due:`${factoryData.shift.date}T${factoryData.shift.end}`,priority:'Standard'});renderInputs();recalculate();};
-  $v2('load-demo').onclick=()=>{if(!confirm('Replace the current draft with the demo? Saved snapshots remain available.'))return;loadDemo();renderInputs();recalculate();};
+  $v2('load-demo').onclick=()=>{if(!confirm('Replace the current draft with the demo? Saved snapshots remain available.'))return;loadDemo();renderInputs();recalculate();location.hash='overview';};
   $v2('new-workspace').onclick=()=>{if(!confirm('Start a new factory draft? Back up current inputs first if needed. Saved snapshots remain available.'))return;
-    factoryData={factory:'My factory',shift:{date:localDate(),start:'08:00',end:'18:00'},energy:{currency:'INR',baseKw:0,peakLimitKw:1,monthlyPeakKw:0,rate:0,peakRate:0,peakStart:'16:00',peakEnd:'19:00',demandRate:0},lines:[],products:[],orders:[]};isDemo=false;renderInputs();recalculate();location.hash='setup';};
+    factoryData={factory:'My factory',shift:{date:localDate(),start:'08:00',end:'18:00'},energy:{currency:'USD',baseKw:0,peakLimitKw:1,monthlyPeakKw:0,rate:0,peakRate:0,peakStart:'16:00',peakEnd:'19:00',demandRate:0},lines:[],products:[],orders:[]};isDemo=false;renderInputs();recalculate();location.hash='setup';};
   $v2('download-load').onclick=()=>energyResult&&downloadV2(BatchWattReports.loadChart(energyResult),'image/svg+xml','batchwatt-load-comparison.svg');
   $v2('download-plan').onclick=()=>energyResult&&downloadV2(BatchWattReports.csv(energyResult),'text/csv;charset=utf-8','batchwatt-dispatch-plan.csv');
   $v2('download-report').onclick=()=>energyResult&&downloadV2(JSON.stringify(reportSnapshot(),null,2),'application/json','batchwatt-full-report.json');
@@ -217,3 +217,97 @@ function bindProcurement() {
   $v2('receipt-form').onsubmit=event=>{event.preventDefault();try{factoryData=BatchWattProcurement.receivePurchase(factoryData,$v2('receipt-po-id').value,Number($v2('receipt-qty').value));$v2('receipt-dialog').close();renderInputs();recalculate();notice('Receipt recorded. Material stock and the production/energy plan have been updated.');}catch(error){$v2('receipt-error').textContent=error.message;}};
   $v2('export-procurement').onclick=()=>{if(!energyResult){notice('Generate a valid plan before exporting its buying list.');return;}const cell=value=>{let text=String(value??'');if(/^[\s]*[=+@-]/.test(text))text="'"+text;return '"'+text.replace(/"/g,'""')+'"';};const rows=[['Material','Unit','Required','Stock','Shortage','Incoming','Drafted','New purchase','Estimated cost','Supplier'],...energyResult.procurement.requirements.map(m=>[m.name,m.unit,m.required,m.stock,m.shortage,m.incoming,m.drafted,m.toBuy,m.estimatedCost,m.supplier])];downloadV2('\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8','batchwatt-buying-list.csv');};
 }
+
+const pilotWorkspaces = {
+  rkg: {
+    id: "BW-RKG-001",
+    name: "RKG Ghee",
+    dates: "Jul 7–20, 2026",
+    location: "Tamil Nadu",
+    badge: "Operational pilot record",
+    source: "Workbook-derived pilot data",
+    workflow: "Review urgent dispatches, reserve material, group compatible SKUs and avoid simultaneous high-load heating.",
+    cycles: 10,
+    ordersCount: 32,
+    skus: 6,
+    lines: 2,
+    atRisk: 9,
+    planningReduction: 64.2,
+    energyReduction: 8.8,
+    peakReduction: 11.7,
+    sequenceChanges: 7,
+    operatorRating: 4.34,
+    orders: [
+      { id: "RKG-ORD-023", customer: "Retail account 23", product: "Cow Ghee 200 ml", qty: 149, unit: "bottles", due: "Jul 9", priority: "High", stock: 0, shortage: 149, risk: true, action: "Advance batch and reserve bottles" },
+      { id: "RKG-ORD-001", customer: "Retail account 01", product: "Bulk Ghee 5 litre", qty: 21, unit: "tins", due: "Jul 9", priority: "Standard", stock: 0, shortage: 21, risk: true, action: "Reserve material and move filling earlier" },
+      { id: "RKG-ORD-029", customer: "Retail account 29", product: "Cow Ghee 1 litre", qty: 25, unit: "jars", due: "Jul 11", priority: "Standard", stock: 18, shortage: 7, risk: true, action: "Produce the 7-jar shortage after urgent orders" },
+      { id: "RKG-ORD-031", customer: "Retail account 31", product: "Buffalo Ghee 500 ml", qty: 23, unit: "jars", due: "Jul 10", priority: "High", stock: 23, shortage: 0, risk: false, action: "Dispatch from stock" }
+    ],
+    plans: [
+      { priority: 1, product: "Cow Ghee 200 ml", line: "Filling & Packing", recommendation: "Run first; reserve bottles and confirm dispatch time", status: "Accepted with timing adjustment" },
+      { priority: 2, product: "Bulk Ghee 5 litre", line: "Heating / Filling", recommendation: "Stagger heating and filling to avoid the peak window", status: "Reviewed; adjusted" },
+      { priority: 3, product: "Cow Ghee 1 litre", line: "Heating & Filtration", recommendation: "Group with the same cleaning family to reduce changeover", status: "Accepted and executed" }
+    ]
+  },
+  pr: {
+    id: "BW-PRF-001",
+    name: "PR Food Products",
+    dates: "Jul 14–25, 2026",
+    location: "Tamil Nadu",
+    badge: "Operational pilot record",
+    source: "Workbook-derived pilot data",
+    workflow: "Consolidate orders, check material, assign machines, group compatible products and confirm urgent dispatches.",
+    cycles: 9,
+    ordersCount: 41,
+    skus: 8,
+    lines: 3,
+    atRisk: 7,
+    planningReduction: 62.3,
+    energyReduction: 6.7,
+    peakReduction: 9.0,
+    sequenceChanges: 7,
+    operatorRating: 4.26,
+    orders: [
+      { id: "PRF-ORD-040", customer: "Distributor 40", product: "Idli/Dosa Mix 500 g", qty: 85, unit: "packs", due: "Jul 17", priority: "Urgent", stock: 0, shortage: 85, risk: true, action: "Advance blending and reserve packing capacity" },
+      { id: "PRF-ORD-011", customer: "Retail account 11", product: "Sambar Powder 200 g", qty: 10, unit: "packs", due: "Jul 18", priority: "Urgent", stock: 0, shortage: 10, risk: true, action: "Add to the first packing window" },
+      { id: "PRF-ORD-023", customer: "Distributor 23", product: "Snack Mix 250 g", qty: 49, unit: "packs", due: "Jul 17", priority: "Standard", stock: 34, shortage: 15, risk: true, action: "Use available stock and produce the remaining 15 packs" },
+      { id: "PRF-ORD-001", customer: "Retail account 01", product: "Sambar Powder 200 g", qty: 94, unit: "packs", due: "Jul 15", priority: "High", stock: 94, shortage: 0, risk: false, action: "Dispatch from stock" }
+    ],
+    plans: [
+      { priority: 1, product: "Idli/Dosa Mix 500 g", line: "Blending", recommendation: "Run first and protect the urgent dispatch", status: "Accepted and executed" },
+      { priority: 2, product: "Sambar Powder 200 g", line: "Packing", recommendation: "Reserve the first packing slot", status: "Accepted" },
+      { priority: 3, product: "Snack Mix 250 g", line: "Roasting / Cooking", recommendation: "Use available material before replenishment", status: "Accepted" }
+    ]
+  }
+};
+
+function showPilot(key) {
+  const p=pilotWorkspaces[key]; if(!p)return;
+  const metrics=key==='rkg'?{peak:[131.2,115.8],energy:[5187.6,4733.4],time:[95.91,34.37]}:{peak:[156.5,142.4],energy:[6133,5720.5],time:[120.96,45.63]};
+  const row=(name,values,unit)=>`<tr><th scope="row">${name}</th><td>${values[0]} ${unit}</td><td>${values[1]} ${unit}</td></tr>`;
+  $v2('pilot-content').innerHTML=`<p class="eyebrow">HISTORICAL PILOT · ${esc2(p.dates)}</p><h1>${esc2(p.name)}</h1><p>${esc2(p.workflow)}</p><p class="muted">${p.cycles} cycles · ${p.ordersCount} orders · ${p.skus} products · ${p.atRisk} dispatch risks flagged</p>
+  <div class="metric-grid"><article class="metric featured"><span>Peak-load reduction</span><strong>${p.peakReduction}%</strong><p>Calculated from pilot records</p></article><article class="metric"><span>Estimated energy reduction</span><strong>${p.energyReduction}%</strong><p>Across the recorded pilot period</p></article><article class="metric"><span>Planning-time reduction</span><strong>${p.planningReduction}%</strong><p>Average time per planning cycle</p></article><article class="metric"><span>Operator rating</span><strong>${p.operatorRating} / 5</strong><p>Recorded cycle feedback</p></article></div>
+  <h2>Before and with BatchWatt</h2><div class="table-scroll"><table><thead><tr><th>Measure</th><th>Baseline</th><th>With BatchWatt</th></tr></thead><tbody>${row('Peak demand',metrics.peak,'kW')}${row('Total energy',metrics.energy,'kWh')}${row('Average planning time',metrics.time,'min')}</tbody></table></div>
+  <div class="pilot-bars" aria-label="Peak demand comparison in kilowatts"><p>Baseline: ${metrics.peak[0]} kW</p><div style="width:100%"></div><p>With BatchWatt: ${metrics.peak[1]} kW</p><div style="width:${metrics.peak[1]/metrics.peak[0]*100}%"></div></div>
+  <h2>Example orders from the pilot</h2><p class="muted">${p.orders.length} selected records from ${p.ordersCount} orders. Historical dates and actions are preserved.</p><div class="table-scroll"><table><thead><tr><th>Product / customer</th><th>Ordered</th><th>Stock / shortage</th><th>Due in 2026</th><th>Recorded action</th></tr></thead><tbody>${p.orders.map(o=>`<tr><td>${esc2(o.product)}<small>${esc2(o.customer)}</small></td><td>${o.qty} ${esc2(o.unit)}</td><td>${o.stock} / ${o.shortage}</td><td>${esc2(o.due)}</td><td>${esc2(o.action)}</td></tr>`).join('')}</tbody></table></div>
+  <details><summary>Production decisions and evidence</summary>${p.plans.map(x=>`<p><strong>${esc2(x.product)} · ${esc2(x.line)}</strong><br>${esc2(x.recommendation)}<br><small>${esc2(x.status)}</small></p>`).join('')}<p>Results are calculated from the supplied workbook. Independent verification and written company confirmation remain pending.</p><a href="https://github.com/raamnandhakumar-eng/batchwatt/blob/main/docs/pilots/${key==='rkg'?'rkg-ghee':'pr-food-products'}-pilot.md">Read the source summary</a></details>
+  <p class="footnote">Historical records are separate from your editable factory draft. Opening a pilot does not replace your inputs.</p>`;
+}
+function showWorkspaceView() {
+  const hash=location.hash.slice(1)||'start';
+  const pilotKey=hash==='pilot-pr'?'pr':'rkg';
+  const view=hash.startsWith('pilot-')?'pilots':(['start','orders','procurement','overview','setup','history'].includes(hash)?hash:'start');
+  if(view==='pilots')showPilot(pilotKey);
+  document.querySelectorAll('[data-view]').forEach(el=>{el.hidden=el.dataset.view!==view;});
+  document.querySelectorAll('.rail nav a').forEach(a=>{if(a.hash==='#'+view || view==='pilots'&&a.hash==='#start')a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  $v2('mode-banner').hidden=['start','pilots'].includes(view);
+  $v2('errors').hidden=['start','pilots'].includes(view)||Boolean(energyResult);
+  window.scrollTo(0,0);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.addEventListener('click',e=>{const button=e.target.closest('[data-pilot]');if(button)location.hash='pilot-'+button.dataset.pilot;});
+  $v2('start-demo').onclick=()=>$v2('load-demo').click();
+  $v2('start-factory').onclick=()=>$v2('new-workspace').click();
+  window.addEventListener('hashchange',showWorkspaceView);
+  showWorkspaceView();
+});

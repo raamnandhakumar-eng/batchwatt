@@ -6,6 +6,12 @@ BatchWatt connects procurement, inventory, production and energy planning in one
 
 **[Open BatchWatt on Vercel](https://batchwatt-energy-ciel5.vercel.app)** · **[Vercel project](https://vercel.com/ciel5/batchwatt-energy)** · **[Import the repo into Vercel](https://vercel.com/new)**
 
+## Two pilots in the app
+
+Open **Start & pilots**, then choose **RKG Ghee** or **PR Food Products** to see recorded results, example orders and production decisions. Your current factory draft stays intact.
+
+The working demo and new factory workspaces use **US dollars (USD)** by default.
+
 ## What you can do
 
 - **Plan around energy:** compare peak demand, machine load charts, electricity costs and tariff windows.
@@ -44,7 +50,7 @@ Use the `main` branch of [this repository](https://github.com/raamnandhakumar-en
 | Output directory | `dist` |
 | API keys or database credentials | None required for V2 |
 
-The build settings are included in `vercel.json`. The published app includes V2 code and synthetic demo inputs; old pilot workbooks are excluded.
+The build settings are included in `vercel.json`. The published app includes V2 code, selected pilot summaries and synthetic demo inputs. Raw pilot workbooks are excluded.
 
 ## Version 1
 
