@@ -16,6 +16,19 @@ The complete original project, including its workbook and documentation, is pres
 - **Protect dispatch:** retain the baseline if the candidate drops work, worsens any scheduled order’s lateness or raises modeled combined cost/exposure.
 - **Surface blockers:** allocate shared finished and packaging stock once per SKU; flag packaging shortages, insufficient shift capacity, late orders and target exceedance.
 
+## Procurement connects the factory plan
+
+- Supplier records with contact and lead time.
+- Raw-material inventory, unit costs and reorder buffers.
+- Per-product ingredient recipes; products without recipes are held.
+- Material requirements and buying suggestions linked to the loaded orders.
+- Purchase-order forms with supplier, material, quantity, price, expected date and notes.
+- Draft, ordered, partial receipt and full receipt states.
+- Receipt forms update physical stock and recalculate production and energy. Open orders are never treated as received stock.
+- Download purchase records and a complete buying-list CSV.
+
+Purchases are local planning records. BatchWatt does not send an order or payment to a supplier. Recorded unit costs are estimates in the selected workspace currency.
+
 ## Working product features
 
 1. Editable orders, products, inventory, machines, shift times and energy tariffs.

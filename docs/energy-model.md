@@ -40,7 +40,7 @@ The final monthly peak can be set by another day. Demand savings are therefore c
 
 - Validate operating loads and tariff values against meter and bill records.
 - The tariff model excludes ratchets, minimum billed demand, power-factor adjustments, penalties and taxes.
-- One line per product; multi-stage dependencies, raw materials, labor, safety and detailed process constraints are not scheduled.
+- One line per product; material recipes and available stock are checked. Multi-stage dependencies, labor, safety and detailed process constraints are not scheduled.
 - Startup transients are not represented as billing-interval demand. Changeovers run at the configured line kW.
 - Quantities retain each product's own unit; unlike SKUs are not summed into a misleading physical output measure.
 - Blocked work remains in the dispatch report; it is not counted as energy savings.
@@ -51,3 +51,12 @@ The final monthly peak can be set by another day. Demand savings are therefore c
 The browser uses the same `createEnergyPlan` implementation as the stateless Vercel API. Browser calculations stay on the device. Drafts and up to eight reviewed snapshots use browser storage, with explicit export and restore. Any input edit clears the current review checkbox. Saved snapshots retain their inputs, output, demo status and review timestamp.
 
 Device storage is not a multi-user production database or immutable audit log. Cloud synchronization, live metering, authenticated approvals and real WhatsApp intake remain separate future integrations.
+
+
+## Procurement workflow
+
+Raw-material recipes specify quantities per finished product unit. Finished stock offsets production demand before ingredients are calculated. Materials are checked in dispatch-priority order. A batch with missing materials, an absent recipe, or packaging shortage is held; partial ingredient sets are not reserved for held batches. Receipts increase current inventory; draft or ordered quantities only reduce duplicate buying suggestions.
+
+Suggested new purchase = max(0, total material demand + reorder buffer − current stock − outstanding ordered quantity − active draft quantity). Recommendations aggregate all loaded production demand, including blocked orders. Incoming stock is shown separately from physical availability.
+
+Purchase orders progress from Draft to Ordered, then Part received or Received. Receipt quantities cannot exceed outstanding quantity, cannot be negative, and cannot be posted twice to a fully received order. Each receipt retains its quantity and timestamp. These device-local records are not supplier communications, payments, a regulated audit trail, or automatic replenishment transactions.

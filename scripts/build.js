@@ -4,6 +4,7 @@ const path = require('node:path');
 const assets = [
   ['planner.html','index.html'], ['planner.css','planner.css'],
   ['planner-app.js','planner-app.js'], ['demo-data.js','demo-data.js'],
+  ['lib/procurement.js','lib/procurement.js'],
   ['lib/energy-planner.js','lib/energy-planner.js'],
   ['lib/energy-reports.js','lib/energy-reports.js']
 ];
