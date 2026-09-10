@@ -14,6 +14,21 @@ test('demo lowers peak without dropping work or worsening any dispatch', () => {
   assert.equal(r.comparison.conditionalDemandSaving,555);
   assert.equal(JSON.stringify(input),before,'input is immutable');
 });
+test('cost-aware decisions explain what to produce and when without worsening dispatch', () => {
+  const r=createEnergyPlan(fresh());
+  assert.equal(r.schemaVersion,'2.1');
+  assert.equal(r.decisions.length,r.proposed.jobs.length);
+  assert.ok(r.objective.some(x=>x.includes('due times')));
+  assert.ok(r.objective.some(x=>x.includes('cost')));
+  assert.ok(r.comparison.totalModeledOperatingSaving>=0);
+  for(const d of r.decisions){
+    const proposed=r.proposed.jobs.find(j=>j.id===d.orderId);
+    const baseline=r.baseline.jobs.find(j=>j.id===d.orderId);
+    assert.equal(d.recommendedStart,proposed.startTime);
+    assert.ok(proposed.lateMinutes<=baseline.lateMinutes);
+    assert.ok(typeof d.reason==='string'&&d.reason.length>10);
+  }
+});
 test('shared finished stock and packaging are consumed once per product', () => {
   const input=fresh();input.orders=[{...input.orders[0],qty:100},{...input.orders[0],id:'second',qty:100,due:'2026-09-09T14:00'}];input.products[0].packaging=100;
   const r=createEnergyPlan(input);
@@ -68,7 +83,7 @@ test('report escapes markup and CSV formulas from factory inputs', () => {
 });
 test('Vercel API accepts the same structured data and rejects bad requests', async () => {
   let code,body;const res={setHeader(){},status(n){code=n;return this;},json(b){body=b;return this;}};
-  await handler({method:'POST',body:fresh()},res);assert.equal(code,200);assert.equal(body.schemaVersion,'2.0');assert.equal(body.proposed.peakKw,40);
+  await handler({method:'POST',body:fresh()},res);assert.equal(code,200);assert.equal(body.schemaVersion,'2.1');assert.equal(body.proposed.peakKw,40);
   await handler({method:'POST',body:{...fresh(),orders:[{id:'bad'}]}},res);assert.equal(code,400);
   await handler({method:'GET'},res);assert.equal(code,405);
 });
