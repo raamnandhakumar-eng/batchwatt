@@ -1,4 +1,4 @@
-/* BatchWatt bulk order intake UI. Depends on XLSX, BatchWattOrderImport, and ops-app globals. */
+/* BatchWatt bulk order intake UI. Depends on ExcelJS, BatchWattOrderImport, and ops-app globals. */
 'use strict';
 (function(){
   let matrix=[];
@@ -21,10 +21,10 @@
     const dialog=document.createElement('dialog');dialog.id='order-import-dialog';dialog.className='import-dialog';
     dialog.innerHTML=`<div class="import-shell">
       <div class="dialog-head"><div><p class="eyebrow">ORDER INTAKE</p><h2>Import customer orders</h2></div><button type="button" class="icon-button" id="close-import" aria-label="Close">×</button></div>
-      <p class="subtle">Paste rows copied from Excel or upload .xlsx, .xls, .csv, or .tsv. BatchWatt validates every row before it changes the live plan.</p>
+      <p class="subtle">Paste rows copied from Excel or upload .xlsx, .csv, or .tsv. BatchWatt validates every row before it changes the live plan.</p>
       <div class="import-source-grid">
         <section class="import-source"><strong>Paste from Excel or WhatsApp</strong><textarea id="import-paste" rows="7" placeholder="Customer\tProduct\tQuantity\tDue\tPriority\nRavi Stores\tCow ghee 1 L\t40\t9/10/2026 3:00 PM\tHigh"></textarea><button type="button" class="quiet" id="parse-paste">Preview pasted rows</button></section>
-        <section class="import-source"><strong>Upload spreadsheet</strong><label class="file-drop">Choose Excel or CSV<input id="import-file" type="file" accept=".xlsx,.xls,.csv,.tsv,.txt"></label><small id="import-file-name">No file selected</small></section>
+        <section class="import-source"><strong>Upload spreadsheet</strong><label class="file-drop">Choose Excel or CSV<input id="import-file" type="file" accept=".xlsx,.csv,.tsv,.txt"></label><small id="import-file-name">No file selected</small></section>
       </div>
       <section id="mapping-panel" class="import-stage" hidden>
         <div class="panel-head"><div><p class="eyebrow">COLUMN MAPPING</p><h3>Confirm what each column means</h3></div><span id="import-source-label" class="subtle"></span></div>
@@ -63,7 +63,6 @@
     $('preview-panel').hidden=false;
     $('preview-summary').textContent=`${built.valid.length} valid · ${built.invalid.length} rejected`;
     $('confirm-import').disabled=built.valid.length===0;
-    $('confirm-import').dataset.valid=String(built.valid.length);
     const byRow=new Map([...built.valid.map(x=>[x.row,{ok:true,...x}]),...built.invalid.map(x=>[x.row,{ok:false,...x}])]);
     $('preview-table').innerHTML=[...byRow.values()].slice(0,50).map(x=>{
       if(x.ok){const d=x.draft;return `<tr><td>${x.row}</td><td>${esc(d.customer)}</td><td>${esc(d.productName)}</td><td>${d.qty}</td><td>${esc(d.due.replace('T',' '))}</td><td>${esc(d.priority)}</td><td class="status-good">Ready</td></tr>`;}
@@ -97,17 +96,28 @@
     $('import-paste').value='';$('import-file').value='';$('import-file-name').textContent='No file selected';matrix=[];$('mapping-panel').hidden=true;$('preview-panel').hidden=true;fail('');$('order-import-dialog').showModal();
   }
 
+  function excelCellValue(value){
+    if(value==null)return '';
+    if(value instanceof Date)return value;
+    if(typeof value!=='object')return value;
+    if(Array.isArray(value.richText))return value.richText.map(x=>x.text||'').join('');
+    if(Object.prototype.hasOwnProperty.call(value,'result'))return value.result;
+    if(value.text!=null)return value.text;
+    if(value.hyperlink)return value.text||value.hyperlink;
+    return String(value);
+  }
+
   async function readFile(file){
     $('import-file-name').textContent=file.name;
     const lower=file.name.toLowerCase();
     try{
       if(lower.endsWith('.csv')||lower.endsWith('.tsv')||lower.endsWith('.txt')){setMatrix(BatchWattOrderImport.parseDelimited(await file.text()),file.name);return;}
-      if(!window.XLSX)throw new Error('Excel reader is unavailable.');
-      const book=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
-      if(!book.SheetNames.length)throw new Error('The workbook has no sheets.');
-      const sheet=book.Sheets[book.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false,dateNF:'yyyy-mm-dd hh:mm'});
-      setMatrix(rows,`${file.name} · ${book.SheetNames[0]}`);
+      if(!lower.endsWith('.xlsx'))throw new Error('Use .xlsx, .csv, or pasted rows.');
+      if(!window.ExcelJS)throw new Error('Excel reader is unavailable.');
+      const book=new ExcelJS.Workbook();await book.xlsx.load(await file.arrayBuffer());
+      const sheet=book.worksheets[0];if(!sheet)throw new Error('The workbook has no worksheets.');
+      const rows=[];sheet.eachRow({includeEmpty:false},row=>rows.push(row.values.slice(1).map(excelCellValue)));
+      setMatrix(rows,`${file.name} · ${sheet.name}`);
     }catch(err){fail(`Could not read order file: ${err.message}`);}
   }
 
