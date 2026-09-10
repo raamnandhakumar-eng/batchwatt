@@ -1,72 +1,92 @@
 # BatchWatt
 
-**Simple daily factory operations: know what to do next.**
+**A simple factory decision console: what to make, when to make it, what to buy, and what it costs.**
 
-BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into a practical shift plan for small manufacturers.
+BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into one practical shift plan.
 
 **[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
 
-## Try it in 2 minutes
+## The simple flow
 
-1. Open one of the two working demos on the **Today** screen.
-2. Change an order, material position, or energy input and watch the plan recalculate.
-3. Open **Dashboard** to see order health, production, procurement, energy, release status, and operating risks in one view.
-4. Review **What to produce and when**. BatchWatt protects supplied due times first, then avoids peak-limit breaches and chooses the lowest modeled electricity + conditional demand-charge cost among feasible schedules.
-5. Release the shift when hard blockers are cleared, then export the operating plan or dashboard.
+Daily operators mainly use three places:
 
-## The app is built around five screens
+1. **Today** — the main decision console. See what needs attention, what to produce, when to run it, energy cost/peak insights, and whether the shift is ready to release.
+2. **Orders** — add one order, paste rows, or import Excel/CSV order data.
+3. **Buying** — see material shortages, recommended purchases, purchase orders, and receipts.
 
-- **Today** — one recommended next action, today’s production runs, visible energy controls, issues, demos, and shift release.
-- **Dashboard** — integrated management view of order health, production, procurement, energy, release readiness, source coverage, and top risks.
-- **Orders** — customer demand and dispatch status, with manual, pasted, Excel, and CSV intake.
-- **Buying** — materials to replenish, purchase orders, and receipts.
-- **More** — energy check, shift settings, workspace tools, and the detailed planner.
+Two supporting tabs stay separate:
 
-## What to produce and when
+- **Pilot Results** — read-only locked pilot/resume facts plus the two one-click demos.
+- **More** — factory and shift settings plus the detailed V2 planner.
 
-For each production order, BatchWatt now shows the recommended start/end time, line, quantity, customer due time, priority, changeover time, modeled run-energy cost, whether the job was shifted versus the baseline schedule, and the reason for the recommendation.
+## Today screen
 
-The scheduling objective is deliberately ordered:
+The Today screen is intentionally one integrated dashboard instead of a separate analytics page.
 
-1. Protect supplied order due times.
+### Decision Console
+
+Shows the operating sequence in plain language:
+
+- Orders — what needs attention.
+- Produce — the next product and recommended start time.
+- Buy — material actions required.
+- Release — whether the shift can be approved.
+
+### Energy Insights
+
+Shows:
+
+- planned peak kW versus the operating target;
+- estimated shift energy cost;
+- modeled electricity + conditional demand-charge saving versus the baseline schedule;
+- number of production runs shifted for lower modeled cost;
+- a 15-minute load chart with the peak tariff window and peak target;
+- a short plain-English recommendation explaining what the energy position means.
+
+Energy assumptions such as background load, peak target, monthly peak, off-peak/peak tariff, demand charge, and peak window remain editable but are collapsed by default.
+
+### What to make and when
+
+For each required production run, BatchWatt shows:
+
+- product and quantity;
+- production line;
+- recommended start and end time;
+- why that timing was selected;
+- modeled run-energy cost;
+- whether it was shifted from the baseline schedule.
+
+The scheduling objective remains deliberately ordered:
+
+1. Protect supplied customer due times.
 2. Avoid peak-demand target breaches.
 3. Minimize modeled electricity and conditional demand-charge cost.
 4. Use finished stock before scheduling new production.
 5. Keep material shortages and replenishment cost visible.
-6. Include line changeover time in the schedule.
+6. Include line changeover time.
 
-BatchWatt also reports usage-cost change, conditional demand saving, peak reduction, and the number of jobs shifted. Demand savings are conditional on the compared schedules setting the final monthly peak; the tool does not present them as guaranteed bill savings.
+## Two demos
 
-## Two working demos
+The **Pilot Results** tab contains two one-click illustrative workspaces:
 
-- **RKG Ghee — peak-load + dispatch pressure.** A complete illustrative workspace for urgent orders, production sequencing, energy constraints, and shift release.
-- **PR Food Products — procurement + production coordination.** A complete illustrative workspace for material availability, incoming supply, machine sequencing, energy exposure, and shift release.
+- **RKG Ghee — peak-load + dispatch pressure**
+- **PR Food Products — procurement + production coordination**
 
-The one-click demo workspaces are illustrative operating scenarios. Recorded pilot metrics are shown as pilot context and remain separate from the synthetic demo inputs.
+The demo workspaces are illustrative. They remain separate from the historical pilot evidence.
 
 ## Customer order inputs
 
-Orders can enter BatchWatt in three simple ways:
+Orders can enter BatchWatt in three ways:
 
 1. Add one customer order manually.
-2. Paste rows copied directly from Excel or a structured WhatsApp order list.
+2. Paste rows copied from Excel or a structured WhatsApp order list.
 3. Upload an `.xlsx`, `.csv`, or `.tsv` file.
 
-BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, Priority, and Order/Reference. You can correct the column mapping before import. The preview validates products, quantities, due dates, priorities, and duplicates. Valid rows can be imported even when other rows are rejected.
-
-## Daily flow
-
-1. Add or import customer orders.
-2. Fix any material or production blocker BatchWatt flags.
-3. Review the cost-aware production sequence and integrated dashboard.
-4. Review the energy position and peak-demand headroom.
-5. Release the shift plan.
-6. Dispatch stock orders, run production, and receive purchased material as it arrives.
-7. Export the current operating plan or dashboard when needed.
+BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, Priority, and Order/Reference. It validates products, quantities, due dates, priorities, and duplicates before import.
 
 ## What stays under the hood
 
-The V3.6 operator MVP uses the production, procurement, inventory, and energy planning engines behind a simple operating console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
+V3.7 keeps the production, procurement, inventory, and energy planning engines while presenting them through one simpler operator console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
 ## Operational pilot facts
 
@@ -84,11 +104,11 @@ These are the same BatchWatt facts used in the Meta resume/application materials
 
 The pilot records are calculated from the supplied pilot workbooks. Independent external verification and publication permissions remain pending.
 
-The canonical resume/application wording and claim boundaries are preserved in `docs/RESUME_CLAIMS_LOCK.md`. New V3.6 capabilities must not be retroactively represented as capabilities deployed in the two 2026 pilots unless separately verified.
+The canonical resume/application wording and claim boundaries are preserved in `docs/RESUME_CLAIMS_LOCK.md`. New product capabilities must not be retroactively represented as capabilities deployed in the two 2026 pilots unless separately verified.
 
 ## Pilot evidence
 
-The repository preserves pilot documentation for **RKG Ghee** and **PR Food Products**. Pilot records remain separate from the synthetic live demo.
+The repository preserves pilot documentation for **RKG Ghee** and **PR Food Products**. Pilot records remain separate from the synthetic live demos.
 
 ## Important note
 
