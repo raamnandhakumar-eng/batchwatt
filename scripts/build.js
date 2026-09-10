@@ -17,7 +17,7 @@ const assets = [
   ['lib/energy-reports.js', 'lib/energy-reports.js'],
   ['lib/operations.js', 'lib/operations.js'],
   ['lib/order-import.js', 'lib/order-import.js'],
-  ['node_modules/xlsx/dist/xlsx.full.min.js', 'xlsx.full.min.js'],
+  ['node_modules/exceljs/dist/exceljs.min.js', 'exceljs.min.js'],
 ];
 
 const out = path.join(__dirname, '..', 'dist');
