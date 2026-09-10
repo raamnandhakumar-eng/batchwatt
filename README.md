@@ -1,74 +1,57 @@
 # BatchWatt
 
-**Factory operations control for production, procurement, dispatch, and energy.**
+**Know what to buy, what to produce, when to run it, and what the energy impact is.**
 
-BatchWatt helps small factories turn orders, material availability, machine capacity, and electricity constraints into one operational shift plan.
+BatchWatt is a factory decision console for small manufacturers. It turns customer orders, finished stock, raw-material availability, supplier lead times, production capacity, and electricity tariffs into one daily operating plan.
 
 **[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
 
-## Current version
+## Core workflow
 
-The latest version is an operations control console built around one question: **is the shift ready to run?**
+1. **Buy** — identifies materials to purchase, quantity, supplier, lead time, recommended timing, and estimated spend.
+2. **Produce** — sequences production by order due time, material availability, line capacity, changeovers, and operating constraints.
+3. **Dispatch** — separates orders ready from finished stock, scheduled for production, late, or blocked.
+4. **Energy** — shows peak demand, tariff-window exposure, modeled shift energy cost, and energy-aware timing changes.
 
-It brings production planning, procurement, dispatch risk, and energy into one screen so a supervisor can see blockers before releasing the plan.
+Energy is an insight layer, not the primary objective. BatchWatt protects production and dispatch first. It only keeps an energy-aware schedule when committed work remains scheduled, lateness does not worsen, and the modeled bill does not increase.
 
-## What it does
+## Decision console
 
-- Builds a production plan from customer orders, inventory, recipes, machines, and shift capacity.
-- Identifies material shortages and procurement actions before production starts.
-- Flags blocked orders, late-dispatch risk, overdue inbound materials, and other operational exceptions.
-- Tracks planned electrical demand against a configured peak-demand target.
-- Shows dispatch readiness, open exceptions, blocked orders, and peak-demand headroom.
-- Prevents shift-plan release when critical blockers or peak-limit breaches remain.
-- Records a released plan fingerprint so later changes to orders, stock, tariffs, or setup make the release visibly stale.
-- Maintains a local audit trail for operational actions and plan releases.
-- Uses USD for the current demo and planning workflow.
+The current V3.1 console puts the daily decisions first:
 
-## Operations workflow
-
-1. Load customer orders and factory inputs.
-2. Calculate the production and energy plan.
-3. Review the operational work queue.
-4. Resolve procurement, dispatch, capacity, or energy exceptions.
-5. Recalculate the plan.
-6. Release the shift only when hard blockers are cleared.
-
-## Energy layer
-
-BatchWatt treats energy as an operating constraint, not just a reporting metric.
-
-The planner compares machine schedules with the factory's peak-demand target and highlights when the proposed shift would exceed that limit. This lets the operator adjust timing while still protecting production and dispatch requirements.
-
-The synthetic demo includes a case where peak demand is reduced from **82 kW to 40 kW** while completing the same production work with no late dispatches. Actual savings depend on the factory, tariff structure, and operating conditions.
-
-## Pilot context
-
-The project includes work developed from two pilot environments:
-
-- RKG Ghee
-- PR Food Products
-
-Pilot context is used to make the workflow realistic while the public demo uses controlled example inputs.
-
-## Architecture
-
-The current application combines:
-
-- a production and energy planning engine
-- procurement and inventory logic
-- an operational exception engine
+- immediate procurement actions
+- what should run next
+- a detailed production sequence
+- supplier and material timing
+- dispatch readiness
+- production blockers and exceptions
+- peak-demand headroom
+- peak-tariff overlap by production run
 - supervisor release controls
-- dispatch and run-board views
-- local-first saved state and audit history
+- local audit history
 
-No API keys or database credentials are required for the current public version.
+## Pilots
 
-## Version history
+The app keeps recorded pilot evidence from **RKG Ghee** and **PR Food Products** separate from the synthetic live demo.
 
-The original BatchWatt V1 is preserved separately in the repository on the `archive/batchwatt-v1` branch.
+**RKG Ghee**
+- 32 orders across 10 pilot cycles
+- recorded planning-time reduction: 64.2%
+- recorded energy reduction: 8.8%
+- recorded peak reduction: 11.7%
 
-The current `main` branch contains the latest operations-control version.
+**PR Food Products**
+- 41 orders across 9 pilot cycles
+- recorded planning-time reduction: 62.3%
+- recorded energy reduction: 6.7%
+- recorded peak reduction: 9.0%
+
+The pilot view also keeps example production decisions and sequencing recommendations from both environments.
+
+## Previous versions
+
+The original BatchWatt V1 remains preserved on the `archive/batchwatt-v1` branch. The detailed V2 planner also remains in the current build while V3.1 is the default console.
 
 ## Important note
 
-BatchWatt is decision-support software. It does not control machines, read live meters, place supplier orders, or send payments. A supervisor should review operational plans before use.
+BatchWatt is decision-support software. It does not control machines, read live meters, send supplier orders, or make payments. Energy and savings outputs are modeled estimates. A supervisor should review the operating plan before release.
