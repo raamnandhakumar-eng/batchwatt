@@ -1,11 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V3 operations console is the default app. V2 remains available as the detailed planner.
+// V3.1 factory decision console is the default app. V2 remains available as the detailed planner.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
   ['ops-app.js', 'ops-app.js'],
+  ['decision-console.js', 'decision-console.js'],
   ['planner.html', 'planner-v2.html'],
   ['planner.css', 'planner.css'],
   ['planner-app.js', 'planner-app.js'],
@@ -33,4 +34,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V3 operations assets with V2 planner preserved.`);
+console.log(`Built ${assets.length} BatchWatt V3.1 decision-console assets with V2 planner preserved.`);
