@@ -1,11 +1,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V3.2 simple operator console is the default app. V2 remains available for detailed setup.
+// V3.3 simple operator console is the default app. V2 remains available for detailed setup.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
+  ['order-import.css', 'order-import.css'],
   ['ops-app.js', 'ops-app.js'],
+  ['order-import-ui.js', 'order-import-ui.js'],
   ['planner.html', 'planner-v2.html'],
   ['planner.css', 'planner.css'],
   ['planner-app.js', 'planner-app.js'],
@@ -14,6 +16,8 @@ const assets = [
   ['lib/energy-planner.js', 'lib/energy-planner.js'],
   ['lib/energy-reports.js', 'lib/energy-reports.js'],
   ['lib/operations.js', 'lib/operations.js'],
+  ['lib/order-import.js', 'lib/order-import.js'],
+  ['node_modules/xlsx/dist/xlsx.full.min.js', 'xlsx.full.min.js'],
 ];
 
 const out = path.join(__dirname, '..', 'dist');
@@ -33,4 +37,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V3.2 simple operator assets with V2 planner preserved.`);
+console.log(`Built ${assets.length} BatchWatt V3.3 operator assets with bulk order intake and V2 planner preserved.`);
