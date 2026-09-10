@@ -26,7 +26,14 @@ function persistDraft() {
 }
 function ensureProcurement() { for (const key of ['suppliers','materials','recipes','purchaseOrders']) if (!factoryData[key]) factoryData[key]=[]; }
 function renderInputs() {
+  migrateOriginalDemoToUSD();
+  renderCurrencyGate();
+  document.querySelector('.workspace-label').textContent=factoryData.energy.currency==='USD'?'US dollars · USD ($)':'Currency setup required';
   ensureProcurement();
+  const sampleProduct=factoryData.products[0]?.name||'Your product name';
+  const sampleOrder=`Customer | ${sampleProduct} | 10 | ${factoryData.shift.date} ${factoryData.shift.end} | High`;
+  $v2('whatsapp-example').textContent=sampleOrder;
+  $v2('paste-orders').placeholder=sampleOrder;
   renderProcurementInputs();
   $v2('factory-name').value = factoryData.factory;
   $v2('planning-date').value = factoryData.shift.date;
@@ -38,12 +45,13 @@ function renderInputs() {
   $v2('line-inputs').innerHTML = factoryData.lines.map(l => `<tr><td>${field('lines',l,'name')}</td><td>${field('lines',l,'kw','number','min="0.01" step="any"')}</td><td>${field('lines',l,'changeoverMinutes','number','min="0" step="1"')}</td><td>${removeButton('lines',l)}</td></tr>`).join('') || '<tr><td colspan="4">Add at least one machine or production line.</td></tr>';
   const fields = [
     ['baseKw','Background load (kW)','number'],['peakLimitKw','Peak demand target (kW)','number'],['monthlyPeakKw','Month peak so far (kW)','number'],
-    ['currency','Currency code (USD = US dollars)','text'],['rate','Off-peak rate / kWh','number'],['peakRate','Peak rate / kWh','number'],
-    ['demandRate','Monthly demand rate / kW','number'],['peakStart','Peak tariff starts','time'],['peakEnd','Peak tariff ends','time']
+    ['rate','Off-peak price (USD / kWh)','number'],['peakRate','Peak price (USD / kWh)','number'],
+    ['demandRate','Monthly demand price (USD / kW)','number'],['peakStart','Peak tariff starts','time'],['peakEnd','Peak tariff ends','time']
   ];
   $v2('energy-inputs').innerHTML = fields.map(([key,label,type]) => `<label>${label}<input data-energy="${key}" type="${type}" value="${esc2(factoryData.energy[key])}" ${type==='number'?'min="0" step="any"':type==='time'?'step="900"':'maxlength="3"'}></label>`).join('');
 }
 function recalculate() {
+  if(factoryData.energy.currency!=='USD'){energyResult=null;$v2('results').hidden=true;$v2('errors').hidden=true;persistDraft();return;}
   $v2('reviewed').checked = false;
   $v2('save-plan').disabled = true;
   persistDraft();
@@ -56,6 +64,7 @@ function recalculate() {
     energyResult = null;renderProcurementResult();$v2('results').hidden = true;
     $v2('errors').hidden = false;$v2('errors').textContent=`Complete your setup to generate a plan: ${error.message}`;
   }
+  renderBusinessBrief();
 }
 function renderResult() {
   const r = energyResult, c = r.comparison;
@@ -181,7 +190,8 @@ function renderPurchases() {
   }).join('')||'<tr><td colspan="6">No purchase orders yet. Draft one from the buying list or create it manually.</td></tr>';
 }
 function openPurchase(materialId='') {
-  if(!factoryData.suppliers.length||!factoryData.materials.length){notice('Add a supplier and material before drafting a purchase order.');location.hash='procurement';return;}
+  if(!factoryData.suppliers.length){goToInput('setup','suppliers-section');notice('Add a supplier before drafting a purchase order.');return;}
+  if(!factoryData.materials.length){goToInput('procurement','materials-section');notice('Add a material before drafting a purchase order.');return;}
   const material=factoryData.materials.find(m=>m.id===materialId)||factoryData.materials[0];
   $v2('po-supplier').innerHTML=option('','Choose supplier',material.supplierId)+factoryData.suppliers.map(s=>option(s.id,s.name,material.supplierId)).join('');
   $v2('po-material').innerHTML=factoryData.materials.map(m=>option(m.id,m.name+' ('+m.unit+')',material.id)).join('');
@@ -294,14 +304,16 @@ function showPilot(key) {
   <p class="footnote">Historical records are separate from your editable factory draft. Opening a pilot does not replace your inputs.</p>`;
 }
 function showWorkspaceView() {
-  const hash=location.hash.slice(1)||'start';
+  const hash=location.hash.slice(1)||'overview';
   const pilotKey=hash==='pilot-pr'?'pr':'rkg';
-  const view=hash.startsWith('pilot-')?'pilots':(['start','orders','procurement','overview','setup','history'].includes(hash)?hash:'start');
+  const requested=hash.startsWith('pilot-')?'pilots':(['start','orders','procurement','overview','setup','history'].includes(hash)?hash:'start');
+  const view=factoryData.energy.currency!=='USD'&&!['start','pilots'].includes(requested)?'currency':requested;
   if(view==='pilots')showPilot(pilotKey);
   document.querySelectorAll('[data-view]').forEach(el=>{el.hidden=el.dataset.view!==view;});
   document.querySelectorAll('.rail nav a').forEach(a=>{if(a.hash==='#'+view || view==='pilots'&&a.hash==='#start')a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  $v2('mode-banner').hidden=['start','pilots'].includes(view);
-  $v2('errors').hidden=['start','pilots'].includes(view)||Boolean(energyResult);
+  document.querySelector('.workspace-tools').open=false;
+  $v2('mode-banner').hidden=['start','pilots','currency'].includes(view);
+  $v2('errors').hidden=['start','pilots','currency'].includes(view)||Boolean(energyResult);
   window.scrollTo(0,0);
 }
 document.addEventListener('DOMContentLoaded',()=>{
@@ -310,4 +322,99 @@ document.addEventListener('DOMContentLoaded',()=>{
   $v2('start-factory').onclick=()=>$v2('new-workspace').click();
   window.addEventListener('hashchange',showWorkspaceView);
   showWorkspaceView();
+});
+
+function setupSteps(input) {
+  return [
+    {label:'Machines and shift hours',done:input.lines.length>0&&input.lines.every(l=>Number(l.kw)>0),view:'setup',target:'setup'},
+    {label:'Products, output rates and packaging',done:input.products.length>0&&input.products.every(p=>Number(p.rate)>0&&input.lines.some(l=>l.id===p.lineId)),view:'setup',target:'products-section'},
+    {label:'Material stock',done:(input.materials||[]).length>0,view:'procurement',target:'materials-section'},
+    {label:'Ingredients for each product',done:input.products.length>0&&input.products.every(p=>(input.recipes||[]).some(r=>r.productId===p.id)),view:'setup',target:'recipes-section'},
+    {label:'Electricity prices in USD',done:input.energy.currency==='USD'&&Number(input.energy.rate)>0,view:'setup',target:'tariff-section'}
+  ];
+}
+function renderBusinessBrief() {
+  const steps=setupSteps(factoryData);
+  $v2('shift-context').textContent=`${factoryData.factory} · ${factoryData.shift.date} · ${factoryData.shift.start}–${factoryData.shift.end}`;
+  $v2('setup-checklist').innerHTML=steps.map((s,i)=>`<button class="setup-task quiet" data-go="${s.view}" data-target="${s.target}"><span>${s.done?'✓':i+1}</span><span>${s.label}</span><small>${s.done?'Review':'Set up'}</small></button>`).join('');
+  $v2('setup-guide').hidden=steps.every(s=>s.done);
+  const r=energyResult;
+  if(!r){$v2('business-brief').innerHTML='<p class="verdict">Complete the setup below to see a usable shift plan. Your inputs are saved as you go.</p>';return;}
+  const rows=BatchWattReports.dispatchRows(r), ready=rows.filter(o=>o.status==='Ready from stock'), risk=rows.filter(o=>['Blocked','Late','Overdue stock dispatch'].includes(o.status));
+  const money=n=>BatchWattReports.money(n,r.energy.currency);
+  const actions=[];
+  for(const o of risk){const allocation=r.allocations.find(a=>a.id===o.id);const view=allocation.recipeMissing?'setup':allocation.materialShortages.length?'procurement':allocation.packagingShort?'setup':'orders';const target=allocation.recipeMissing?'recipes-section':allocation.packagingShort?'products-section':view;
+    actions.push({title:`${o.customer}: ${o.product}`,detail:`Due ${o.due.replace('T',' ')}. ${o.reason}`,view,target,button:allocation.recipeMissing?'Add recipe':allocation.materialShortages.length?'Check materials':allocation.packagingShort?'Update packaging':'Review order'});}
+  const incoming=(factoryData.purchaseOrders||[]).filter(p=>['Ordered','Part received'].includes(p.status));
+  for(const p of incoming.filter(p=>p.expectedDate<=factoryData.shift.date)){const material=factoryData.materials.find(m=>m.id===p.materialId);actions.push({title:`${p.expectedDate<factoryData.shift.date?'Overdue delivery':'Delivery expected'}: ${material?.name||p.materialId}`,detail:`${p.qty-p.receivedQty} ${material?.unit||'units'} remaining. Confirm delivery with the supplier; receive only stock that arrived.`,view:'procurement',target:'purchases-section',button:'Review receipt'});}
+  for(const m of r.procurement.requirements.filter(m=>m.toBuy>0)){actions.push({title:`Buy ${m.toBuy} ${m.unit} of ${m.name}`,detail:`Estimated ${money(m.estimatedCost)} including reorder buffer. ${m.shortage} ${m.unit} short for loaded orders.`,material:m.materialId,button:'Draft purchase'});}
+  const next=[...r.proposed.jobs].sort((a,b)=>a.start-b.start)[0];
+  $v2('business-brief').innerHTML=`<div class="business-cards"><article><span>Can dispatch from stock</span><strong>${ready.length} orders</strong><small>At the start of this shift</small></article><article class="${risk.length?'attention':''}"><span>Need your attention</span><strong>${risk.length} orders</strong><small>Blocked or missing their due time</small></article><article><span>Planned shift electricity</span><strong>${money(r.proposed.usageCost)}</strong><small>${r.proposed.kwh} kWh · excludes monthly demand charges</small></article></div>
+  <section class="panel"><div class="panel-heading"><h2>${actions.length?'Do these next':'Your plan is ready to review'}</h2><a href="#orders">View all ${rows.length} orders</a></div>${!rows.length?'<p>Add your first customer order to create a production plan.</p>':!actions.length?'<p>No modeled order blockers. Check the run times below before sharing.</p>':''}<div class="decision-list">${actions.map(a=>`<article><div><strong>${esc2(a.title)}</strong><p>${esc2(a.detail)}</p></div><button class="quiet" ${a.material?`data-buy="${esc2(a.material)}"`:`data-go="${a.view}" data-target="${a.target}"`}>${a.button}</button></article>`).join('')}</div></section>
+  <section class="shift-recommendation"><div><span class="eyebrow">FIRST PLANNED RUN</span><h2>${next?`${esc2(next.startTime)} · ${esc2(next.product)}`:'No production run scheduled'}</h2><p>${next?`${esc2(next.line)} · finishes ${esc2(next.endTime)}. Review the full sequence below.`:'Check orders and stock, or resolve the blockers above.'}</p></div><div><span class="eyebrow">ENERGY DECISION</span><h2>${r.baseline.peakKw} → ${r.proposed.peakKw} kW</h2><p>Shift energy-cost change: ${money(r.comparison.usageSaving)} saved. Potential monthly demand saving: ${money(r.comparison.conditionalDemandSaving)}.</p><small>Monthly saving depends on the final billing peak. These are estimates from your inputs.</small></div></section>`;
+}
+function goToInput(view,target) {
+  const focusTarget=()=>{const el=$v2(target);if(el){el.scrollIntoView({block:'start'});el.querySelector('input,select,button')?.focus({preventScroll:true});}};
+  if(location.hash==='#'+view){showWorkspaceView();focusTarget();}
+  else {window.addEventListener('hashchange',focusTarget,{once:true});location.hash=view;}
+}
+function openOrderForm() {
+  if(!factoryData.products.length){goToInput('setup','products-section');notice('Add your first product, then add its customer orders.');return;}
+  $v2('order-form').reset();$v2('new-product').innerHTML=factoryData.products.map(p=>option(p.id,p.name,'')).join('');
+  $v2('new-due').value=`${factoryData.shift.date}T${factoryData.shift.end}`;$v2('new-quantity').value=1;$v2('order-error').textContent='';$v2('order-dialog').showModal();$v2('new-customer').focus();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  $v2('quick-order').onclick=openOrderForm;$v2('add-order').onclick=openOrderForm;
+  document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go)goToInput(go.dataset.go,go.dataset.target);});
+  $v2('order-form').onsubmit=e=>{e.preventDefault();const order={id:newId('order'),customer:$v2('new-customer').value.trim(),productId:$v2('new-product').value,qty:Number($v2('new-quantity').value),due:$v2('new-due').value,priority:$v2('new-priority').value};
+    if(!order.customer||!Number.isFinite(order.qty)||order.qty<=0||!factoryData.products.some(p=>p.id===order.productId)||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(order.due)){$v2('order-error').textContent='Enter a customer, product, positive quantity and due date.';return;}
+    factoryData.orders.push(order);$v2('order-dialog').close();renderInputs();recalculate();location.hash='overview';showWorkspaceView();notice('Order added. Review its delivery and material requirements below.');
+  };
+});
+
+function migrateOriginalDemoToUSD() {
+  if(factoryData.energy.currency==='USD'||!isDemo)return false;
+  // Only replace the unchanged illustrative INR price set, never customer-entered prices.
+  const demo=window.BATCHWATT_DEMO;
+  const old=factoryData.energy;
+  const oldCosts=[400,120,80];
+  const matches=old.currency==='INR'&&Number(old.rate)===8&&Number(old.peakRate)===14&&Number(old.demandRate)===350&&!(factoryData.purchaseOrders||[]).length&&factoryData.materials?.length===demo.materials.length&&factoryData.materials.every(m=>{const index=demo.materials.findIndex(d=>d.id===m.id);return index>=0&&Number(m.unitCost)===oldCosts[index];});
+  if(!matches)return false;
+  try{localStorage.setItem('batchwatt_before_usd',JSON.stringify({input:factoryData,isDemo}));}catch{return false;}
+  factoryData.energy={...old,currency:'USD',rate:demo.energy.rate,peakRate:demo.energy.peakRate,demandRate:demo.energy.demandRate};
+  factoryData.materials.forEach(m=>m.unitCost=demo.materials.find(d=>d.id===m.id).unitCost);
+  return true;
+}
+function convertWorkspacePricesToUSD(input,usdPerUnit) {
+  const rate=Number(usdPerUnit);
+  if(!Number.isFinite(rate)||rate<=0)throw new Error('Enter a positive exchange rate: USD for one unit of the old currency.');
+  if(input.energy.currency==='USD')throw new Error('This workspace already uses USD.');
+  const converted=copyData(input),convert=n=>Math.round(Number(n)*rate*1e6)/1e6;
+  ['rate','peakRate','demandRate'].forEach(key=>converted.energy[key]=convert(converted.energy[key]));
+  (converted.materials||[]).forEach(m=>m.unitCost=convert(m.unitCost));
+  (converted.purchaseOrders||[]).forEach(po=>po.unitCost=convert(po.unitCost));
+  converted.currencyConversion={from:input.energy.currency,to:'USD',usdPerUnit:rate,convertedAt:new Date().toISOString()};
+  converted.energy.currency='USD';return converted;
+}
+function renderCurrencyGate() {
+  if(factoryData.energy.currency==='USD')return;
+  $v2('previous-currency').textContent=factoryData.energy.currency;
+  $v2('conversion-label').textContent=`USD for 1 ${factoryData.energy.currency}`;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  $v2('currency-backup').onclick=()=>downloadV2(JSON.stringify({input:factoryData,isDemo},null,2),'application/json','batchwatt-before-usd.json');
+  $v2('currency-form').onsubmit=e=>{e.preventDefault();try{
+    const converted=convertWorkspacePricesToUSD(factoryData,$v2('usd-rate').value);
+    try{localStorage.setItem('batchwatt_before_usd',JSON.stringify({input:factoryData,isDemo}));}catch{throw new Error('Could not save a backup on this browser. Free browser storage before converting.');}
+    factoryData=converted;renderInputs();recalculate();showWorkspaceView();notice('Prices converted to USD. Quantities and energy use are unchanged. Original inputs backed up on this browser.');
+  }catch(error){$v2('currency-error').textContent=error.message;}};
+});
+
+function whatsappPlanUrl(result) {
+  if(!result)return null;
+  return 'https://wa.me/?text='+encodeURIComponent(BatchWattReports.message(result));
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  $v2('whatsapp-plan').onclick=()=>{const url=whatsappPlanUrl(energyResult);if(url)window.open(url,'_blank','noopener,noreferrer');};
+  document.addEventListener('click',e=>{const link=e.target.closest('[data-open-import]');if(link){e.preventDefault();goToInput('orders','whatsapp-import');$v2('whatsapp-import').open=true;$v2('paste-orders').focus();}});
 });
