@@ -11,7 +11,7 @@ test('demo lowers peak without dropping work or worsening any dispatch', () => {
   assert.equal(r.proposed.jobs.length,r.baseline.jobs.length);
   assert.equal(r.proposed.lateOrders,0);assert.equal(r.proposed.unscheduled.length,0);
   assert.equal(r.baseline.kwh,r.proposed.kwh,'shifting timing must not invent kWh savings');
-  assert.equal(r.comparison.conditionalDemandSaving,12950);
+  assert.equal(r.comparison.conditionalDemandSaving,555);
   assert.equal(JSON.stringify(input),before,'input is immutable');
 });
 test('shared finished stock and packaging are consumed once per product', () => {
@@ -56,7 +56,7 @@ test('stock-only orders use only background load and show overdue dispatch', () 
 });
 test('overnight tariff windows apply to the correct intervals', () => {
   const input=fresh();input.energy.peakStart='17:00';input.energy.peakEnd='09:00';const r=createEnergyPlan(input);
-  assert.equal(r.proposed.profile[0].rate,14);assert.equal(r.proposed.profile[4].rate,8);assert.equal(r.proposed.profile.at(-1).rate,14);
+  assert.equal(r.proposed.profile[0].rate,0.21);assert.equal(r.proposed.profile[4].rate,0.12);assert.equal(r.proposed.profile.at(-1).rate,0.21);
 });
 test('invalid relationships, dates, rates and duplicate orders fail clearly', () => {
   for(const mutate of [i=>i.orders[0].productId='missing',i=>i.orders[0].due='2026-02-30T10:00',i=>i.products[0].rate=0,i=>i.lines[0].kw=-2,i=>i.orders.push({...i.orders[0]})]){const input=fresh();mutate(input);assert.throws(()=>createEnergyPlan(input));}

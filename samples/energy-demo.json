@@ -6,15 +6,15 @@
     "end": "18:00"
   },
   "energy": {
-    "currency": "INR",
+    "currency": "USD",
     "baseKw": 8,
     "peakLimitKw": 65,
     "monthlyPeakKw": 45,
-    "rate": 8,
-    "peakRate": 14,
+    "rate": 0.12,
+    "peakRate": 0.21,
     "peakStart": "16:00",
     "peakEnd": "19:00",
-    "demandRate": 350
+    "demandRate": 15
   },
   "lines": [
     {
@@ -123,7 +123,7 @@
       "unit": "L",
       "stock": 1200,
       "reorderPoint": 100,
-      "unitCost": 400,
+      "unitCost": 5,
       "supplierId": "supplier-1"
     },
     {
@@ -132,7 +132,7 @@
       "unit": "kg",
       "stock": 100,
       "reorderPoint": 20,
-      "unitCost": 120,
+      "unitCost": 1.5,
       "supplierId": "supplier-1"
     },
     {
@@ -141,7 +141,7 @@
       "unit": "kg",
       "stock": 100,
       "reorderPoint": 20,
-      "unitCost": 80,
+      "unitCost": 1,
       "supplierId": "supplier-1"
     }
   ],

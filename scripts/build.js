@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-// Explicit public asset list: never copy workbooks, pilot records, inputs or reports.
+// Explicit public asset list: includes selected in-app pilot summaries; excludes raw workbooks and reports.
 const assets = [
   ['planner.html','index.html'], ['planner.css','planner.css'],
   ['planner-app.js','planner-app.js'], ['demo-data.js','demo-data.js'],
@@ -15,4 +15,4 @@ for (const [source,destination] of assets) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.copyFileSync(path.join(__dirname,'..',source),target);
 }
-console.log(`Built ${assets.length} V2 application assets. Pilot records and workbooks are excluded.`);
+console.log(`Built ${assets.length} V2 application assets. Selected pilot summaries are embedded; raw workbooks are excluded.`);
