@@ -1,91 +1,74 @@
 # BatchWatt
 
-**Plan production. Reduce peak load. Keep dispatch on time.**
+**Factory operations control for production, procurement, dispatch, and energy.**
 
-BatchWatt connects procurement, inventory, production and energy planning in one workspace for small factories.
+BatchWatt helps small factories turn orders, material availability, machine capacity, and electricity constraints into one operational shift plan.
 
-**[Open the latest verified Vercel preview](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)** · **[Vercel project](https://vercel.com/ciel5/batchwatt)** · **[Import the repo into Vercel](https://vercel.com/new)**
+**[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
 
-## Two pilots in the app
+## Current version
 
-Open **Start & pilots**, then choose **RKG Ghee** or **PR Food Products** to see recorded results, example orders and production decisions. Your current factory draft stays intact.
+The latest version is an operations control console built around one question: **is the shift ready to run?**
 
-The working demo and new factory workspaces use **US dollars (USD)** by default.
+It brings production planning, procurement, dispatch risk, and energy into one screen so a supervisor can see blockers before releasing the plan.
 
-## What you can do
+## What it does
 
-- **Plan around energy:** compare peak demand, machine load charts, electricity costs and tariff windows.
-- **Protect deliveries:** build a production schedule around orders, deadlines, available stock and machine capacity.
-- **Manage procurement:** add suppliers, materials and recipes; create purchase records and record partial or full deliveries.
-- **Catch shortages:** see missing materials, packaging and capacity before releasing a plan.
-- **Save and share:** save reviewed plans, download charts and CSV reports, back up inputs, or copy a message for the floor team.
+- Builds a production plan from customer orders, inventory, recipes, machines, and shift capacity.
+- Identifies material shortages and procurement actions before production starts.
+- Flags blocked orders, late-dispatch risk, overdue inbound materials, and other operational exceptions.
+- Tracks planned electrical demand against a configured peak-demand target.
+- Shows dispatch readiness, open exceptions, blocked orders, and peak-demand headroom.
+- Prevents shift-plan release when critical blockers or peak-limit breaches remain.
+- Records a released plan fingerprint so later changes to orders, stock, tariffs, or setup make the release visibly stale.
+- Maintains a local audit trail for operational actions and plan releases.
+- Uses USD for the current demo and planning workflow.
 
-## WhatsApp
+## Operations workflow
 
-- **Incoming orders:** copy orders from WhatsApp and use **Paste WhatsApp orders** in the app. It shows the expected format and validates the rows.
-- **Floor plan:** click **Open in WhatsApp**, choose a contact or group, review the draft and send it.
-- Automatic inbox sync and unattended sending are not connected.
+1. Load customer orders and factory inputs.
+2. Calculate the production and energy plan.
+3. Review the operational work queue.
+4. Resolve procurement, dispatch, capacity, or energy exceptions.
+5. Recalculate the plan.
+6. Release the shift only when hard blockers are cleared.
 
-## A simple daily routine
+## Energy layer
 
-The app opens on your **Shift plan**: orders ready from stock, orders needing attention, buying actions, first planned run and estimated electricity cost. Use **Add customer order**, follow the next-step buttons, then review and share the floor plan. Charts and detailed comparisons are under **Explore energy chart, costs and assumptions**.
+BatchWatt treats energy as an operating constraint, not just a reporting metric.
 
-Set up machines, products, materials, recipes and USD electricity prices once. The setup checklist links straight to each form. Existing rupee demo prices update to the USD demo assumptions. Other saved currencies require an explicit exchange rate before price conversion; original inputs are backed up.
+The planner compares machine schedules with the factory's peak-demand target and highlights when the proposed shift would exceed that limit. This lets the operator adjust timing while still protecting production and dispatch requirements.
 
-## Start in five steps
+The synthetic demo includes a case where peak demand is reduced from **82 kW to 40 kW** while completing the same production work with no late dispatches. Actual savings depend on the factory, tariff structure, and operating conditions.
 
-1. Open the app and load the demo to explore.
-2. Enter your products, machines, suppliers, materials and recipes.
-3. Set your shift hours, electricity tariffs and peak-demand target.
-4. Add customer orders, review buying requirements and record materials received.
-5. Review the proposed schedule, energy chart and dispatch warnings, then save or export your plan.
+## Pilot context
 
-## Why energy matters
+The project includes work developed from two pilot environments:
 
-Running several machines together can create an expensive demand peak. BatchWatt compares an earliest-start schedule with one that staggers machine loads while protecting dispatch deadlines.
+- RKG Ghee
+- PR Food Products
 
-The synthetic demo models **82 kW peak demand reduced to 40 kW**, with the same production work and no late dispatches.
+Pilot context is used to make the workflow realistic while the public demo uses controlled example inputs.
 
-![Demo: baseline and proposed electricity load](docs/examples/energy-load-comparison.svg)
+## Architecture
 
-These are modeled demo results. Actual savings depend on your factory and tariff. Moving production to another time does not automatically reduce total kWh. Monthly demand savings also depend on the peak already reached that month.
+The current application combines:
 
-## Vercel setup
+- a production and energy planning engine
+- procurement and inventory logic
+- an operational exception engine
+- supervisor release controls
+- dispatch and run-board views
+- local-first saved state and audit history
 
-Use the `main` branch of [this repository](https://github.com/raamnandhakumar-eng/batchwatt).
+No API keys or database credentials are required for the current public version.
 
-| Setting | Value |
-|---|---|
-| Framework preset | Other |
-| Root directory | Repository root |
-| Build command | `node scripts/build.js` |
-| Output directory | `dist` |
-| API keys or database credentials | None required for V2 |
+## Version history
 
-The build settings are included in `vercel.json`. The published app includes V2 code, selected pilot summaries and synthetic demo inputs. Raw pilot workbooks are excluded.
+The original BatchWatt V1 is preserved separately in the repository on the `archive/batchwatt-v1` branch.
 
-## Version 1
+The current `main` branch contains the latest operations-control version.
 
-The complete original project is preserved in the **[BatchWatt V1 archive](https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1)**.
+## Important note
 
-## Data and review
-
-Drafts and saved plans stay in your browser. Export a backup to move them between devices. A supervisor should review each plan before use. Purchase records do not send supplier orders or payments, and BatchWatt does not control machines or read live meters.
-
-## Run locally
-
-With Node.js 22 or later:
-
-```bash
-npm install
-npm run dev
-```
-
-To run tests or generate the sample energy report:
-
-```bash
-npm test
-npm run demo:energy
-```
-
-Read more: [Energy model](docs/energy-model.md) · [Version history](docs/version-history.md).
+BatchWatt is decision-support software. It does not control machines, read live meters, place supplier orders, or send payments. A supervisor should review operational plans before use.
