@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="BatchWatt operational control for factory orders, procurement, production and energy.">
+  <title>BatchWatt | Operations Control</title>
+  <link rel="stylesheet" href="/ops.css">
+  <script defer src="/lib/procurement.js"></script>
+  <script defer src="/lib/energy-planner.js"></script>
+  <script defer src="/lib/energy-reports.js"></script>
+  <script defer src="/lib/operations.js"></script>
+  <script defer src="/demo-data.js"></script>
+  <script defer src="/ops-app.js"></script>
+</head>
+<body>
+  <aside class="rail">
+    <a class="brand" href="#operations"><span class="brand-mark">BW</span><span><strong>BatchWatt</strong><small>OPERATIONS CONTROL</small></span></a>
+    <nav aria-label="Primary">
+      <a href="#operations" data-nav="operations">Operations</a>
+      <a href="#orders" data-nav="orders">Orders</a>
+      <a href="#procurement" data-nav="procurement">Procurement</a>
+      <a href="#energy" data-nav="energy">Energy</a>
+      <a href="#setup" data-nav="setup">Setup</a>
+    </nav>
+    <div class="rail-foot">
+      <span>BatchWatt V3</span>
+      <a href="/planner-v2.html">Detailed planner</a>
+      <a href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub ↗</a>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <span class="kicker">FACTORY WORKSPACE</span>
+        <strong id="top-factory">BatchWatt</strong>
+      </div>
+      <div class="top-actions">
+        <span class="save-state" id="save-state">Local operational workspace</span>
+        <button class="ghost" id="load-demo">Load demo</button>
+        <button class="ghost" id="new-workspace">New workspace</button>
+      </div>
+    </header>
+
+    <div id="error" class="error" hidden></div>
+
+    <section class="view" data-view="operations" id="operations">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">TODAY</span>
+          <h1>Operations control</h1>
+          <p id="shift-label">Current shift</p>
+        </div>
+        <div class="actions">
+          <button class="ghost" id="refresh-plan">Recalculate</button>
+          <button class="primary" id="open-order">+ Customer order</button>
+        </div>
+      </div>
+
+      <div class="metric-grid" id="ops-metrics"></div>
+
+      <section class="release-strip" id="release-strip">
+        <div>
+          <span class="eyebrow">SHIFT RELEASE</span>
+          <strong id="release-title">Review required</strong>
+          <p id="release-detail">Resolve critical exceptions before releasing work to the floor.</p>
+        </div>
+        <button class="release-button" id="release-plan">Release shift plan</button>
+      </section>
+
+      <div class="two-column">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">WORK QUEUE</span>
+              <h2>Exceptions requiring action</h2>
+            </div>
+            <div class="segmented" id="queue-filter">
+              <button data-filter="open" class="active">Open</button>
+              <button data-filter="all">All</button>
+            </div>
+          </div>
+          <div id="work-queue" class="work-queue"></div>
+        </section>
+
+        <section class="panel compact-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">RUN BOARD</span>
+              <h2>Production sequence</h2>
+            </div>
+            <a href="#energy">Energy view</a>
+          </div>
+          <div id="run-board" class="run-board"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">AUDIT</span>
+            <h2>Operational activity</h2>
+          </div>
+          <button class="ghost" id="clear-audit">Clear local audit</button>
+        </div>
+        <div id="audit-log" class="audit-log"></div>
+      </section>
+    </section>
+
+    <section class="view" data-view="orders" id="orders" hidden>
+      <div class="page-heading"><div><span class="eyebrow">ORDER CONTROL</span><h1>Orders</h1><p>Protect due times and dispatch commitments.</p></div><button class="primary" id="open-order-2">+ Customer order</button></div>
+      <section class="panel"><div class="table-scroll"><table><thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Qty</th><th>Due</th><th>Priority</th><th>Status</th><th></th></tr></thead><tbody id="orders-table"></tbody></table></div></section>
+    </section>
+
+    <section class="view" data-view="procurement" id="procurement" hidden>
+      <div class="page-heading"><div><span class="eyebrow">MATERIAL CONTROL</span><h1>Procurement</h1><p>Buy shortages, track incoming supply, and record physical receipts.</p></div><button class="primary" id="open-po">+ Purchase order</button></div>
+      <div class="two-column">
+        <section class="panel"><div class="panel-heading"><h2>Material position</h2></div><div class="table-scroll"><table><thead><tr><th>Material</th><th>Stock</th><th>Required</th><th>Incoming</th><th>Buy</th><th>Est. cost</th></tr></thead><tbody id="materials-table"></tbody></table></div></section>
+        <section class="panel"><div class="panel-heading"><h2>Purchase orders</h2></div><div id="purchase-list" class="purchase-list"></div></section>
+      </div>
+    </section>
+
+    <section class="view" data-view="energy" id="energy" hidden>
+      <div class="page-heading"><div><span class="eyebrow">POWER CONTROL</span><h1>Energy</h1><p>Keep the shift below the operating peak target without dropping committed work.</p></div></div>
+      <div class="metric-grid" id="energy-metrics"></div>
+      <section class="panel"><div class="panel-heading"><h2>Planned load profile</h2><span class="pill" id="energy-verdict">Recalculate</span></div><div class="chart-scroll" id="load-chart"></div></section>
+      <section class="panel"><div class="panel-heading"><h2>Tariff inputs</h2></div><div class="settings-grid" id="energy-settings"></div></section>
+    </section>
+
+    <section class="view" data-view="setup" id="setup" hidden>
+      <div class="page-heading"><div><span class="eyebrow">WORKSPACE CONFIGURATION</span><h1>Setup</h1><p>Keep only operational inputs here. Advanced recipe editing remains in the detailed planner.</p></div><a class="ghost button-link" href="/planner-v2.html#setup">Open detailed setup</a></div>
+      <section class="panel">
+        <div class="settings-grid">
+          <label>Factory name<input id="factory-name"></label>
+          <label>Planning date<input id="shift-date" type="date"></label>
+          <label>Shift starts<input id="shift-start" type="time" step="900"></label>
+          <label>Shift ends<input id="shift-end" type="time" step="900"></label>
+        </div>
+      </section>
+      <div class="two-column">
+        <section class="panel"><div class="panel-heading"><h2>Lines</h2></div><div id="line-list" class="simple-list"></div></section>
+        <section class="panel"><div class="panel-heading"><h2>Products</h2></div><div id="product-list" class="simple-list"></div></section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="order-dialog">
+    <form id="order-form">
+      <div class="dialog-heading"><h2>Add customer order</h2><button type="button" class="ghost" data-close="order-dialog">Close</button></div>
+      <label>Customer<input id="order-customer" required></label>
+      <label>Product<select id="order-product" required></select></label>
+      <label>Quantity<input id="order-qty" type="number" min="0.01" step="any" required></label>
+      <label>Due<input id="order-due" type="datetime-local" required></label>
+      <label>Priority<select id="order-priority"><option>Standard</option><option>High</option><option>Urgent</option></select></label>
+      <button class="primary" type="submit">Add order</button>
+    </form>
+  </dialog>
+
+  <dialog id="po-dialog">
+    <form id="po-form">
+      <div class="dialog-heading"><h2>Create purchase order</h2><button type="button" class="ghost" data-close="po-dialog">Close</button></div>
+      <label>Supplier<select id="po-supplier" required></select></label>
+      <label>Material<select id="po-material" required></select></label>
+      <label>Quantity<input id="po-qty" type="number" min="0.0001" step="any" required></label>
+      <label>Unit cost (USD)<input id="po-cost" type="number" min="0" step="any" required></label>
+      <label>Expected delivery<input id="po-date" type="date" required></label>
+      <button class="primary" type="submit">Create draft PO</button>
+    </form>
+  </dialog>
+</body>
+</html>

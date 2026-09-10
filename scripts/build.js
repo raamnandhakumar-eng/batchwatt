@@ -1,15 +1,19 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Explicit public asset list: includes selected in-app pilot summaries; excludes raw workbooks and reports.
+// V3 operations console is the default app. V2 remains available as the detailed planner.
 const assets = [
-  ['planner.html', 'index.html'],
+  ['ops.html', 'index.html'],
+  ['ops.css', 'ops.css'],
+  ['ops-app.js', 'ops-app.js'],
+  ['planner.html', 'planner-v2.html'],
   ['planner.css', 'planner.css'],
   ['planner-app.js', 'planner-app.js'],
   ['demo-data.js', 'demo-data.js'],
   ['lib/procurement.js', 'lib/procurement.js'],
   ['lib/energy-planner.js', 'lib/energy-planner.js'],
   ['lib/energy-reports.js', 'lib/energy-reports.js'],
+  ['lib/operations.js', 'lib/operations.js'],
 ];
 
 const out = path.join(__dirname, '..', 'dist');
@@ -21,15 +25,12 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// The source app is also served at a domain root on Vercel. GitHub Pages serves this
-// repository under /batchwatt/, so convert root-relative HTML assets and navigation
-// into paths relative to the generated index.html. Relative paths work in both places.
-const indexPath = path.join(out, 'index.html');
-const portableIndex = fs
-  .readFileSync(indexPath, 'utf8')
-  .replace(/\b(href|src)="\/(?!\/)/g, '$1="./');
-fs.writeFileSync(indexPath, portableIndex);
+for (const htmlName of ['index.html', 'planner-v2.html']) {
+  const htmlPath = path.join(out, htmlName);
+  const portable = fs
+    .readFileSync(htmlPath, 'utf8')
+    .replace(/\b(href|src)="\/(?!\/)/g, '$1="./');
+  fs.writeFileSync(htmlPath, portable);
+}
 
-console.log(
-  `Built ${assets.length} V2 application assets. Selected pilot summaries are embedded; raw workbooks are excluded.`,
-);
+console.log(`Built ${assets.length} BatchWatt V3 operations assets with V2 planner preserved.`);

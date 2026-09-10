@@ -1,12 +1,12 @@
 {
   "name": "batchwatt",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "Energy-aware factory planning: shared inventory, line capacity, peak demand and tariff scenario comparison.",
+  "description": "Operator-facing factory control for orders, procurement, production scheduling and peak demand.",
   "scripts": {
     "dev": "vercel dev",
     "test:plan": "node samples/test_plan.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node --check ops-app.js && node --check lib/operations.js && node --test tests/*.test.js",
     "demo": "node scripts/export-plan.js samples/sample_plan_payload.json output/demo",
     "demo:energy": "node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo",
     "build": "node scripts/build.js"
