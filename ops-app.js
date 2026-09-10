@@ -1,11 +1,10 @@
-/* BatchWatt V3 operations console. Local-first operational workflow over the V2 planning engine. */
+/* BatchWatt simple operator console. One next action, one run plan, one release decision. */
 'use strict';
 const $ = id => document.getElementById(id);
 const DRAFT_KEY = 'batchwatt_v2_draft';
 const OPS_KEY = 'batchwatt_v3_operations';
-const AUDIT_KEY = 'batchwatt_v3_audit';
 const ACTOR_KEY = 'batchwatt_v3_actor';
-let input, result = null, workflow = {items:{},release:null}, audit = [], queueFilter = 'open';
+let input, result = null, workflow = {items:{},release:null};
 const clone = x => JSON.parse(JSON.stringify(x));
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(n||0));
@@ -25,142 +24,143 @@ function loadState(){
     const draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null');
     input=draft?.input ? draft.input : prepareDemo();
     workflow=JSON.parse(localStorage.getItem(OPS_KEY)||'null') || {items:{},release:null};
-    audit=JSON.parse(localStorage.getItem(AUDIT_KEY)||'[]');
-  }catch{ input=prepareDemo(); workflow={items:{},release:null}; audit=[]; }
+  }catch{ input=prepareDemo(); workflow={items:{},release:null}; }
   input.suppliers ||= []; input.materials ||= []; input.recipes ||= []; input.purchaseOrders ||= [];
 }
 function persist(){
   localStorage.setItem(DRAFT_KEY,JSON.stringify({input,isDemo:false}));
   localStorage.setItem(OPS_KEY,JSON.stringify(workflow));
-  localStorage.setItem(AUDIT_KEY,JSON.stringify(audit.slice(0,100)));
   $('save-state').textContent='Saved on this device';
 }
-function log(action,detail){
-  audit.unshift({id:uid('evt'),at:new Date().toISOString(),actor:actor(),action,detail});
-  audit=audit.slice(0,100); persist();
-}
 function fail(message){ $('error').hidden=!message; $('error').textContent=message||''; }
-function recalc({record=false}={}){
+function recalc(){
   persist();
-  try{ result=BatchWattEnergy.createEnergyPlan(input); fail(''); if(record)log('Plan recalculated',`${input.factory} · ${input.shift.date}`); }
+  if(!(input.orders||[]).length){ result=null; fail(''); renderAll(); return; }
+  try{ result=BatchWattEnergy.createEnergyPlan(input); fail(''); }
   catch(err){ result=null; fail(err.message); }
   renderAll();
 }
 function ops(){ return BatchWattOperations.summary(input,result,workflow); }
 function release(){ return BatchWattOperations.releaseStatus(input,workflow); }
-function statusRows(){ return result ? BatchWattReports.dispatchRows(result) : []; }
+function route(action){ return action==='procurement'?'buy':action==='orders'?'orders':'more'; }
+function goto(view){ location.hash=view; }
 
-function metric(label,value,note,attention=false){ return `<article class="metric ${attention?'attention':''}"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`; }
-function renderOperations(){
-  $('top-factory').textContent=input.factory||'Factory';
-  $('shift-label').textContent=`${input.factory} · ${input.shift.date} · ${input.shift.start}–${input.shift.end}`;
-  if(!result){ $('ops-metrics').innerHTML=metric('Plan status','Incomplete','Fix the highlighted setup issue',true); $('work-queue').innerHTML='<div class="empty">Complete the workspace inputs to create an operational plan.</div>'; return; }
-  const s=ops(), rs=release();
-  const ready=statusRows().filter(r=>['Scheduled','Ready from stock'].includes(r.status)).length;
-  const headroom=s.peakHeadroomKw;
-  $('ops-metrics').innerHTML=[
-    metric('Dispatch ready',`${ready}/${statusRows().length}`,'Scheduled or available from stock',ready<statusRows().length),
-    metric('Open exceptions',s.openCount,`${s.criticalCount} critical`,s.openCount>0),
-    metric('Blocked orders',s.blockedOrders,'Must be cleared before release',s.blockedOrders>0),
-    metric('Peak headroom',`${headroom} kW`,`${result.proposed.peakKw} kW planned vs ${input.energy.peakLimitKw} kW target`,headroom<0)
-  ].join('');
+function orderRows(){
+  if(!result)return [];
+  const jobs=new Map((result.proposed.jobs||[]).map(j=>[j.id,j]));
+  const blocked=new Map((result.proposed.unscheduled||[]).map(j=>[j.id,j]));
+  const shiftStart=BatchWattEnergy.timeMinutes(input.shift.start);
+  return (result.allocations||[]).map(a=>{
+    const job=jobs.get(a.id), hold=blocked.get(a.id);
+    let status='Ready from stock', detail='No production needed';
+    if(hold){status='Blocked';detail=hold.reason;}
+    else if(job){status=job.lateMinutes>0?'Late':'Scheduled';detail=`${job.startTime}–${job.endTime} · ${job.line}`;}
+    else if(!a.produce && a.dueMinute<shiftStart){status='Overdue';detail='Stock is available but due time has passed';}
+    return {...a,status,detail};
+  });
+}
 
-  const strip=$('release-strip');
-  strip.className='release-strip'+(rs.isReleased?' released':rs.isStale?' stale':'');
-  if(rs.isReleased){ $('release-title').textContent='Shift plan released'; $('release-detail').textContent=`Released by ${rs.release.actor} at ${new Date(rs.release.at).toLocaleString()}.`; }
-  else if(rs.isStale){ $('release-title').textContent='Released plan is stale'; $('release-detail').textContent='Orders, stock, tariff, or setup changed after release. Recalculate and release again.'; }
-  else if(s.releasable){ $('release-title').textContent='Ready for supervisor release'; $('release-detail').textContent='No hard operational blocker remains. Release records the current plan fingerprint.'; }
-  else { $('release-title').textContent='Release blocked'; $('release-detail').textContent='Clear blocked orders, critical exceptions, and peak-limit breaches first.'; }
-  $('release-plan').disabled=!s.releasable || rs.isReleased;
-  $('release-plan').textContent=rs.isReleased?'Released':'Release shift plan';
+function nextAction(){
+  if(!(input.orders||[]).length)return {title:'Add your first customer order',detail:'BatchWatt will tell you what to buy, what to run, and when.',label:'Add order',action:'order'};
+  if(!result)return {title:'Finish the factory setup',detail:'A required product, recipe, machine, material, or energy input is missing.',label:'Open settings',action:'more'};
+  const summary=ops(), rs=release();
+  const blocker=(result.proposed.unscheduled||[])[0];
+  if(blocker){
+    const material=String(blocker.reason||'').includes('Material shortage');
+    return {title:material?'Buy missing material':`Fix ${blocker.product}`,detail:blocker.reason,label:material?'Open buying':'Open settings',action:material?'buy':'more'};
+  }
+  if(summary.criticalCount>0){
+    const issue=summary.items.find(i=>i.state.status!=='Resolved'&&i.severity==='critical');
+    return {title:issue?.title||'Resolve critical issue',detail:issue?.detail||'The shift has a critical operating issue.',label:'Fix issue',action:route(issue?.action)};
+  }
+  if(!rs.isReleased || rs.isStale)return {title:rs.isStale?'Release the updated plan':'Release today’s shift plan',detail:'The plan has no hard blocker. Release it before the floor starts work.',label:rs.isStale?'Release again':'Release shift',action:'release'};
+  const ready=orderRows().find(r=>r.status==='Ready from stock');
+  if(ready)return {title:`Dispatch ${ready.product}`,detail:`${ready.fromStock} ${ready.unit} ready for ${ready.customer}. Due ${String(ready.due).replace('T',' ')}.`,label:'Open orders',action:'orders'};
+  const buys=(result.procurement.requirements||[]).filter(m=>Number(m.toBuy)>0);
+  if(buys.length){const m=buys[0];return {title:`Order ${m.toBuy} ${m.unit} ${m.name}`,detail:`Suggested replenishment. Estimated cost ${money(m.estimatedCost)}.`,label:'Create PO',action:'po',materialId:m.materialId,qty:m.toBuy};}
+  const job=[...(result.proposed.jobs||[])].sort((a,b)=>a.start-b.start)[0];
+  if(job)return {title:`Run ${job.product} at ${job.startTime}`,detail:`${job.produce} ${job.unit} on ${job.line}. Due ${String(job.due).replace('T',' ')}.`,label:'View run plan',action:'today'};
+  return {title:'Shift plan complete',detail:'No production or buying action is waiting.',label:'View orders',action:'orders'};
+}
 
-  renderQueue(s.items);
-  const jobs=[...(result.proposed.jobs||[])].sort((a,b)=>a.start-b.start);
-  $('run-board').innerHTML=jobs.length?jobs.map(j=>`<div class="run-row"><span class="run-time">${esc(j.startTime)}</span><div><strong>${esc(j.product)}</strong><small>${esc(j.line)} · ${esc(j.customer)} · ${j.produce} ${esc(j.unit)}</small></div><span class="pill ${j.lateMinutes?'critical':'ready'}">${j.lateMinutes?`${j.lateMinutes}m late`:'Ready'}</span></div>`).join(''):'<div class="empty">No production run scheduled.</div>';
-  renderAudit();
+function renderToday(){
+  $('factory-title').textContent=input.factory||'My factory';
+  $('shift-label').textContent=`${input.shift.date} · ${input.shift.start}–${input.shift.end}`;
+  const action=nextAction();
+  $('next-title').textContent=action.title; $('next-detail').textContent=action.detail; $('next-button').textContent=action.label;
+  $('next-button').dataset.action=action.action; $('next-button').dataset.material=action.materialId||''; $('next-button').dataset.qty=action.qty||'';
+
+  if(!result){
+    $('plan-status').textContent=(input.orders||[]).length?'Needs setup':'No orders yet'; $('plan-status').className='status-pill warn';
+    $('run-summary').textContent=''; $('run-list').innerHTML='<div class="empty">Add an order to create today’s run plan.</div>';
+    $('release-card').className='release-card blocked'; $('release-title').textContent='Not ready to release'; $('release-detail').textContent='Create a valid plan first.'; $('release-plan').disabled=true;
+    $('issue-count').textContent='0'; $('issue-list').innerHTML='<div class="empty">No plan issues yet.</div>'; return;
+  }
+
+  const summary=ops(), rs=release(), jobs=[...(result.proposed.jobs||[])].sort((a,b)=>a.start-b.start);
+  if(rs.isReleased){$('plan-status').textContent='Released';$('plan-status').className='status-pill good';}
+  else if(summary.releasable){$('plan-status').textContent='Ready to release';$('plan-status').className='status-pill good';}
+  else{$('plan-status').textContent='Needs action';$('plan-status').className='status-pill warn';}
+
+  $('run-summary').textContent=`${jobs.length} production run${jobs.length===1?'':'s'}`;
+  $('run-list').innerHTML=jobs.length?jobs.map(j=>`<div class="run-row"><span class="run-time">${esc(j.startTime)}</span><div class="run-main"><strong>${esc(j.product)}</strong><small>${j.produce} ${esc(j.unit)} · ${esc(j.line)} · ${esc(j.customer)}</small></div><span class="run-badge ${j.lateMinutes?'late':''}">${j.lateMinutes?`${j.lateMinutes}m late`:'On time'}</span></div>`).join(''):'<div class="empty">No production run is needed. Orders may be covered from stock.</div>';
+
+  const releaseCard=$('release-card');
+  if(rs.isReleased){releaseCard.className='release-card released';$('release-title').textContent='Shift released';$('release-detail').textContent=`Released by ${rs.release.actor} at ${new Date(rs.release.at).toLocaleString()}.`;$('release-plan').disabled=true;$('release-plan').textContent='Released';}
+  else if(rs.isStale){releaseCard.className='release-card blocked';$('release-title').textContent='Plan changed after release';$('release-detail').textContent='Review the updated plan and release it again.';$('release-plan').disabled=!summary.releasable;$('release-plan').textContent='Release again';}
+  else if(summary.releasable){releaseCard.className='release-card ready';$('release-title').textContent='Ready to release';$('release-detail').textContent='No blocked production or critical energy issue remains.';$('release-plan').disabled=false;$('release-plan').textContent='Release shift';}
+  else{releaseCard.className='release-card blocked';$('release-title').textContent='Release blocked';$('release-detail').textContent='Fix the issues below first.';$('release-plan').disabled=true;$('release-plan').textContent='Release shift';}
+
+  const issues=summary.items.filter(i=>i.state.status!=='Resolved');
+  $('issue-count').textContent=issues.length;
+  $('issue-list').innerHTML=issues.length?issues.map(i=>`<div class="issue-row"><div><span class="issue-type">${esc(i.type)}</span><strong>${esc(i.title)}</strong><p>${esc(i.detail)}</p></div><button class="quiet" data-go="${route(i.action)}">Fix</button></div>`).join(''):'<div class="empty">No operating issues.</div>';
+  $('issues-panel').open=summary.blockedOrders>0||summary.criticalCount>0;
 }
-function renderQueue(items){
-  const visible=queueFilter==='open'?items.filter(i=>i.state.status!=='Resolved'):items;
-  $('work-queue').innerHTML=visible.length?visible.map(i=>`<article class="work-item ${i.severity} ${i.state.status==='Resolved'?'resolved':''}">
-    <span class="severity-dot"></span>
-    <div class="work-main"><strong>${esc(i.title)}</strong><p>${esc(i.detail)}</p><div class="work-meta"><span class="pill ${i.severity}">${esc(i.severity.toUpperCase())}</span><span>${esc(i.type)}</span>${i.due?`<span>Due ${esc(String(i.due).replace('T',' '))}</span>`:''}<span>${esc(i.state.owner||'Unassigned')}</span><span>${esc(i.state.status)}</span></div></div>
-    <div class="work-actions">${i.state.status==='Open'?`<button data-work="ack" data-id="${esc(i.id)}">Acknowledge</button>`:''}${!i.state.owner&&i.state.status!=='Resolved'?`<button data-work="assign" data-id="${esc(i.id)}">Assign</button>`:''}${i.state.status!=='Resolved'?`<button data-work="resolve" data-id="${esc(i.id)}">Resolve</button>`:''}<button data-go="${esc(i.action)}">Open</button></div>
-  </article>`).join(''):'<div class="empty">No exceptions in this view.</div>';
-}
-function renderAudit(){
-  $('audit-log').innerHTML=audit.length?audit.slice(0,20).map(e=>`<div class="audit-row"><time>${esc(new Date(e.at).toLocaleString())}</time><span>${esc(e.actor)}</span><div><strong>${esc(e.action)}</strong><br><small>${esc(e.detail)}</small></div></div>`).join(''):'<div class="empty">Operational actions will appear here.</div>';
-}
+
 function renderOrders(){
-  const rows=new Map(statusRows().map(r=>[r.id,r]));
-  $('orders-table').innerHTML=(input.orders||[]).map(o=>{ const p=input.products.find(p=>p.id===o.productId), r=rows.get(o.id); const ok=r&&['Scheduled','Ready from stock'].includes(r.status); return `<tr><td><strong>${esc(o.id)}</strong></td><td>${esc(o.customer)}</td><td>${esc(p?.name||o.productId)}</td><td>${o.qty}</td><td>${esc(o.due.replace('T',' '))}</td><td>${esc(o.priority)}</td><td class="${ok?'status-good':'status-bad'}">${esc(r?.status||'Needs plan')}</td><td><button data-delete-order="${esc(o.id)}">Remove</button></td></tr>`; }).join('')||'<tr><td colspan="8">No orders loaded.</td></tr>';
+  const rows=orderRows(), statusById=new Map(rows.map(r=>[r.id,r]));
+  const items=(input.orders||[]).map(o=>{const p=input.products.find(p=>p.id===o.productId),r=statusById.get(o.id),status=r?.status||'Needs plan';return {...o,product:p?.name||o.productId,status,detail:r?.detail||''};});
+  $('orders-table').innerHTML=items.length?items.map(o=>`<tr><td>${esc(o.customer)}</td><td>${esc(o.product)}</td><td>${o.qty}</td><td>${esc(o.due.replace('T',' '))}</td><td class="${['Blocked','Late','Overdue'].includes(o.status)?'status-bad':'status-good'}">${esc(o.status)}</td><td><button class="quiet" data-delete-order="${esc(o.id)}">Remove</button></td></tr>`).join(''):'<tr><td colspan="6">No orders yet.</td></tr>';
+  $('orders-cards').innerHTML=items.length?items.map(o=>`<article class="order-card"><div class="order-card-head"><strong>${esc(o.customer)}</strong><span class="${['Blocked','Late','Overdue'].includes(o.status)?'status-bad':'status-good'}">${esc(o.status)}</span></div><p>${esc(o.product)} · ${o.qty}</p><p>Due ${esc(o.due.replace('T',' '))}</p><button class="quiet" data-delete-order="${esc(o.id)}">Remove</button></article>`).join(''):'<div class="empty">No orders yet.</div>';
 }
-function renderProcurement(){
-  if(!result){ $('materials-table').innerHTML='<tr><td colspan="6">Complete the plan to calculate material requirements.</td></tr>'; return; }
-  $('materials-table').innerHTML=(result.procurement.requirements||[]).map(m=>`<tr><td><strong>${esc(m.name)}</strong><small>${esc(m.unit)}</small></td><td>${m.stock}</td><td>${m.required}</td><td>${m.incoming}</td><td class="${m.toBuy?'status-bad':''}">${m.toBuy}</td><td>${money(m.estimatedCost)}</td></tr>`).join('')||'<tr><td colspan="6">No materials configured.</td></tr>';
-  $('purchase-list').innerHTML=(input.purchaseOrders||[]).length?(input.purchaseOrders||[]).map(po=>{ const m=input.materials.find(x=>x.id===po.materialId), s=input.suppliers.find(x=>x.id===po.supplierId), remain=Number(po.qty)-Number(po.receivedQty||0); return `<article class="purchase-card"><div><strong>${esc(po.id)} · ${esc(m?.name||po.materialId)}</strong><p>${esc(s?.name||po.supplierId)} · ${po.qty} ${esc(m?.unit||'units')} · due ${esc(po.expectedDate)} · ${esc(po.status)}</p></div><div class="actions">${po.status==='Draft'?`<button data-po-action="order" data-id="${esc(po.id)}">Mark ordered</button>`:''}${['Ordered','Part received'].includes(po.status)?`<button data-po-action="receive" data-id="${esc(po.id)}">Receive ${remain}</button>`:''}</div></article>`; }).join(''):'<div class="empty">No purchase orders yet.</div>';
+
+function renderBuy(){
+  if(!result){$('buy-summary').textContent='Add an order and complete setup to calculate material needs.';$('buy-list').innerHTML='<div class="empty">No buy plan yet.</div>';$('purchase-list').innerHTML='';return;}
+  const buys=(result.procurement.requirements||[]).filter(m=>Number(m.toBuy)>0), spend=buys.reduce((s,m)=>s+Number(m.estimatedCost||0),0);
+  $('buy-summary').textContent=buys.length?`${buys.length} material action${buys.length===1?'':'s'} · estimated ${money(spend)}`:'No purchase is recommended for the current plan.';
+  $('buy-list').innerHTML=buys.length?buys.map(m=>{const supplier=input.suppliers.find(s=>s.id===m.supplierId)?.name||m.supplier||'Supplier not set';const urgent=Number(m.shortage)>0;return `<article class="buy-row ${urgent?'urgent':''}"><div><span class="eyebrow">${urgent?'NEEDED FOR ORDERS':'BUFFER REPLENISHMENT'}</span><strong class="buy-qty">${m.toBuy} ${esc(m.unit)} ${esc(m.name)}</strong><p>${urgent?`${m.shortage} ${esc(m.unit)} short for current production.`:`Replenishes the configured buffer.`} ${esc(supplier)} · est. ${money(m.estimatedCost)}</p></div><button class="primary" data-create-po="${esc(m.materialId)}" data-qty="${m.toBuy}">Create PO</button></article>`;}).join(''):'<div class="empty">Stock and incoming supply cover the current plan.</div>';
+  const open=(input.purchaseOrders||[]).filter(po=>po.status!=='Cancelled');
+  $('purchase-list').innerHTML=open.length?open.map(po=>{const m=input.materials.find(x=>x.id===po.materialId),s=input.suppliers.find(x=>x.id===po.supplierId),remain=Number(po.qty)-Number(po.receivedQty||0);return `<div class="purchase-row"><div><strong>${esc(m?.name||po.materialId)} · ${esc(po.status)}</strong><p>${esc(s?.name||po.supplierId)} · ${po.qty} ${esc(m?.unit||'units')} · due ${esc(po.expectedDate)}</p></div><div class="actions">${po.status==='Draft'?`<button data-po-action="order" data-id="${esc(po.id)}">Mark ordered</button>`:''}${['Ordered','Part received'].includes(po.status)?`<button data-po-action="receive" data-id="${esc(po.id)}">Receive ${remain}</button>`:''}</div></div>`;}).join(''):'<div class="empty">No purchase orders yet.</div>';
 }
-function renderEnergy(){
-  if(!result){ $('energy-metrics').innerHTML=''; $('load-chart').innerHTML='<div class="empty">Complete the plan to see the load profile.</div>'; return; }
-  $('energy-metrics').innerHTML=[
-    metric('Planned peak',`${result.proposed.peakKw} kW`,`${result.comparison.peakReductionKw} kW below baseline`,result.proposed.peakKw>input.energy.peakLimitKw),
-    metric('Shift energy',`${result.proposed.kwh} kWh`,'Modeled 15-minute load'),
-    metric('Shift energy charge',money(result.proposed.usageCost),'Excludes monthly demand charge'),
-    metric('Conditional demand saving',money(result.comparison.conditionalDemandSaving),'Only if this schedule changes final monthly peak')
-  ].join('');
-  $('load-chart').innerHTML=BatchWattReports.loadChart(result);
-  $('energy-verdict').textContent=result.proposed.peakKw<=input.energy.peakLimitKw?'Within peak target':'Above peak target';
-  $('energy-verdict').className='pill '+(result.proposed.peakKw<=input.energy.peakLimitKw?'ready':'critical');
+
+function renderMore(){
+  $('factory-name').value=input.factory||'';$('shift-date').value=input.shift.date;$('shift-start').value=input.shift.start;$('shift-end').value=input.shift.end;
   const fields=[['baseKw','Background load (kW)','number'],['peakLimitKw','Peak target (kW)','number'],['monthlyPeakKw','Month peak so far (kW)','number'],['rate','Off-peak USD/kWh','number'],['peakRate','Peak USD/kWh','number'],['demandRate','Demand USD/kW','number'],['peakStart','Peak starts','time'],['peakEnd','Peak ends','time']];
   $('energy-settings').innerHTML=fields.map(([key,label,type])=>`<label>${label}<input data-energy="${key}" type="${type}" ${type==='time'?'step="900"':'min="0" step="any"'} value="${esc(input.energy[key])}"></label>`).join('');
-}
-function renderSetup(){
-  $('factory-name').value=input.factory||''; $('shift-date').value=input.shift.date; $('shift-start').value=input.shift.start; $('shift-end').value=input.shift.end;
-  $('line-list').innerHTML=(input.lines||[]).map(l=>`<div class="simple-row"><div><strong>${esc(l.name)}</strong><p>${l.kw} kW · ${l.changeoverMinutes} min changeover</p></div></div>`).join('')||'<div class="empty">No lines configured.</div>';
-  $('product-list').innerHTML=(input.products||[]).map(p=>`<div class="simple-row"><div><strong>${esc(p.name)}</strong><p>${p.rate} ${esc(p.unit)}/hr · stock ${p.stock} · packaging ${p.packaging}</p></div></div>`).join('')||'<div class="empty">No products configured.</div>';
-}
-function renderAll(){ renderOperations(); renderOrders(); renderProcurement(); renderEnergy(); renderSetup(); showView(); }
-function showView(){
-  const view=['operations','orders','procurement','energy','setup'].includes(location.hash.slice(1))?location.hash.slice(1):'operations';
-  document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);
-  document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===view));
-  window.scrollTo(0,0);
-}
-function openOrder(){
-  if(!input.products?.length){ location.hash='setup'; return; }
-  $('order-form').reset(); $('order-product').innerHTML=input.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''); $('order-qty').value=1; $('order-due').value=`${input.shift.date}T${input.shift.end}`; $('order-dialog').showModal();
-}
-function openPo(materialId=''){
-  if(!input.suppliers.length||!input.materials.length){ location.hash='setup'; fail('Add suppliers and materials in the detailed setup before creating purchase orders.'); return; }
-  $('po-form').reset(); $('po-supplier').innerHTML=input.suppliers.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join(''); $('po-material').innerHTML=input.materials.map(m=>`<option value="${esc(m.id)}" ${m.id===materialId?'selected':''}>${esc(m.name)}</option>`).join(''); const mat=input.materials.find(m=>m.id===$('po-material').value); $('po-cost').value=mat?.unitCost||0; $('po-date').value=input.shift.date; $('po-dialog').showModal();
-}
-function setWork(id,patch,action){
-  workflow.items ||= {}; const prev=workflow.items[id]||{status:'Open',owner:'',note:'',updatedAt:null}; workflow.items[id]={...prev,...patch,updatedAt:new Date().toISOString()}; log(action,id); renderAll();
+  if(!result){$('energy-status').textContent='No plan';$('energy-status').className='status-pill neutral';$('energy-summary').innerHTML='<div class="stat"><span>Peak</span><strong>—</strong></div><div class="stat"><span>Energy</span><strong>—</strong></div><div class="stat"><span>Shift cost</span><strong>—</strong></div>';return;}
+  const within=result.proposed.peakKw<=input.energy.peakLimitKw;
+  $('energy-status').textContent=within?'Within peak target':'Above peak target';$('energy-status').className='status-pill '+(within?'good':'bad');
+  $('energy-summary').innerHTML=`<div class="stat"><span>Planned peak</span><strong>${result.proposed.peakKw} kW</strong></div><div class="stat"><span>Shift energy</span><strong>${result.proposed.kwh} kWh</strong></div><div class="stat"><span>Shift cost</span><strong>${money(result.proposed.usageCost)}</strong></div>`;
 }
 
+function renderAll(){renderToday();renderOrders();renderBuy();renderMore();showView();}
+function showView(){const view=['today','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===view));window.scrollTo(0,0);}
+function openOrder(){if(!input.products?.length){goto('more');fail('Add products in the detailed planner before creating orders.');return;}$('order-form').reset();$('order-product').innerHTML=input.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');$('order-qty').value=1;$('order-due').value=`${input.shift.date}T${input.shift.end}`;$('order-dialog').showModal();}
+function openPo(materialId='',qty=''){if(!input.suppliers.length||!input.materials.length){goto('more');fail('Add suppliers and materials in the detailed planner first.');return;}$('po-form').reset();$('po-supplier').innerHTML=input.suppliers.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');$('po-material').innerHTML=input.materials.map(m=>`<option value="${esc(m.id)}" ${m.id===materialId?'selected':''}>${esc(m.name)}</option>`).join('');const mat=input.materials.find(m=>m.id===$('po-material').value);if(mat?.supplierId)$('po-supplier').value=mat.supplierId;$('po-cost').value=mat?.unitCost||0;$('po-qty').value=qty||1;const sup=input.suppliers.find(s=>s.id===$('po-supplier').value),d=new Date(`${input.shift.date}T12:00:00`);d.setDate(d.getDate()+Number(sup?.leadDays||0));$('po-date').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;$('po-dialog').showModal();}
+function releaseShift(){const summary=ops();if(!summary.releasable)return;workflow.release={fingerprint:BatchWattOperations.planFingerprint(input),at:new Date().toISOString(),actor:actor()};persist();renderAll();}
+
 document.addEventListener('DOMContentLoaded',()=>{
-  loadState(); recalc();
-  window.addEventListener('hashchange',showView);
-  $('refresh-plan').onclick=()=>recalc({record:true});
-  $('load-demo').onclick=()=>{ input=prepareDemo(); workflow={items:{},release:null}; log('Demo loaded','Reset operational workspace to illustrative factory data.'); recalc(); location.hash='operations'; };
-  $('new-workspace').onclick=()=>{ const d=prepareDemo(); d.factory='My factory'; d.orders=[]; d.purchaseOrders=[]; input=d; workflow={items:{},release:null}; log('Workspace started','Created a new workspace from the safe starter configuration.'); recalc(); location.hash='setup'; };
-  $('open-order').onclick=openOrder; $('open-order-2').onclick=openOrder;
-  $('open-po').onclick=()=>openPo();
+  loadState();recalc();window.addEventListener('hashchange',showView);
+  $('open-order').onclick=openOrder;$('open-order-2').onclick=openOrder;$('open-po').onclick=()=>openPo();$('release-plan').onclick=releaseShift;
+  $('next-button').onclick=()=>{const b=$('next-button'),action=b.dataset.action;if(action==='order')openOrder();else if(action==='release')releaseShift();else if(action==='po')openPo(b.dataset.material,b.dataset.qty);else goto(action||'today');};
+  $('load-demo').onclick=()=>{input=prepareDemo();workflow={items:{},release:null};recalc();goto('today');};
+  $('new-workspace').onclick=()=>{const d=prepareDemo();d.factory='My factory';d.orders=[];d.purchaseOrders=[];input=d;workflow={items:{},release:null};recalc();goto('more');};
   document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
-  $('order-form').onsubmit=e=>{ e.preventDefault(); const order={id:uid('ORD'),customer:$('order-customer').value.trim(),productId:$('order-product').value,qty:Number($('order-qty').value),due:$('order-due').value,priority:$('order-priority').value}; input.orders.push(order); $('order-dialog').close(); log('Customer order added',`${order.id} · ${order.customer} · ${order.qty}`); recalc(); location.hash='operations'; };
-  $('po-form').onsubmit=e=>{ e.preventDefault(); const po={id:uid('PO'),supplierId:$('po-supplier').value,materialId:$('po-material').value,qty:Number($('po-qty').value),unitCost:Number($('po-cost').value),expectedDate:$('po-date').value,status:'Draft',receivedQty:0,notes:'',receipts:[]}; input.purchaseOrders.push(po); $('po-dialog').close(); log('Purchase order drafted',`${po.id} · ${po.qty}`); recalc(); location.hash='procurement'; };
-  $('release-plan').onclick=()=>{ const s=ops(); if(!s.releasable)return; workflow.release={fingerprint:BatchWattOperations.planFingerprint(input),at:new Date().toISOString(),actor:actor()}; log('Shift plan released',`${input.shift.date} · ${result.proposed.jobs.length} scheduled run(s)`); renderAll(); };
-  $('clear-audit').onclick=()=>{ audit=[]; persist(); renderAudit(); };
-  $('queue-filter').onclick=e=>{ const b=e.target.closest('[data-filter]'); if(!b)return; queueFilter=b.dataset.filter; document.querySelectorAll('#queue-filter button').forEach(x=>x.classList.toggle('active',x===b)); renderQueue(ops().items); };
-  document.addEventListener('click',e=>{
-    const w=e.target.closest('[data-work]'); if(w){ if(w.dataset.work==='ack')setWork(w.dataset.id,{status:'Acknowledged'},'Exception acknowledged'); if(w.dataset.work==='assign')setWork(w.dataset.id,{owner:actor()},'Exception assigned'); if(w.dataset.work==='resolve')setWork(w.dataset.id,{status:'Resolved'},'Exception marked resolved'); return; }
-    const go=e.target.closest('[data-go]'); if(go){ location.hash=go.dataset.go; return; }
-    const del=e.target.closest('[data-delete-order]'); if(del){ input.orders=input.orders.filter(o=>o.id!==del.dataset.deleteOrder); log('Order removed',del.dataset.deleteOrder); recalc(); return; }
-    const po=e.target.closest('[data-po-action]'); if(po){ const row=input.purchaseOrders.find(x=>x.id===po.dataset.id); if(!row)return; if(po.dataset.poAction==='order'){row.status='Ordered';log('Purchase order placed',row.id);recalc();} else { const remain=Number(row.qty)-Number(row.receivedQty||0); input=BatchWattProcurement.receivePurchase(input,row.id,remain);log('Material receipt recorded',`${row.id} · ${remain}`);recalc();} }
-  });
-  document.addEventListener('change',e=>{
-    if(e.target.dataset.energy){ input.energy[e.target.dataset.energy]=e.target.type==='number'?Number(e.target.value):e.target.value; log('Energy setting changed',e.target.dataset.energy); recalc(); }
-  });
-  const setupChange=()=>{ input.factory=$('factory-name').value.trim()||'My factory'; input.shift.date=$('shift-date').value; input.shift.start=$('shift-start').value; input.shift.end=$('shift-end').value; log('Workspace setup changed',`${input.factory} · ${input.shift.date}`); recalc(); };
+  $('order-form').onsubmit=e=>{e.preventDefault();const order={id:uid('ORD'),customer:$('order-customer').value.trim(),productId:$('order-product').value,qty:Number($('order-qty').value),due:$('order-due').value,priority:$('order-priority').value};input.orders.push(order);$('order-dialog').close();recalc();goto('today');};
+  $('po-form').onsubmit=e=>{e.preventDefault();const po={id:uid('PO'),supplierId:$('po-supplier').value,materialId:$('po-material').value,qty:Number($('po-qty').value),unitCost:Number($('po-cost').value),expectedDate:$('po-date').value,status:'Draft',receivedQty:0,notes:'',receipts:[]};input.purchaseOrders.push(po);$('po-dialog').close();recalc();goto('buy');};
+  document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){goto(go.dataset.go);return;}const create=e.target.closest('[data-create-po]');if(create){openPo(create.dataset.createPo,create.dataset.qty);return;}const del=e.target.closest('[data-delete-order]');if(del){input.orders=input.orders.filter(o=>o.id!==del.dataset.deleteOrder);workflow.release=null;recalc();return;}const po=e.target.closest('[data-po-action]');if(po){const row=input.purchaseOrders.find(x=>x.id===po.dataset.id);if(!row)return;if(po.dataset.poAction==='order')row.status='Ordered';else{const remain=Number(row.qty)-Number(row.receivedQty||0);input=BatchWattProcurement.receivePurchase(input,row.id,remain);}recalc();}});
+  document.addEventListener('change',e=>{if(e.target.dataset.energy){input.energy[e.target.dataset.energy]=e.target.type==='number'?Number(e.target.value):e.target.value;recalc();}});
+  const setupChange=()=>{input.factory=$('factory-name').value.trim()||'My factory';input.shift.date=$('shift-date').value;input.shift.start=$('shift-start').value;input.shift.end=$('shift-end').value;recalc();};
   ['factory-name','shift-date','shift-start','shift-end'].forEach(id=>$(id).addEventListener('change',setupChange));
-  $('po-material').addEventListener('change',()=>{ const m=input.materials.find(x=>x.id===$('po-material').value); if(m)$('po-cost').value=m.unitCost; });
+  $('po-material').addEventListener('change',()=>{const m=input.materials.find(x=>x.id===$('po-material').value);if(m){$('po-cost').value=m.unitCost;if(m.supplierId)$('po-supplier').value=m.supplierId;}});
 });

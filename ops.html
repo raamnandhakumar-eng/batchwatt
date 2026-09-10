@@ -3,290 +3,170 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="BatchWatt turns orders, stock, procurement, production capacity and energy tariffs into a daily factory decision plan.">
-  <title>BatchWatt | Factory Decision Console</title>
+  <meta name="description" content="BatchWatt is a simple daily production, procurement and energy tool for small factories.">
+  <title>BatchWatt | Today</title>
   <link rel="stylesheet" href="/ops.css">
   <script defer src="/lib/procurement.js"></script>
   <script defer src="/lib/energy-planner.js"></script>
-  <script defer src="/lib/energy-reports.js"></script>
   <script defer src="/lib/operations.js"></script>
   <script defer src="/demo-data.js"></script>
   <script defer src="/ops-app.js"></script>
-  <script defer src="/decision-console.js"></script>
 </head>
 <body>
-  <aside class="rail">
-    <a class="brand" href="#operations">
+  <header class="appbar">
+    <a class="brand" href="#today" aria-label="BatchWatt home">
       <span class="brand-mark">BW</span>
-      <span><strong>BatchWatt</strong><small>FACTORY DECISION CONSOLE</small></span>
+      <span><strong>BatchWatt</strong><small>Factory operations</small></span>
     </a>
-    <nav aria-label="Primary">
-      <a href="#operations" data-nav="operations"><span>01</span> Control tower</a>
-      <a href="#orders" data-nav="orders"><span>02</span> Orders</a>
-      <a href="#procurement" data-nav="procurement"><span>03</span> Procurement</a>
-      <a href="#energy" data-nav="energy"><span>04</span> Energy</a>
-      <a href="#setup" data-nav="setup"><span>05</span> Setup</a>
-    </nav>
-    <div class="rail-foot">
-      <div class="rail-note">
-        <strong>Daily decision flow</strong>
-        <span>Buy → Produce → Dispatch → Review energy</span>
-      </div>
-      <span>BatchWatt V3.1</span>
-      <a href="/planner-v2.html">Detailed planner</a>
+    <div class="appbar-right">
+      <span id="save-state" class="save-state">Saved on this device</span>
+      <button id="open-order" class="primary">+ Order</button>
     </div>
-  </aside>
+  </header>
 
-  <main>
-    <header class="topbar">
-      <div class="workspace-title">
-        <span class="kicker">FACTORY WORKSPACE</span>
-        <strong id="top-factory">BatchWatt</strong>
-      </div>
-      <div class="top-actions">
-        <span class="save-state" id="save-state">Local workspace</span>
-        <button class="quiet" id="show-pilots">Pilots</button>
-        <button class="quiet" id="load-demo">Load demo</button>
-        <button class="quiet" id="new-workspace">New workspace</button>
-      </div>
-    </header>
+  <nav class="tabs" aria-label="BatchWatt sections">
+    <a href="#today" data-nav="today">Today</a>
+    <a href="#orders" data-nav="orders">Orders</a>
+    <a href="#buy" data-nav="buy">Buying</a>
+    <a href="#more" data-nav="more">More</a>
+  </nav>
 
+  <main class="shell">
     <div id="error" class="error" hidden></div>
 
-    <section class="view" data-view="operations" id="operations">
-      <div class="page-heading hero-heading">
+    <section class="view" data-view="today" id="today">
+      <div class="today-head">
         <div>
-          <span class="eyebrow">TODAY'S FACTORY PLAN</span>
-          <h1>What to buy. What to produce. When to run it.</h1>
-          <p id="shift-label">Current shift</p>
+          <p class="eyebrow">TODAY</p>
+          <h1 id="factory-title">Factory plan</h1>
+          <p id="shift-label" class="subtle">Current shift</p>
         </div>
-        <div class="actions">
-          <button class="quiet" id="refresh-plan">Recalculate</button>
-          <button class="primary" id="open-order">+ Customer order</button>
-        </div>
+        <span id="plan-status" class="status-pill neutral">Checking plan</span>
       </div>
 
-      <div class="decision-grid">
-        <article class="decision-card buy">
-          <div class="decision-label"><span class="decision-number">01</span><span>BUY</span></div>
-          <strong id="decision-buy">Calculate plan</strong>
-          <p id="decision-buy-note">Materials required to protect loaded orders.</p>
-          <a href="#procurement">Open procurement →</a>
-        </article>
-        <article class="decision-card make">
-          <div class="decision-label"><span class="decision-number">02</span><span>PRODUCE</span></div>
-          <strong id="decision-make">Calculate plan</strong>
-          <p id="decision-make-note">Next run based on due time, materials, capacity, and energy.</p>
-          <a href="#production-plan-anchor">See production plan →</a>
-        </article>
-        <article class="decision-card dispatch">
-          <div class="decision-label"><span class="decision-number">03</span><span>DISPATCH</span></div>
-          <strong id="decision-dispatch">Calculate plan</strong>
-          <p id="decision-dispatch-note">Orders ready from stock or scheduled today.</p>
-          <a href="#orders">Open orders →</a>
-        </article>
-        <article class="decision-card power">
-          <div class="decision-label"><span class="decision-number">04</span><span>ENERGY</span></div>
-          <strong id="decision-energy">Calculate plan</strong>
-          <p id="decision-energy-note">Peak and tariff impact of the production sequence.</p>
-          <a href="#energy">Open energy →</a>
-        </article>
-      </div>
-
-      <div class="metric-grid" id="ops-metrics"></div>
-
-      <div class="control-layout">
-        <section class="panel focal-panel">
-          <div class="panel-heading">
-            <div><span class="eyebrow">NEXT BEST ACTIONS</span><h2>Do these first</h2></div>
-            <span class="subtle" id="action-count">0 actions</span>
-          </div>
-          <div id="priority-actions" class="priority-actions"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div><span class="eyebrow">RUN BOARD</span><h2>Production sequence</h2></div>
-            <a href="#production-plan-anchor">Full run plan</a>
-          </div>
-          <div id="run-board" class="run-board"></div>
-        </section>
-      </div>
-
-      <section class="energy-ribbon">
-        <div>
-          <span class="eyebrow">ENERGY LAYER</span>
-          <strong id="energy-ribbon-title">Energy insight will appear after planning.</strong>
-          <p id="energy-ribbon-note">Dispatch comes first. Energy optimization follows only when it does not weaken the plan.</p>
+      <section id="next-action" class="next-card">
+        <div class="next-copy">
+          <p class="eyebrow">DO THIS NEXT</p>
+          <h2 id="next-title">Add your first customer order</h2>
+          <p id="next-detail">BatchWatt will tell you what to buy, what to run, and when.</p>
         </div>
-        <div class="energy-ribbon-metrics" id="energy-ribbon-metrics"></div>
-        <a href="#energy">See detail →</a>
-      </section>
-
-      <section class="panel" id="production-plan-anchor">
-        <div class="panel-heading">
-          <div><span class="eyebrow">WHAT TO PRODUCE & WHEN</span><h2>Detailed run plan</h2></div>
-          <span class="subtle">Due time + material availability + line capacity + energy</span>
-        </div>
-        <div id="production-plan" class="production-plan"></div>
-      </section>
-
-      <section class="release-strip" id="release-strip">
-        <div>
-          <span class="eyebrow">SUPERVISOR RELEASE</span>
-          <strong id="release-title">Review required</strong>
-          <p id="release-detail">Resolve critical exceptions before releasing work to the floor.</p>
-        </div>
-        <button class="release-button" id="release-plan">Release shift plan</button>
+        <button id="next-button" class="primary big">Add order</button>
       </section>
 
       <section class="panel">
-        <div class="panel-heading">
-          <div><span class="eyebrow">RISKS & HOLDS</span><h2>Exceptions that can stop the plan</h2></div>
-          <div class="segmented" id="queue-filter">
-            <button data-filter="open" class="active">Open</button>
-            <button data-filter="all">All</button>
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">RUN PLAN</p>
+            <h2>What runs today</h2>
           </div>
+          <span id="run-summary" class="subtle"></span>
         </div>
-        <div id="work-queue" class="work-queue"></div>
+        <div id="run-list" class="run-list"></div>
       </section>
+
+      <section class="release-card" id="release-card">
+        <div>
+          <p class="eyebrow">SHIFT RELEASE</p>
+          <h2 id="release-title">Review required</h2>
+          <p id="release-detail">Resolve blockers before releasing the plan.</p>
+        </div>
+        <button id="release-plan" class="release-button">Release shift</button>
+      </section>
+
+      <details class="panel issues-panel" id="issues-panel">
+        <summary><span>Issues to fix</span><strong id="issue-count">0</strong></summary>
+        <div id="issue-list" class="issue-list"></div>
+      </details>
     </section>
 
     <section class="view" data-view="orders" id="orders" hidden>
-      <div class="page-heading">
-        <div><span class="eyebrow">ORDER CONTROL</span><h1>Orders and dispatch</h1><p>See what can ship from stock, what needs production, and what is blocked.</p></div>
-        <button class="primary" id="open-order-2">+ Customer order</button>
+      <div class="page-head">
+        <div><p class="eyebrow">ORDERS</p><h1>Customer orders</h1><p class="subtle">What ships from stock, what needs production, and what is blocked.</p></div>
+        <button id="open-order-2" class="primary">+ Order</button>
       </div>
       <section class="panel">
-        <div class="table-scroll">
+        <div class="mobile-cards" id="orders-cards"></div>
+        <div class="table-wrap desktop-table">
           <table>
-            <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Qty</th><th>Due</th><th>Priority</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Customer</th><th>Product</th><th>Qty</th><th>Due</th><th>Status</th><th></th></tr></thead>
             <tbody id="orders-table"></tbody>
           </table>
         </div>
       </section>
     </section>
 
-    <section class="view" data-view="procurement" id="procurement" hidden>
-      <div class="page-heading">
-        <div><span class="eyebrow">PROCUREMENT</span><h1>What to buy and when</h1><p>Turn production demand into material actions, supplier timing, and estimated spend.</p></div>
-        <button class="primary" id="open-po">+ Purchase order</button>
+    <section class="view" data-view="buy" id="buy" hidden>
+      <div class="page-head">
+        <div><p class="eyebrow">BUYING</p><h1>Materials to buy</h1><p class="subtle">Only the material actions needed for the loaded orders and buffer.</p></div>
+        <button id="open-po" class="primary">+ Purchase order</button>
       </div>
-
-      <div class="metric-grid" id="procurement-metrics"></div>
-
+      <div id="buy-summary" class="summary-strip"></div>
       <section class="panel">
-        <div class="panel-heading">
-          <div><span class="eyebrow">BUY PLAN</span><h2>Recommended purchase actions</h2></div>
-          <span class="subtle">Loaded orders + configured buffer stock</span>
-        </div>
-        <div id="buy-plan" class="buy-plan"></div>
+        <div id="buy-list" class="buy-list"></div>
       </section>
-
-      <div class="two-column">
-        <section class="panel">
-          <div class="panel-heading"><div><h2>Material position</h2><p>Stock, demand, incoming supply, and remaining gap.</p></div></div>
-          <div class="table-scroll">
-            <table>
-              <thead><tr><th>Material</th><th>Stock</th><th>Required</th><th>Incoming</th><th>Buy</th><th>Est. cost</th></tr></thead>
-              <tbody id="materials-table"></tbody>
-            </table>
-          </div>
-        </section>
-        <section class="panel">
-          <div class="panel-heading"><div><h2>Purchase orders</h2><p>Draft, ordered, and received supply.</p></div></div>
-          <div id="purchase-list" class="purchase-list"></div>
-        </section>
-      </div>
+      <details class="panel">
+        <summary>Open purchase orders</summary>
+        <div id="purchase-list" class="purchase-list"></div>
+      </details>
     </section>
 
-    <section class="view" data-view="energy" id="energy" hidden>
-      <div class="page-heading">
-        <div><span class="eyebrow">ENERGY INSIGHTS</span><h1>Use energy without losing the production plan</h1><p>See peak demand, shift cost, tariff exposure, and which runs moved.</p></div>
+    <section class="view" data-view="more" id="more" hidden>
+      <div class="page-head">
+        <div><p class="eyebrow">MORE</p><h1>Factory settings</h1><p class="subtle">Daily operators should rarely need this page.</p></div>
       </div>
-      <div class="metric-grid" id="energy-metrics"></div>
-      <div class="two-column energy-layout">
-        <section class="panel">
-          <div class="panel-heading"><div><span class="eyebrow">LOAD PROFILE</span><h2>Baseline vs proposed</h2></div><span class="pill" id="energy-verdict">Recalculate</span></div>
-          <div class="chart-scroll" id="load-chart"></div>
-        </section>
-        <section class="panel">
-          <div class="panel-heading"><div><span class="eyebrow">ENERGY DECISIONS</span><h2>What changed</h2></div></div>
-          <div id="energy-insights" class="insight-list"></div>
-        </section>
-      </div>
-      <section class="panel">
-        <div class="panel-heading"><div><h2>Tariff and peak inputs</h2><p>Use the actual utility rate and current monthly peak for a more useful model.</p></div></div>
-        <div class="settings-grid" id="energy-settings"></div>
-      </section>
-    </section>
 
-    <section class="view" data-view="setup" id="setup" hidden>
-      <div class="page-heading">
-        <div><span class="eyebrow">WORKSPACE SETUP</span><h1>Factory inputs</h1><p>Keep daily decisions simple. Use the detailed planner for recipes, suppliers, and master data.</p></div>
-        <a class="quiet button-link" href="/planner-v2.html#setup">Detailed setup</a>
-      </div>
-      <section class="panel">
+      <section class="panel compact-panel">
+        <div class="panel-head"><div><p class="eyebrow">ENERGY</p><h2>Power check</h2></div><span id="energy-status" class="status-pill neutral">No plan</span></div>
+        <div id="energy-summary" class="stats"></div>
+        <details>
+          <summary>Edit tariff and peak settings</summary>
+          <div id="energy-settings" class="settings-grid"></div>
+        </details>
+      </section>
+
+      <section class="panel compact-panel">
+        <div class="panel-head"><div><p class="eyebrow">SHIFT</p><h2>Basic setup</h2></div></div>
         <div class="settings-grid">
           <label>Factory name<input id="factory-name"></label>
-          <label>Planning date<input id="shift-date" type="date"></label>
-          <label>Shift starts<input id="shift-start" type="time" step="900"></label>
-          <label>Shift ends<input id="shift-end" type="time" step="900"></label>
+          <label>Date<input id="shift-date" type="date"></label>
+          <label>Starts<input id="shift-start" type="time" step="900"></label>
+          <label>Ends<input id="shift-end" type="time" step="900"></label>
         </div>
       </section>
-      <div class="two-column">
-        <section class="panel"><div class="panel-heading"><h2>Lines</h2></div><div id="line-list" class="simple-list"></div></section>
-        <section class="panel"><div class="panel-heading"><h2>Products</h2></div><div id="product-list" class="simple-list"></div></section>
-      </div>
-      <section class="panel">
-        <div class="panel-heading"><div><span class="eyebrow">LOCAL ACTIVITY</span><h2>Audit trail</h2></div><button class="quiet" id="clear-audit">Clear local audit</button></div>
-        <div id="audit-log" class="audit-log"></div>
+
+      <section class="panel compact-panel">
+        <div class="panel-head"><div><p class="eyebrow">TOOLS</p><h2>Workspace</h2></div></div>
+        <div class="tool-grid">
+          <button id="load-demo" class="quiet">Load demo</button>
+          <button id="new-workspace" class="quiet">Start clean workspace</button>
+          <a class="quiet button-link" href="/planner-v2.html">Detailed planner</a>
+          <a class="quiet button-link" href="https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1">Version 1 archive</a>
+        </div>
       </section>
     </section>
   </main>
 
-  <dialog id="pilots-dialog" class="wide-dialog">
-    <div class="pilot-dialog-inner">
-      <div class="dialog-heading">
-        <div><span class="eyebrow">PILOT EVIDENCE</span><h2>RKG Ghee + PR Food Products</h2></div>
-        <button type="button" class="quiet" id="close-pilots">Close</button>
-      </div>
-      <p class="dialog-copy">Recorded pilot results stay separate from the synthetic live demo. They show how BatchWatt was used around order risk, production sequencing, and energy.</p>
-      <div id="pilot-cards" class="pilot-grid"></div>
-      <div class="panel pilot-detail-panel">
-        <div class="panel-heading">
-          <div><span class="eyebrow">PILOT DECISIONS</span><h2 id="pilot-detail-title">RKG Ghee</h2></div>
-          <div class="segmented" id="pilot-tabs">
-            <button data-pilot="rkg" class="active">RKG Ghee</button>
-            <button data-pilot="pr">PR Food Products</button>
-          </div>
-        </div>
-        <div id="pilot-detail" class="pilot-detail"></div>
-      </div>
-    </div>
-  </dialog>
-
   <dialog id="order-dialog">
     <form id="order-form">
-      <div class="dialog-heading"><h2>Add customer order</h2><button type="button" class="quiet" data-close="order-dialog">Close</button></div>
+      <div class="dialog-head"><h2>Add customer order</h2><button type="button" class="icon-button" data-close="order-dialog" aria-label="Close">×</button></div>
       <label>Customer<input id="order-customer" required></label>
       <label>Product<select id="order-product" required></select></label>
       <label>Quantity<input id="order-qty" type="number" min="0.01" step="any" required></label>
       <label>Due<input id="order-due" type="datetime-local" required></label>
       <label>Priority<select id="order-priority"><option>Standard</option><option>High</option><option>Urgent</option></select></label>
-      <button class="primary" type="submit">Add order</button>
+      <button class="primary big" type="submit">Add order</button>
     </form>
   </dialog>
 
   <dialog id="po-dialog">
     <form id="po-form">
-      <div class="dialog-heading"><h2>Create purchase order</h2><button type="button" class="quiet" data-close="po-dialog">Close</button></div>
+      <div class="dialog-head"><h2>Create purchase order</h2><button type="button" class="icon-button" data-close="po-dialog" aria-label="Close">×</button></div>
       <label>Supplier<select id="po-supplier" required></select></label>
       <label>Material<select id="po-material" required></select></label>
       <label>Quantity<input id="po-qty" type="number" min="0.0001" step="any" required></label>
       <label>Unit cost (USD)<input id="po-cost" type="number" min="0" step="any" required></label>
-      <label>Expected delivery<input id="po-date" type="date" required></label>
-      <button class="primary" type="submit">Create draft PO</button>
+      <label>Expected date<input id="po-date" type="date" required></label>
+      <button class="primary big" type="submit">Save purchase order</button>
     </form>
   </dialog>
 </body>

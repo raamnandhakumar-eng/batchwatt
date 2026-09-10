@@ -1,57 +1,36 @@
 # BatchWatt
 
-**Know what to buy, what to produce, when to run it, and what the energy impact is.**
+**Simple daily factory operations: know what to do next.**
 
-BatchWatt is a factory decision console for small manufacturers. It turns customer orders, finished stock, raw-material availability, supplier lead times, production capacity, and electricity tariffs into one daily operating plan.
+BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into a practical shift plan for small manufacturers.
 
 **[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
 
-## Core workflow
+## The app is built around four screens
 
-1. **Buy** — identifies materials to purchase, quantity, supplier, lead time, recommended timing, and estimated spend.
-2. **Produce** — sequences production by order due time, material availability, line capacity, changeovers, and operating constraints.
-3. **Dispatch** — separates orders ready from finished stock, scheduled for production, late, or blocked.
-4. **Energy** — shows peak demand, tariff-window exposure, modeled shift energy cost, and energy-aware timing changes.
+- **Today** — one recommended next action, today’s production runs, issues, and shift release.
+- **Orders** — customer demand and dispatch status.
+- **Buying** — materials to replenish, purchase orders, and receipts.
+- **More** — energy check, shift settings, demo tools, and the detailed planner.
 
-Energy is an insight layer, not the primary objective. BatchWatt protects production and dispatch first. It only keeps an energy-aware schedule when committed work remains scheduled, lateness does not worsen, and the modeled bill does not increase.
+## Daily flow
 
-## Decision console
+1. Add customer orders.
+2. Fix any material or production blocker BatchWatt flags.
+3. Review the run sequence.
+4. Release the shift plan.
+5. Dispatch stock orders, run production, and receive purchased material as it arrives.
 
-The current V3.1 console puts the daily decisions first:
+BatchWatt keeps energy practical. It checks peak demand and tariff timing after production and delivery constraints are protected.
 
-- immediate procurement actions
-- what should run next
-- a detailed production sequence
-- supplier and material timing
-- dispatch readiness
-- production blockers and exceptions
-- peak-demand headroom
-- peak-tariff overlap by production run
-- supervisor release controls
-- local audit history
+## What stays under the hood
 
-## Pilots
+The simplified V3.2 console still uses the full production, procurement, inventory, and energy planning engines. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
-The app keeps recorded pilot evidence from **RKG Ghee** and **PR Food Products** separate from the synthetic live demo.
+## Pilot evidence
 
-**RKG Ghee**
-- 32 orders across 10 pilot cycles
-- recorded planning-time reduction: 64.2%
-- recorded energy reduction: 8.8%
-- recorded peak reduction: 11.7%
-
-**PR Food Products**
-- 41 orders across 9 pilot cycles
-- recorded planning-time reduction: 62.3%
-- recorded energy reduction: 6.7%
-- recorded peak reduction: 9.0%
-
-The pilot view also keeps example production decisions and sequencing recommendations from both environments.
-
-## Previous versions
-
-The original BatchWatt V1 remains preserved on the `archive/batchwatt-v1` branch. The detailed V2 planner also remains in the current build while V3.1 is the default console.
+The repository preserves pilot documentation for **RKG Ghee** and **PR Food Products**. Pilot records remain separate from the synthetic live demo.
 
 ## Important note
 
-BatchWatt is decision-support software. It does not control machines, read live meters, send supplier orders, or make payments. Energy and savings outputs are modeled estimates. A supervisor should review the operating plan before release.
+BatchWatt is decision-support software. It does not directly control machines, read live meters, send supplier orders, or make payments. Energy and savings outputs are modeled estimates. A supervisor should review the operating plan before release.
