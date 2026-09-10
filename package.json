@@ -1,12 +1,12 @@
 {
   "name": "batchwatt",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "private": true,
-  "description": "Simple factory operations console for daily production, buying, dispatch and energy-aware shift release.",
+  "description": "Simple factory decision console for production timing, buying, dispatch and energy-aware shift planning.",
   "scripts": {
     "dev": "vercel dev",
     "test:plan": "node samples/test_plan.js",
-    "test": "node --check ops-app.js && node --check today-energy.js && node --check demo-scenarios.js && node --check demo-ui.js && node --check decision-dashboard.js && node --check production-decision-ui.js && node --check order-import-ui.js && node --check lib/order-import.js && node --check lib/operations.js && node --check lib/energy-planner.js && node --test tests/*.test.js",
+    "test": "node --check ops-app.js && node --check demo-scenarios.js && node --check unified-console.js && node --check pilot-results-tab.js && node --check order-import-ui.js && node --check lib/order-import.js && node --check lib/operations.js && node --check lib/energy-planner.js && node --test tests/*.test.js",
     "demo": "node scripts/export-plan.js samples/sample_plan_payload.json output/demo",
     "demo:energy": "node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo",
     "build": "node scripts/build.js"
