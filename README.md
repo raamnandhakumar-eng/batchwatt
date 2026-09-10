@@ -9,13 +9,23 @@ BatchWatt turns customer orders, inventory, production capacity, purchasing need
 ## The app is built around four screens
 
 - **Today** — one recommended next action, today’s production runs, issues, and shift release.
-- **Orders** — customer demand and dispatch status.
+- **Orders** — customer demand and dispatch status, with manual, pasted, Excel, and CSV intake.
 - **Buying** — materials to replenish, purchase orders, and receipts.
 - **More** — energy check, shift settings, demo tools, and the detailed planner.
 
+## Customer order inputs
+
+Orders can enter BatchWatt in three simple ways:
+
+1. Add one customer order manually.
+2. Paste rows copied directly from Excel or a structured WhatsApp order list.
+3. Upload an `.xlsx`, `.csv`, or `.tsv` file.
+
+BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, Priority, and Order/Reference. You can correct the column mapping before import. The preview validates products, quantities, due dates, priorities, and duplicates. Valid rows can be imported even when other rows are rejected.
+
 ## Daily flow
 
-1. Add customer orders.
+1. Add or import customer orders.
 2. Fix any material or production blocker BatchWatt flags.
 3. Review the run sequence.
 4. Release the shift plan.
@@ -25,7 +35,7 @@ BatchWatt keeps energy practical. It checks peak demand and tariff timing after 
 
 ## What stays under the hood
 
-The simplified V3.2 console still uses the full production, procurement, inventory, and energy planning engines. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
+The simplified V3.3 console still uses the full production, procurement, inventory, and energy planning engines. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
 ## Operational pilot facts
 
