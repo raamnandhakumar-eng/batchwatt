@@ -6,12 +6,27 @@ BatchWatt turns customer orders, inventory, production capacity, purchasing need
 
 **[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
 
+## Try it in 2 minutes
+
+1. Open one of the two working demos on the **Today** screen.
+2. Change an order, material position, or energy input and watch the plan recalculate.
+3. Review what to buy, what to produce, dispatch status, and any operating holds.
+4. Release the shift when hard blockers are cleared.
+5. Export the current plan, or download the order template and import your own `.xlsx`, `.csv`, or pasted Excel rows.
+
 ## The app is built around four screens
 
-- **Today** — one recommended next action, today’s production runs, issues, and shift release.
+- **Today** — one recommended next action, today’s production runs, visible energy controls, issues, demos, and shift release.
 - **Orders** — customer demand and dispatch status, with manual, pasted, Excel, and CSV intake.
 - **Buying** — materials to replenish, purchase orders, and receipts.
-- **More** — energy check, shift settings, demo tools, and the detailed planner.
+- **More** — energy check, shift settings, workspace tools, and the detailed planner.
+
+## Two working demos
+
+- **RKG Ghee — peak-load + dispatch pressure.** A complete illustrative workspace for urgent orders, production sequencing, energy constraints, and shift release.
+- **PR Food Products — procurement + production coordination.** A complete illustrative workspace for material availability, incoming supply, machine sequencing, energy exposure, and shift release.
+
+The one-click demo workspaces are illustrative operating scenarios. Recorded pilot metrics are shown as pilot context and remain separate from the synthetic demo inputs.
 
 ## Customer order inputs
 
@@ -27,15 +42,16 @@ BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, 
 
 1. Add or import customer orders.
 2. Fix any material or production blocker BatchWatt flags.
-3. Review the run sequence.
+3. Review the run sequence and energy position.
 4. Release the shift plan.
 5. Dispatch stock orders, run production, and receive purchased material as it arrives.
+6. Export the current operating plan when needed.
 
 BatchWatt keeps energy practical. It checks peak demand and tariff timing after production and delivery constraints are protected.
 
 ## What stays under the hood
 
-The simplified V3.3 console still uses the full production, procurement, inventory, and energy planning engines. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
+The V3.5 operator MVP still uses the full production, procurement, inventory, and energy planning engines. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
 ## Operational pilot facts
 
