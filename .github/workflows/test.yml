@@ -10,6 +10,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm install --ignore-scripts
       - run: npm test
       - run: npm run demo
       - run: node scripts/export-energy-plan.js samples/energy-demo.json output/energy-demo
