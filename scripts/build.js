@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V3.4 simple operator console is the default app. V2 remains available for detailed setup.
+// V3.5 operator MVP is the default app. V2 remains available for detailed setup.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,15 +29,19 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Keep the source console simple while shipping the visible Today energy module in production.
-fs.appendFileSync(
-  path.join(out, 'ops-app.js'),
-  `\n\n${fs.readFileSync(path.join(__dirname, '..', 'today-energy.js'), 'utf8')}\n`,
-);
-fs.appendFileSync(
-  path.join(out, 'ops.css'),
-  `\n\n${fs.readFileSync(path.join(__dirname, '..', 'today-energy.css'), 'utf8')}\n`,
-);
+// Keep source modules small while shipping the visible energy controls and two one-click demos in production.
+for (const moduleName of ['today-energy.js', 'demo-scenarios.js', 'demo-ui.js']) {
+  fs.appendFileSync(
+    path.join(out, 'ops-app.js'),
+    `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
+  );
+}
+for (const styleName of ['today-energy.css', 'demo-ui.css']) {
+  fs.appendFileSync(
+    path.join(out, 'ops.css'),
+    `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
+  );
+}
 
 for (const htmlName of ['index.html', 'planner-v2.html']) {
   const htmlPath = path.join(out, htmlName);
@@ -47,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V3.4 operator assets with visible energy controls, bulk order intake, and V2 planner preserved.`);
+console.log(`Built ${assets.length} BatchWatt V3.5 operator MVP assets with visible energy, bulk order intake, two demos, plan export, and V2 preserved.`);
