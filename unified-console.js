@@ -26,7 +26,7 @@
         </div>
         <div id="simple-energy-kpis" class="simple-energy-kpis"></div>
         <div class="energy-chart-wrap"><svg id="simple-energy-chart" viewBox="0 0 920 280" role="img" aria-label="Planned power load by time"></svg></div>
-        <div id="simple-energy-insight" class="energy-insight-callout"></div>
+        <p class="chart-legend"><span>━ Recommended load</span><span>┄ Baseline load</span><span>Shading: peak tariff hours</span></p><div id="simple-energy-insight" class="energy-insight-callout"></div>
         <details class="simple-energy-inputs">
           <summary>Change energy assumptions</summary>
           <div id="simple-energy-fields" class="today-energy-inputs"></div>
@@ -104,7 +104,8 @@
     if(!profile.length){svg.innerHTML='<text x="24" y="44" class="chart-empty">Add orders to generate the energy load chart.</text>';return;}
 
     const w=920,h=280,left=58,right=24,top=24,bottom=42;
-    const maxKw=Math.max(Number(input.energy.peakLimitKw||0),...profile.map(x=>Number(x.kw||0)),1)*1.15;
+    const baseline=result?.baseline?.profile||[];
+    const maxKw=Math.max(Number(input.energy.peakLimitKw||0),...baseline.map(x=>Number(x.kw||0)),...profile.map(x=>Number(x.kw||0)),1)*1.15;
     const x=i=>left+(i/Math.max(profile.length-1,1))*(w-left-right);
     const y=v=>top+(1-v/maxKw)*(h-top-bottom);
     const points=profile.map((s,i)=>`${x(i)},${y(Number(s.kw||0))}`).join(' ');
@@ -112,14 +113,11 @@
     const targetY=y(target);
     const start=mins(input.energy.peakStart),end=mins(input.energy.peakEnd);
     const inPeak=m=>start===end?false:start<end?(m>=start&&m<end):(m>=start||m<end);
-    const peakIndexes=profile.map((s,i)=>inPeak(Number(s.minute))?i:-1).filter(i=>i>=0);
-    let shade='';
-    if(peakIndexes.length){
-      const a=x(Math.min(...peakIndexes)),b=x(Math.max(...peakIndexes));
-      shade=`<rect x="${a}" y="${top}" width="${Math.max(4,b-a)}" height="${h-top-bottom}" class="peak-shade"/>`;
-    }
+    const slotWidth=(w-left-right)/Math.max(profile.length-1,1);
+    const shade=profile.map((s,i)=>inPeak(Number(s.minute))?`<rect x="${x(i)}" y="${top}" width="${Math.min(slotWidth,w-right-x(i))}" height="${h-top-bottom}" class="peak-shade"/>`:'').join('');
+    const baselinePoints=baseline.map((s,i)=>`${x(i)},${y(Number(s.kw||0))}`).join(' ');
     const ticks=[0,Math.floor((profile.length-1)/2),profile.length-1].map(i=>`<text x="${x(i)}" y="${h-14}" text-anchor="middle" class="chart-label">${esc(profile[i].time)}</text>`).join('');
-    svg.innerHTML=`${shade}<line x1="${left}" y1="${targetY}" x2="${w-right}" y2="${targetY}" class="limit-line"/><text x="${w-right}" y="${Math.max(14,targetY-7)}" text-anchor="end" class="limit-label">Peak target ${fmt(target)} kW</text><polyline points="${points}" class="load-line"/><line x1="${left}" y1="${h-bottom}" x2="${w-right}" y2="${h-bottom}" class="axis"/><text x="8" y="${top+6}" class="chart-label">${fmt(maxKw)} kW</text><text x="22" y="${h-bottom+4}" class="chart-label">0</text>${ticks}`;
+    svg.innerHTML=`<title>Recommended and baseline power load</title>${shade}<polyline points="${baselinePoints}" class="baseline-line"/><line x1="${left}" y1="${targetY}" x2="${w-right}" y2="${targetY}" class="limit-line"/><text x="${w-right}" y="${Math.max(14,targetY-7)}" text-anchor="end" class="limit-label">Peak target ${fmt(target)} kW</text><polyline points="${points}" class="load-line"/><line x1="${left}" y1="${h-bottom}" x2="${w-right}" y2="${h-bottom}" class="axis"/><text x="8" y="${top+6}" class="chart-label">${fmt(maxKw)} kW</text><text x="22" y="${h-bottom+4}" class="chart-label">0</text>${ticks}`;
   }
 
   function renderEnergy(){
@@ -164,7 +162,9 @@
     saving.className=`status-pill ${total>0?'good':'neutral'}`;
 
     if(!result){list.innerHTML='<div class="empty">Add orders to generate the production plan.</div>';return;}
-    if(!decisions.length){list.innerHTML='<div class="empty">No production is required; current orders can be covered from finished stock.</div>';return;}
+    const blocked=result.proposed.unscheduled||[];
+    const holds=blocked.map(j=>`<article class="production-hold"><strong>${esc(j.product)} · ${esc(j.customer)}</strong><p>${esc(j.reason)}</p><button class="quiet" data-simple-go="${String(j.reason).includes('Material shortage')?'buy':'orders'}">Resolve blocker</button></article>`).join('');
+    if(!decisions.length){list.innerHTML=holds||'<div class="empty">No production is required; current orders can be covered from finished stock.</div>';return;}
 
     list.innerHTML=decisions.map((d,i)=>{
       const moved=Number(d.shiftedMinutes||0)!==0;
@@ -175,7 +175,7 @@
         <div class="decision-why"><span>Why</span><strong>${esc(d.reason)}</strong></div>
         <div class="decision-run-cost"><span>Run energy</span><strong>${money(d.proposedUsageCost||0)}</strong>${moved?`<small>shifted ${Math.abs(Number(d.shiftedMinutes))} min</small>`:''}</div>
       </article>`;
-    }).join('');
+    }).join('')+holds;
   }
 
   function render(){mount();renderActions();renderEnergy();renderDecisions();}

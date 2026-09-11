@@ -36,7 +36,7 @@
   </nav>
 
   <main class="shell">
-    <div id="error" class="error" hidden></div>
+    <div id="error" class="error" role="alert" hidden></div>
 
     <section class="view" data-view="today" id="today">
       <div class="today-head">
@@ -89,6 +89,7 @@
         <button id="open-order-2" class="primary">+ Order</button>
       </div>
       <section class="panel">
+        <div class="order-toolbar"><label>Search orders<input id="order-search" type="search" placeholder="Customer, product or order ID"></label><label>Show<select id="order-status-filter"><option value="all">All orders</option><option value="attention">Needs attention</option></select></label><p id="order-count" class="subtle" role="status"></p></div>
         <div class="mobile-cards" id="orders-cards"></div>
         <div class="table-wrap desktop-table">
           <table>
@@ -152,13 +153,13 @@
 
   <dialog id="order-dialog">
     <form id="order-form">
-      <div class="dialog-head"><h2>Add customer order</h2><button type="button" class="icon-button" data-close="order-dialog" aria-label="Close">×</button></div>
+      <div class="dialog-head"><h2 id="order-dialog-title">Add customer order</h2><button type="button" class="icon-button" data-close="order-dialog" aria-label="Close">×</button></div>
       <label>Customer<input id="order-customer" required></label>
       <label>Product<select id="order-product" required></select></label>
       <label>Quantity<input id="order-qty" type="number" min="0.01" step="any" required></label>
       <label>Due<input id="order-due" type="datetime-local" required></label>
       <label>Priority<select id="order-priority"><option>Standard</option><option>High</option><option>Urgent</option></select></label>
-      <button class="primary big" type="submit">Add order</button>
+      <button id="order-submit" class="primary big" type="submit">Add order</button>
     </form>
   </dialog>
 
@@ -173,5 +174,12 @@
       <button class="primary big" type="submit">Save purchase order</button>
     </form>
   </dialog>
+<dialog id="receipt-dialog"><form id="receipt-form">
+    <div class="dialog-head"><h2>Receive material</h2><button type="button" class="icon-button" data-close="receipt-dialog" aria-label="Close">×</button></div>
+    <p id="receipt-detail" class="subtle"></p>
+    <label>Quantity received<input id="receipt-qty" type="number" min="0.000001" step="any" required></label>
+    <p id="receipt-error" class="status-bad" role="alert"></p>
+    <button class="primary big" type="submit">Record receipt</button>
+  </form></dialog>
 </body>
 </html>

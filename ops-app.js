@@ -5,6 +5,7 @@ const DRAFT_KEY = 'batchwatt_v2_draft';
 const OPS_KEY = 'batchwatt_v3_operations';
 const ACTOR_KEY = 'batchwatt_v3_actor';
 let input, result = null, workflow = {items:{},release:null};
+let editingOrderId = null;
 const clone = x => JSON.parse(JSON.stringify(x));
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const money = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(n||0));
@@ -119,9 +120,16 @@ function renderToday(){
 
 function renderOrders(){
   const rows=orderRows(), statusById=new Map(rows.map(r=>[r.id,r]));
-  const items=(input.orders||[]).map(o=>{const p=input.products.find(p=>p.id===o.productId),r=statusById.get(o.id),status=r?.status||'Needs plan';return {...o,product:p?.name||o.productId,status,detail:r?.detail||''};});
-  $('orders-table').innerHTML=items.length?items.map(o=>`<tr><td>${esc(o.customer)}</td><td>${esc(o.product)}</td><td>${o.qty}</td><td>${esc(o.due.replace('T',' '))}</td><td class="${['Blocked','Late','Overdue'].includes(o.status)?'status-bad':'status-good'}">${esc(o.status)}</td><td><button class="quiet" data-delete-order="${esc(o.id)}">Remove</button></td></tr>`).join(''):'<tr><td colspan="6">No orders yet.</td></tr>';
-  $('orders-cards').innerHTML=items.length?items.map(o=>`<article class="order-card"><div class="order-card-head"><strong>${esc(o.customer)}</strong><span class="${['Blocked','Late','Overdue'].includes(o.status)?'status-bad':'status-good'}">${esc(o.status)}</span></div><p>${esc(o.product)} · ${o.qty}</p><p>Due ${esc(o.due.replace('T',' '))}</p><button class="quiet" data-delete-order="${esc(o.id)}">Remove</button></article>`).join(''):'<div class="empty">No orders yet.</div>';
+  const query=($('order-search')?.value||'').trim().toLowerCase();
+  const filter=$('order-status-filter')?.value||'all';
+  const all=(input.orders||[]).map(o=>{const p=input.products.find(p=>p.id===o.productId),r=statusById.get(o.id);return {...o,product:p?.name||o.productId,unit:p?.unit||'',status:r?.status||'Needs plan',detail:r?.detail||'Complete setup to calculate this order.'};});
+  const risk=o=>['Blocked','Late','Overdue','Needs plan'].includes(o.status);
+  const items=all.filter(o=>(filter!=='attention'||risk(o))&&`${o.customer} ${o.product} ${o.id}`.toLowerCase().includes(query));
+  if($('order-count'))$('order-count').textContent=`${items.length} of ${all.length} orders · ${all.filter(risk).length} need attention`;
+  const buttons=o=>`<div class="actions"><button class="quiet" data-edit-order="${esc(o.id)}" aria-label="Edit order for ${esc(o.customer)}">Edit</button><button class="quiet" data-delete-order="${esc(o.id)}" aria-label="Remove order for ${esc(o.customer)}">Remove</button></div>`;
+  const tone=o=>risk(o)?'status-bad':'status-good';
+  $('orders-table').innerHTML=items.length?items.map(o=>`<tr><td><strong>${esc(o.customer)}</strong><small class="order-detail">${esc(o.priority)}</small></td><td>${esc(o.product)}</td><td>${esc(o.qty)} ${esc(o.unit)}</td><td>${esc(o.due.replace('T',' '))}</td><td class="${tone(o)}">${esc(o.status)}<small class="order-detail">${esc(o.detail)}</small></td><td>${buttons(o)}</td></tr>`).join(''):'<tr><td colspan="6">'+(all.length?'No orders match. Clear your search or choose All orders.':'No orders yet. Add an order or import your order sheet.')+'</td></tr>';
+  $('orders-cards').innerHTML=items.length?items.map(o=>`<article class="order-card"><div class="order-card-head"><strong>${esc(o.customer)}</strong><span class="${tone(o)}">${esc(o.status)}</span></div><p>${esc(o.product)} · ${esc(o.qty)} ${esc(o.unit)} · ${esc(o.priority)}</p><p>Due ${esc(o.due.replace('T',' '))}</p><p>${esc(o.detail)}</p>${buttons(o)}</article>`).join(''):'<div class="empty">'+(all.length?'No matching orders.':'Add your first order above.')+'</div>';
 }
 
 function renderBuy(){
@@ -130,7 +138,7 @@ function renderBuy(){
   $('buy-summary').textContent=buys.length?`${buys.length} material action${buys.length===1?'':'s'} · estimated ${money(spend)}`:'No purchase is recommended for the current plan.';
   $('buy-list').innerHTML=buys.length?buys.map(m=>{const supplier=input.suppliers.find(s=>s.id===m.supplierId)?.name||m.supplier||'Supplier not set';const urgent=Number(m.shortage)>0;return `<article class="buy-row ${urgent?'urgent':''}"><div><span class="eyebrow">${urgent?'NEEDED FOR ORDERS':'BUFFER REPLENISHMENT'}</span><strong class="buy-qty">${m.toBuy} ${esc(m.unit)} ${esc(m.name)}</strong><p>${urgent?`${m.shortage} ${esc(m.unit)} short for current production.`:`Replenishes the configured buffer.`} ${esc(supplier)} · est. ${money(m.estimatedCost)}</p></div><button class="primary" data-create-po="${esc(m.materialId)}" data-qty="${m.toBuy}">Create PO</button></article>`;}).join(''):'<div class="empty">Stock and incoming supply cover the current plan.</div>';
   const open=(input.purchaseOrders||[]).filter(po=>po.status!=='Cancelled');
-  $('purchase-list').innerHTML=open.length?open.map(po=>{const m=input.materials.find(x=>x.id===po.materialId),s=input.suppliers.find(x=>x.id===po.supplierId),remain=Number(po.qty)-Number(po.receivedQty||0);return `<div class="purchase-row"><div><strong>${esc(m?.name||po.materialId)} · ${esc(po.status)}</strong><p>${esc(s?.name||po.supplierId)} · ${po.qty} ${esc(m?.unit||'units')} · due ${esc(po.expectedDate)}</p></div><div class="actions">${po.status==='Draft'?`<button data-po-action="order" data-id="${esc(po.id)}">Mark ordered</button>`:''}${['Ordered','Part received'].includes(po.status)?`<button data-po-action="receive" data-id="${esc(po.id)}">Receive ${remain}</button>`:''}</div></div>`;}).join(''):'<div class="empty">No purchase orders yet.</div>';
+  $('purchase-list').innerHTML=open.length?open.map(po=>{const m=input.materials.find(x=>x.id===po.materialId),s=input.suppliers.find(x=>x.id===po.supplierId),remain=Number(po.qty)-Number(po.receivedQty||0);return `<div class="purchase-row"><div><strong>${esc(m?.name||po.materialId)} · ${esc(po.status)}</strong><p>${esc(s?.name||po.supplierId)} · ${po.qty} ${esc(m?.unit||'units')} · due ${esc(po.expectedDate)}</p></div><div class="actions">${po.status==='Draft'?`<button data-po-action="order" data-id="${esc(po.id)}">Mark ordered</button>`:''}${['Ordered','Part received'].includes(po.status)?`<button data-po-action="receive" data-id="${esc(po.id)}">Receive delivery</button><small>${remain} remaining</small>`:''}</div></div>`;}).join(''):'<div class="empty">No purchase orders yet.</div>';
 }
 
 function renderMore(){
@@ -145,20 +153,48 @@ function renderMore(){
 
 function renderAll(){renderToday();renderOrders();renderBuy();renderMore();showView();}
 function showView(){const view=['today','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===view));window.scrollTo(0,0);}
-function openOrder(){if(!input.products?.length){goto('more');fail('Add products in the detailed planner before creating orders.');return;}$('order-form').reset();$('order-product').innerHTML=input.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');$('order-qty').value=1;$('order-due').value=`${input.shift.date}T${input.shift.end}`;$('order-dialog').showModal();}
+function openOrder(orderId=null){
+  if(!input.products?.length){goto('more');fail('Add products in the detailed planner before creating orders.');return;}
+  const order=typeof orderId==='string'?input.orders.find(o=>o.id===orderId):null;
+  editingOrderId=order?.id||null;
+  $('order-form').reset();
+  $('order-dialog-title').textContent=order?'Edit customer order':'Add customer order';
+  $('order-submit').textContent=order?'Save changes':'Add order';
+  $('order-product').innerHTML=input.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+  $('order-customer').value=order?.customer||'';
+  if(order)$('order-product').value=order.productId;
+  $('order-qty').value=order?.qty||1;
+  $('order-due').value=order?.due||`${input.shift.date}T${input.shift.end}`;
+  $('order-priority').value=order?.priority||'Standard';
+  $('order-dialog').showModal();
+}
+function openReceipt(id){
+  const po=input.purchaseOrders.find(p=>p.id===id);
+  if(!po||!['Ordered','Part received'].includes(po.status))return;
+  const material=input.materials.find(m=>m.id===po.materialId);
+  const remaining=Number((Number(po.qty)-Number(po.receivedQty||0)).toFixed(6));
+  $('receipt-form').dataset.poId=id;
+  $('receipt-detail').textContent=`${material?.name||po.materialId}: ${remaining} ${material?.unit||'units'} still due. Enter only the quantity that arrived.`;
+  $('receipt-qty').max=remaining;$('receipt-qty').value=remaining;
+  $('receipt-error').textContent='';$('receipt-dialog').showModal();
+}
+
 function openPo(materialId='',qty=''){if(!input.suppliers.length||!input.materials.length){goto('more');fail('Add suppliers and materials in the detailed planner first.');return;}$('po-form').reset();$('po-supplier').innerHTML=input.suppliers.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');$('po-material').innerHTML=input.materials.map(m=>`<option value="${esc(m.id)}" ${m.id===materialId?'selected':''}>${esc(m.name)}</option>`).join('');const mat=input.materials.find(m=>m.id===$('po-material').value);if(mat?.supplierId)$('po-supplier').value=mat.supplierId;$('po-cost').value=mat?.unitCost||0;$('po-qty').value=qty||1;const sup=input.suppliers.find(s=>s.id===$('po-supplier').value),d=new Date(`${input.shift.date}T12:00:00`);d.setDate(d.getDate()+Number(sup?.leadDays||0));$('po-date').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;$('po-dialog').showModal();}
-function releaseShift(){const summary=ops();if(!summary.releasable)return;workflow.release={fingerprint:BatchWattOperations.planFingerprint(input),at:new Date().toISOString(),actor:actor()};persist();renderAll();}
+function releaseShift(){const summary=ops();if(!summary.releasable)return;workflow.release={fingerprint:BatchWattOperations.planFingerprint(input),at:new Date().toISOString(),actor:actor()};persist();recalc();}
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadState();recalc();window.addEventListener('hashchange',showView);
-  $('open-order').onclick=openOrder;$('open-order-2').onclick=openOrder;$('open-po').onclick=()=>openPo();$('release-plan').onclick=releaseShift;
+  $('order-search').oninput=renderOrders;$('order-status-filter').onchange=renderOrders;
+  $('order-customer').oninput=()=> $('order-customer').setCustomValidity('');
+  $('receipt-form').onsubmit=e=>{e.preventDefault();try{input=BatchWattProcurement.receivePurchase(input,$('receipt-form').dataset.poId,Number($('receipt-qty').value));$('receipt-dialog').close();recalc();}catch(err){$('receipt-error').textContent=err.message;}};
+  $('open-order').onclick=()=>openOrder();$('open-order-2').onclick=()=>openOrder();$('open-po').onclick=()=>openPo();$('release-plan').onclick=releaseShift;
   $('next-button').onclick=()=>{const b=$('next-button'),action=b.dataset.action;if(action==='order')openOrder();else if(action==='release')releaseShift();else if(action==='po')openPo(b.dataset.material,b.dataset.qty);else goto(action||'today');};
-  $('load-demo').onclick=()=>{input=prepareDemo();workflow={items:{},release:null};recalc();goto('today');};
-  $('new-workspace').onclick=()=>{const d=prepareDemo();d.factory='My factory';d.orders=[];d.purchaseOrders=[];input=d;workflow={items:{},release:null};recalc();goto('more');};
+  $('load-demo').onclick=()=>{if(!confirm('Replace this workspace with demo data?'))return;input=prepareDemo();workflow={items:{},release:null};recalc();goto('today');};
+  $('new-workspace').onclick=()=>{if(!confirm('Clear the current orders and purchase orders to start a new workspace?'))return;const d=prepareDemo();d.factory='My factory';d.orders=[];d.purchaseOrders=[];input=d;workflow={items:{},release:null};recalc();goto('more');};
   document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
-  $('order-form').onsubmit=e=>{e.preventDefault();const order={id:uid('ORD'),customer:$('order-customer').value.trim(),productId:$('order-product').value,qty:Number($('order-qty').value),due:$('order-due').value,priority:$('order-priority').value};input.orders.push(order);$('order-dialog').close();recalc();goto('today');};
+  $('order-form').onsubmit=e=>{e.preventDefault();const order={id:editingOrderId||uid('ORD'),customer:$('order-customer').value.trim(),productId:$('order-product').value,qty:Number($('order-qty').value),due:$('order-due').value,priority:$('order-priority').value};if(!order.customer){$('order-customer').setCustomValidity('Enter a customer name.');$('order-customer').reportValidity();return;}const index=input.orders.findIndex(o=>o.id===editingOrderId);if(index>=0)input.orders[index]={...input.orders[index],...order};else input.orders.push(order);editingOrderId=null;$('order-dialog').close();recalc();goto('today');};
   $('po-form').onsubmit=e=>{e.preventDefault();const po={id:uid('PO'),supplierId:$('po-supplier').value,materialId:$('po-material').value,qty:Number($('po-qty').value),unitCost:Number($('po-cost').value),expectedDate:$('po-date').value,status:'Draft',receivedQty:0,notes:'',receipts:[]};input.purchaseOrders.push(po);$('po-dialog').close();recalc();goto('buy');};
-  document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){goto(go.dataset.go);return;}const create=e.target.closest('[data-create-po]');if(create){openPo(create.dataset.createPo,create.dataset.qty);return;}const del=e.target.closest('[data-delete-order]');if(del){input.orders=input.orders.filter(o=>o.id!==del.dataset.deleteOrder);workflow.release=null;recalc();return;}const po=e.target.closest('[data-po-action]');if(po){const row=input.purchaseOrders.find(x=>x.id===po.dataset.id);if(!row)return;if(po.dataset.poAction==='order')row.status='Ordered';else{const remain=Number(row.qty)-Number(row.receivedQty||0);input=BatchWattProcurement.receivePurchase(input,row.id,remain);}recalc();}});
+  document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){goto(go.dataset.go);return;}const create=e.target.closest('[data-create-po]');if(create){openPo(create.dataset.createPo,create.dataset.qty);return;}const edit=e.target.closest('[data-edit-order]');if(edit){openOrder(edit.dataset.editOrder);return;}const del=e.target.closest('[data-delete-order]');if(del){if(!confirm('Remove this order from the plan?'))return;input.orders=input.orders.filter(o=>o.id!==del.dataset.deleteOrder);workflow.release=null;recalc();return;}const po=e.target.closest('[data-po-action]');if(po){const row=input.purchaseOrders.find(x=>x.id===po.dataset.id);if(!row)return;if(po.dataset.poAction==='order')row.status='Ordered';else{openReceipt(row.id);return;}recalc();}});
   document.addEventListener('change',e=>{if(e.target.dataset.energy){input.energy[e.target.dataset.energy]=e.target.type==='number'?Number(e.target.value):e.target.value;recalc();}});
   const setupChange=()=>{input.factory=$('factory-name').value.trim()||'My factory';input.shift.date=$('shift-date').value;input.shift.start=$('shift-start').value;input.shift.end=$('shift-end').value;recalc();};
   ['factory-name','shift-date','shift-start','shift-end'].forEach(id=>$(id).addEventListener('change',setupChange));

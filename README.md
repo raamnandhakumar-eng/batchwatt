@@ -6,6 +6,14 @@ BatchWatt turns customer orders, inventory, production capacity, purchasing need
 
 **[Open BatchWatt](https://batchwatt.vercel.app/)**
 
+## New in V3.8
+
+- Edit customer orders without removing and re-entering them.
+- Search by customer, product, or order ID and filter orders that need attention.
+- Record partial material deliveries; inventory increases only by the received quantity.
+- Compare recommended load against the baseline on the energy chart.
+- See blocked production alongside scheduled runs, with a direct action to resolve it.
+
 ## The simple flow
 
 Daily operators mainly use three places:
@@ -86,7 +94,7 @@ BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, 
 
 ## What stays under the hood
 
-V3.7 keeps the production, procurement, inventory, and energy planning engines while presenting them through one simpler operator console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
+V3.8 keeps the production, procurement, inventory, and energy planning engines while presenting them through one simpler operator console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
 ## Operational pilot facts
 

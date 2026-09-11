@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V3.7 simplified operator console is the default app. V2 remains available for detailed setup.
+// V3.8 simplified operator console is the default app. V2 remains available for detailed setup.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V3.7 assets with one Today decision console, energy chart, cost-aware production timing, two demos in Pilot Results, bulk order intake, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V3.8 assets with one Today decision console, energy chart, cost-aware production timing, two demos in Pilot Results, bulk order intake, and V2 preserved.`);
