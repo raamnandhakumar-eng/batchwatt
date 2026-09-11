@@ -4,7 +4,7 @@
 
 BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into one practical shift plan.
 
-**[Open BatchWatt](https://batchwatt-git-improve-business-flow-usd-whatsapp-ciel5.vercel.app)**
+**[Open BatchWatt](https://batchwatt.vercel.app/)**
 
 ## The simple flow
 
