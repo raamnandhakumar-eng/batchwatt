@@ -66,7 +66,7 @@
     const copy=head.querySelector('p:not(.eyebrow)');
     if(eyebrow)eyebrow.textContent='START HERE';
     if(title)title.textContent='Plan production using your orders and energy data';
-    if(copy)copy.textContent='New to BatchWatt? Load your orders and, if available, 15-minute energy data. BatchWatt checks what can be produced, when it should run, what is blocked, and the peak-load and cost impact.';
+    if(copy)copy.textContent='BatchWatt is a production and energy planning tool. It combines customer orders, inventory, production capacity and energy data, then tells you what can be produced, what is blocked, what should run next, and how the plan affects peak load and modeled energy cost.';
 
     const actions=head.querySelector('.pipeline-actions');
     if(actions&&!document.getElementById('sample-plan-button')){
@@ -91,8 +91,9 @@
     }
     explainer.innerHTML=`
       <div class="product-explainer-intro">
-        <span>HOW TO USE BATCHWATT</span>
-        <strong>Three steps from raw data to a usable shift plan.</strong>
+        <span>WHAT BATCHWATT DOES</span>
+        <strong>Turns raw operating data into a usable shift plan.</strong>
+        <small>It connects demand, production constraints and energy instead of treating them as separate spreadsheets.</small>
       </div>
       <div class="product-step">
         <b>1</b><div><span>LOAD YOUR DATA</span><strong>Orders + energy Excel / CSV</strong><small>Import customer demand and an optional 15-minute facility load profile.</small></div>
