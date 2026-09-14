@@ -3,3 +3,68 @@
 /* Dairy control-room visual layer */
 :root{--bg:#fff;--surface:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--accent:#2457d6;--accent-dark:#1d46ad;--ink:#172033;--shadow:none}
 body{background:#fff}.appbar{background:#fff;color:var(--text);border-bottom:1px solid var(--line)}.brand{color:var(--text)}.brand-mark{background:var(--accent)}.brand small,.save-state{color:var(--muted)}.tabs{background:#fff}.tabs a[aria-current="page"]{background:#f2f4f7}.shell{max-width:1180px;padding-top:42px}.eyebrow{font-size:10px;letter-spacing:.06em;color:var(--muted)}h1{font-size:42px}.panel{border-radius:12px;box-shadow:none}.primary{background:var(--accent);border-color:var(--accent)}.primary:hover{background:var(--accent-dark)}.next-card{display:none}.status-pill{font-size:11px}.plan-head{color:var(--muted);font-size:11px;font-weight:700}.plan-row{display:grid;grid-template-columns:76px minmax(150px,1.1fr) 120px 130px minmax(220px,1.8fr);gap:18px;align-items:center;padding:14px 4px;border-bottom:1px solid var(--line);font-size:13px}.action-run{background:#eef8f1;color:#26734d}.action-shift{background:#fff6e7;color:#8a5b13}.action-hold{background:#fff0ee;color:#b42318}.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 30px}.kpi{border:1px solid var(--line);border-radius:12px;padding:16px 18px}.kpi span{display:block;font-size:12px;color:var(--muted)}.kpi strong{display:block;font-size:30px;margin-top:7px}.product-line{font-size:15px;color:var(--muted);max-width:780px}.core-line{font-size:13px;color:var(--muted)}.hero-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.energy-impact{border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:28px}.energy-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.energy-metrics>div{padding:8px 12px;border-left:1px solid var(--line)}.energy-metrics>div:first-child{border-left:0}.energy-metrics span{display:block;color:var(--muted);font-size:11px}.energy-metrics strong{display:block;margin-top:5px;font-size:17px}.simple-load-chart{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.simple-load-chart>div{display:grid;grid-template-columns:54px 1fr 78px;gap:10px;align-items:center;margin:9px 0}.simple-load-chart i{height:8px;background:#d0d5dd;border-radius:999px;display:block}.simple-load-chart>div:nth-child(2) i{background:var(--accent)}.simple-load-chart span,.simple-load-chart b,.simple-load-chart small{font-size:11px}.simple-load-chart small{color:var(--muted)}.release-card,.release-card.ready,.release-card.blocked,.release-card.released{background:#fff;border:1px solid var(--line);border-radius:12px}.release-button{background:#fff;color:var(--text);border-color:var(--line)}.footer-note{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}@media(max-width:800px){h1{font-size:34px}.kpi-row,.energy-metrics{grid-template-columns:repeat(2,1fr)}.plan-row{grid-template-columns:70px 1fr}.plan-row span:nth-child(3),.plan-row span:nth-child(4),.plan-row span:nth-child(5){grid-column:2}}
+
+
+/* Native dairy operations layout */
+.legacy-today{display:none!important}
+.dairy-hero{margin-bottom:20px}
+.dairy-hero-row{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+.dairy-hero h1{font-size:44px;line-height:1.04;letter-spacing:-.035em;margin-bottom:10px}
+.product-line{font-size:16px;line-height:1.45;color:var(--muted);margin:0 0 7px;max-width:880px}
+.core-line{font-size:14px;line-height:1.45;color:var(--text);font-weight:760;margin:0}
+.dairy-plan-actions{display:flex;justify-content:flex-end;gap:10px;align-items:center;flex-wrap:wrap;margin:22px 0 18px}
+.button-secondary-strong{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:11px 15px;font-weight:760;cursor:pointer;text-decoration:none}
+.button-secondary-strong:hover{background:#f8fafc}
+.compact-menu{position:relative}
+.compact-menu>summary{list-style:none}.compact-menu>summary::-webkit-details-marker{display:none}
+.compact-menu-pop{position:absolute;right:0;top:46px;z-index:30;min-width:190px;padding:8px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 16px 40px rgba(16,24,40,.12);display:grid}
+.compact-menu:not([open]) .compact-menu-pop{display:none}
+.compact-menu-pop a{padding:9px 10px;border-radius:7px;color:var(--text);text-decoration:none;font-size:13px}
+.compact-menu-pop a:hover{background:#f8fafc}
+.dairy-output-section{margin:0 0 34px}
+.section-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:10px}
+.section-heading h2{font-size:25px;line-height:1.15;margin:0 0 4px}
+.section-heading p{font-size:13px;color:var(--muted);margin:0}
+.dairy-schedule{border-top:1px solid var(--line)}
+.plan-head{padding:10px 4px!important;color:var(--muted);font-size:11px!important;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.plan-row{grid-template-columns:86px minmax(150px,1.1fr) 125px 135px minmax(220px,1.8fr)!important;padding:15px 4px!important}
+.action-pill{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900}
+.action-run{color:#26734d;background:#eef8f1}
+.action-shift{color:#8a5b13;background:#fff6e7}
+.action-hold{color:#b42318;background:#fff0ee}
+.plan-reason{color:var(--muted);line-height:1.45}
+.dairy-empty{padding:24px 4px;color:var(--muted);font-size:13px}
+.energy-impact{padding:20px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.energy-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.energy-metrics>div{padding:4px 16px;border-left:1px solid var(--line)}
+.energy-metrics>div:first-child{border-left:0}
+.energy-metrics span{display:block;font-size:11px;color:var(--muted)}
+.energy-metrics strong{display:block;font-size:17px;margin-top:5px}
+.load-curve{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.load-curve svg{display:block;width:100%;height:150px}
+.load-curve>div{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.data-checks{margin-top:14px;border-top:1px solid var(--line);padding-top:13px}
+.data-checks summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--muted)}
+.data-checks p{font-size:12px;line-height:1.6;color:var(--muted);max-width:900px}
+.pilot-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+.pilot-summary-grid article{border:1px solid var(--line);border-radius:11px;padding:16px;background:#fff}
+.pilot-summary-grid span{display:block;font-size:11px;color:var(--muted)}
+.pilot-summary-grid strong{display:block;font-size:23px;margin-top:5px}
+.pilot-boundary{font-size:13px;line-height:1.6;color:var(--muted);max-width:900px}
+.footer-note{max-width:1180px;margin:0 auto;padding:20px 24px 36px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+#today .planner-workflow,#today .decision-console,#today .integration-summary,#today #decision-trace-panel,#today .product-explainer,#today .learning-peek,#today .integration-story{display:none!important}
+#today .kpi-row{margin:18px 0 30px}
+#today .kpi{background:#fff}
+#open-order{display:none!important}
+@media(max-width:800px){
+  .dairy-hero-row{flex-direction:column;gap:10px}
+  .dairy-hero h1{font-size:34px}
+  .dairy-plan-actions{justify-content:stretch}
+  .dairy-plan-actions>*{flex:1 1 auto}
+  .kpi-row,.energy-metrics,.pilot-summary-grid{grid-template-columns:repeat(2,1fr)!important}
+  .plan-row{grid-template-columns:72px 1fr!important}
+  .plan-row>span:nth-child(n+3){grid-column:2}
+  .plan-head{display:none!important}
+  .energy-metrics>div:nth-child(3){border-left:0;margin-top:14px}
+  .energy-metrics>div:nth-child(4){margin-top:14px}
+}
