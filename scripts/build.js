@@ -1,13 +1,15 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.8 functional planner with visible integration health and decision trace.
+// V4.9 functional planner with order + energy spreadsheet integration.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
   ['order-import.css', 'order-import.css'],
+  ['energy-import.css', 'energy-import.css'],
   ['ops-app.js', 'ops-app.js'],
   ['order-import-ui.js', 'order-import-ui.js'],
+  ['energy-import-ui.js', 'energy-import-ui.js'],
   ['planner.html', 'planner-v2.html'],
   ['planner.css', 'planner.css'],
   ['planner-app.js', 'planner-app.js'],
@@ -17,6 +19,7 @@ const assets = [
   ['lib/energy-reports.js', 'lib/energy-reports.js'],
   ['lib/operations.js', 'lib/operations.js'],
   ['lib/order-import.js', 'lib/order-import.js'],
+  ['lib/energy-import.js', 'lib/energy-import.js'],
   ['node_modules/exceljs/dist/exceljs.min.js', 'exceljs.min.js'],
 ];
 
@@ -51,4 +54,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.8 assets with live shared-model health, visible decision order, per-run scheduling rationale, blockers, production sequence, energy impact, and temporary synthetic sample mode.`);
+console.log(`Built ${assets.length} BatchWatt V4.9 assets with Orders Excel/CSV + Energy Excel/CSV -> validation/mapping -> shared model -> scheduling -> peak/cost decisions, live decision trace, and temporary synthetic sample mode.`);
