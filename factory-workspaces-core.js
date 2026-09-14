@@ -37,20 +37,22 @@
   function save(){
     if(restoring||!input)return;const id=factoryId();if(!id)return;const ws=ensure(id,input);if(!ws)return;const items=list(id),i=items.findIndex(w=>w.id===ws.id);if(i<0)return;items[i]={...items[i],state:stateFromInput(input),workflow:copy(workflow||{items:{},release:null}),updatedAt:new Date().toISOString()};setList(id,items);
   }
-  function load(wsId,id=factoryId(),navigate=true){
-    const p=profile(id),ws=list(id).find(w=>w.id===wsId);if(!p||!ws)return;save();setActive(id,wsId);restoring=true;input=inputFromState(p,ws.state);workflow=copy(ws.workflow||{items:{},release:null});input.suppliers||=[];input.materials||=[];input.recipes||=[];input.purchaseOrders||=[];input.orders||=[];result=null;restoring=false;recalc();window.BatchWattWorkspaceUI?.render();if(navigate)location.hash='#today';
+  function load(wsId,id=factoryId(),navigate=true,saveBefore=true){
+    const p=profile(id),ws=list(id).find(w=>w.id===wsId);if(!p||!ws)return;if(saveBefore)save();setActive(id,wsId);restoring=true;input=inputFromState(p,ws.state);workflow=copy(ws.workflow||{items:{},release:null});input.suppliers||=[];input.materials||=[];input.recipes||=[];input.purchaseOrders||=[];input.orders||=[];result=null;restoring=false;recalc();window.BatchWattWorkspaceUI?.render();if(navigate)location.hash='#today';
   }
   function create(name,date,mode='fresh'){
-    const id=factoryId(),p=profile(id);if(!id||!p)return null;save();let state,flow;if(mode==='duplicate'){state=stateFromInput(input);flow=copy(workflow||{items:{},release:null});}else{state=freshState(p);flow={items:{},release:null};}state.shift={...(state.shift||{}),date};const ws={id:uid(),name,state,workflow:flow,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};const items=list(id);items.push(ws);setList(id,items);setActive(id,ws.id);load(ws.id,id,true);return ws;
+    const id=factoryId(),p=profile(id);if(!id||!p)return null;save();let state,flow;if(mode==='duplicate'){state=stateFromInput(input);flow=copy(workflow||{items:{},release:null});}else{state=freshState(p);flow={items:{},release:null};}state.shift={...(state.shift||{}),date};const ws={id:uid(),name,state,workflow:flow,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};const items=list(id);items.push(ws);setList(id,items);load(ws.id,id,true,false);return ws;
   }
   function rename(wsId,name){const id=factoryId(),items=list(id),ws=items.find(w=>w.id===wsId);if(!ws||!name?.trim())return;ws.name=name.trim();ws.updatedAt=new Date().toISOString();setList(id,items);window.BatchWattWorkspaceUI?.render();}
-  function duplicate(wsId){const id=factoryId(),items=list(id),src=items.find(w=>w.id===wsId);if(!src)return;save();const ws={...copy(src),id:uid(),name:`${src.name} copy`,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};items.push(ws);setList(id,items);setActive(id,ws.id);load(ws.id,id,true);}
-  function remove(wsId){const id=factoryId(),items=list(id);if(items.length<=1)return false;const remaining=items.filter(w=>w.id!==wsId);setList(id,remaining);if(activeId(id)===wsId){setActive(id,remaining[0].id);load(remaining[0].id,id,true);}else window.BatchWattWorkspaceUI?.render();return true;}
-  function syncFactory(){const id=factoryId();if(!id)return;const ws=ensure(id,input);if(ws)load(ws.id,id,false);}
+  function duplicate(wsId){const id=factoryId(),items=list(id),src=items.find(w=>w.id===wsId);if(!src)return;save();const ws={...copy(src),id:uid(),name:`${src.name} copy`,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};items.push(ws);setList(id,items);load(ws.id,id,true,false);}
+  function remove(wsId){
+    const id=factoryId(),items=list(id);if(items.length<=1)return false;const wasActive=activeId(id)===wsId;const remaining=items.filter(w=>w.id!==wsId);setList(id,remaining);if(wasActive)load(remaining[0].id,id,true,false);else window.BatchWattWorkspaceUI?.render();return true;
+  }
+  function syncFactory(){const id=factoryId();if(!id)return;const ws=ensure(id,input);if(ws)load(ws.id,id,false,false);}
 
   const priorPersist=persist;persist=function(){const v=priorPersist.apply(this,arguments);save();return v;};
   const priorRecalc=recalc;recalc=function(){const v=priorRecalc.apply(this,arguments);window.BatchWattWorkspaceUI?.render();return v;};
   document.addEventListener('change',e=>{if(e.target?.id==='factory-profile-select'||e.target?.id==='fp-profile-select'){save();setTimeout(syncFactory,0);}},true);
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const id=factoryId();if(id){ensure(id,input);const a=activeId(id);if(a)load(a,id,false);}},0));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const id=factoryId();if(id){ensure(id,input);const a=activeId(id);if(a)load(a,id,false,false);}},0));
   window.BatchWattWorkspaces={list:()=>copy(list()),activeId:()=>activeId(),active:()=>copy(list().find(w=>w.id===activeId())||null),save,load,create,rename,duplicate,remove,ensure,syncFactory};
 })();
