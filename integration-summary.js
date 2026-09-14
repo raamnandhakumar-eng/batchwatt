@@ -64,9 +64,9 @@
     const eyebrow=head.querySelector('.eyebrow');
     const title=head.querySelector('h1');
     const copy=head.querySelector('p:not(.eyebrow)');
-    if(eyebrow)eyebrow.textContent='PRODUCTION + ENERGY DECISION SUPPORT';
-    if(title)title.textContent='Turn orders and energy data into a production plan';
-    if(copy)copy.textContent='BatchWatt combines demand, inventory, line capacity and 15-minute energy data to decide what should run, when it should run, and what needs attention.';
+    if(eyebrow)eyebrow.textContent='START HERE';
+    if(title)title.textContent='Plan production using your orders and energy data';
+    if(copy)copy.textContent='New to BatchWatt? Load your orders and, if available, 15-minute energy data. BatchWatt checks what can be produced, when it should run, what is blocked, and the peak-load and cost impact.';
 
     const actions=head.querySelector('.pipeline-actions');
     if(actions&&!document.getElementById('sample-plan-button')){
@@ -82,28 +82,29 @@
     document.getElementById('model-line')?.remove();
     document.getElementById('integration-strip')?.remove();
 
-    if(!document.getElementById('product-explainer')){
-      const explainer=document.createElement('section');
+    let explainer=document.getElementById('product-explainer');
+    if(!explainer){
+      explainer=document.createElement('section');
       explainer.id='product-explainer';
       explainer.className='product-explainer';
-      explainer.innerHTML=`
-        <div class="product-explainer-intro">
-          <span>WHAT BATCHWATT DOES</span>
-          <strong>One shared model for operations and energy.</strong>
-        </div>
-        <div class="product-step">
-          <b>1</b><div><span>INTEGRATE</span><strong>Orders + energy Excel / CSV</strong><small>Validate and map fragmented inputs.</small></div>
-        </div>
-        <i>→</i>
-        <div class="product-step">
-          <b>2</b><div><span>CHECK</span><strong>Materials + capacity + due times + peak</strong><small>Find blockers and operating constraints.</small></div>
-        </div>
-        <i>→</i>
-        <div class="product-step">
-          <b>3</b><div><span>RECOMMEND</span><strong>Sequence + load + modeled cost</strong><small>Produce a decision-ready shift plan.</small></div>
-        </div>`;
       head.insertAdjacentElement('afterend',explainer);
     }
+    explainer.innerHTML=`
+      <div class="product-explainer-intro">
+        <span>HOW TO USE BATCHWATT</span>
+        <strong>Three steps from raw data to a usable shift plan.</strong>
+      </div>
+      <div class="product-step">
+        <b>1</b><div><span>LOAD YOUR DATA</span><strong>Orders + energy Excel / CSV</strong><small>Import customer demand and an optional 15-minute facility load profile.</small></div>
+      </div>
+      <i>→</i>
+      <div class="product-step">
+        <b>2</b><div><span>BATCHWATT CHECKS IT</span><strong>Stock, materials, capacity, due times and peak</strong><small>Invalid inputs and operating blockers stay visible.</small></div>
+      </div>
+      <i>→</i>
+      <div class="product-step">
+        <b>3</b><div><span>USE THE PLAN</span><strong>What to run, when to run it, and why</strong><small>See the recommended sequence, blockers, load profile and modeled cost.</small></div>
+      </div>`;
   }
 
   function mountSampleNotice(){
