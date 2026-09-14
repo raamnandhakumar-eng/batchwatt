@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.4.1 simple planner with integration summary layer.
+// V4.5 simple planner with integration summary and guided synthetic sample.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.4.1 assets with a simplified Orders -> Attention -> Production -> Energy workflow, shared-model integration summary, compact risk queue, expandable pipeline details, separate Pilot Results, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.5 assets with a simplified Orders -> Attention -> Production -> Energy workflow, shared-model integration summary, guided synthetic sample plan, compact risk queue, expandable pipeline details, separate Pilot Results, and V2 preserved.`);
