@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.7 simple functional planner with guided sample and visible load profile.
+// V4.8 functional planner with visible integration health and decision trace.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,14 +29,14 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: decision logic -> workspace shell -> neutral default -> simple planner -> final product layer.
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js']) {
+// Production UI layers: planning engine -> workspace -> simple workflow -> integration summary -> live decision trace.
+for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
   );
 }
-for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css', 'operational-pipeline.css', 'integration-summary.css']) {
+for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css', 'operational-pipeline.css', 'integration-summary.css', 'decision-trace.css']) {
   fs.appendFileSync(
     path.join(out, 'ops.css'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.7 assets with a simple Import/Sample -> Risk -> Production -> Energy workflow, temporary synthetic sample mode, visible baseline-vs-recommended load profile, compact status cards, separate Pilot Results, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.8 assets with live shared-model health, visible decision order, per-run scheduling rationale, blockers, production sequence, energy impact, and temporary synthetic sample mode.`);
