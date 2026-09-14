@@ -13,7 +13,7 @@
     wrap.innerHTML=`
       <section class="panel decision-console-simple">
         <div class="panel-head">
-          <div><p class="eyebrow">DECISION CONSOLE</p><h2>What should we do today?</h2><p class="subtle">Orders first. Then production timing, buying, energy, and release.</p></div>
+          <div><p class="eyebrow">01 / ORDERS & STOCK</p><h2>Start with your orders</h2><p class="subtle">Add demand and check finished stock. Your production plan updates automatically.</p></div>
           <span id="simple-status" class="status-pill neutral">Waiting for plan</span>
         </div>
         <div id="simple-actions" class="simple-actions"></div>
@@ -21,26 +21,28 @@
 
       <section class="panel energy-insights-simple">
         <div class="panel-head">
-          <div><p class="eyebrow">ENERGY INSIGHTS</p><h2>When should we run?</h2><p class="subtle">Planned 15-minute load profile with tariff-aware timing and a peak target.</p></div>
+          <div><p class="eyebrow">03 / ENERGY</p><h2>Energy for this plan</h2><p class="subtle">Estimated electricity use and cost for the recommended schedule.</p></div>
           <span id="simple-energy-status" class="status-pill neutral">No plan</span>
         </div>
         <div id="simple-energy-kpis" class="simple-energy-kpis"></div>
         <div class="energy-chart-wrap"><svg id="simple-energy-chart" viewBox="0 0 920 280" role="img" aria-label="Planned power load by time"></svg></div>
         <p class="chart-legend"><span>━ Recommended load</span><span>┄ Baseline load</span><span>Shading: peak tariff hours</span></p><div id="simple-energy-insight" class="energy-insight-callout"></div>
-        <details class="simple-energy-inputs">
-          <summary>Change energy assumptions</summary>
+        <div class="simple-energy-inputs">
+          <h3>Adjust power and rates</h3>
           <div id="simple-energy-fields" class="today-energy-inputs"></div>
-        </details>
+        </div>
       </section>
 
       <section class="panel simple-production-decisions">
         <div class="panel-head">
-          <div><p class="eyebrow">PRODUCTION PLAN</p><h2>What to make and when</h2><p class="subtle">Delivery first, then the lowest modeled operating cost that keeps the work feasible.</p></div>
+          <div><p class="eyebrow">02 / PRODUCTION</p><h2>What to make and when</h2><p class="subtle">Follow these runs in start-time order. Blocked work stays visible below.</p></div>
           <span id="simple-saving" class="status-pill neutral">Lowest feasible cost</span>
         </div>
         <div id="simple-decision-list" class="simple-decision-list"></div>
       </section>`;
     next.insertAdjacentElement('afterend',wrap);
+    wrap.querySelector('.energy-insights-simple').before(wrap.querySelector('.simple-production-decisions'));
+    next.hidden=true;
 
     // Hide the older duplicate run-plan panel; release and issues remain below as the final action step.
     const oldRun=wrap.nextElementSibling;
@@ -77,10 +79,9 @@
     status.textContent=label;status.className=`status-pill ${tone}`;
 
     box.innerHTML=[
-      actionCard('1. Orders',risky.length?`${risky.length} need attention`:`${rows.length} covered or scheduled`,risky.length?'bad':'good','Open','orders'),
-      actionCard('2. Produce',first?`${first.product} at ${first.recommendedStart}`:'No production required',first?'good':'neutral'),
-      actionCard('3. Buy',buys.length?`${buys.length} material action${buys.length===1?'':'s'}`:'Nothing to buy',buys.length?'warn':'good','Open','buy'),
-      actionCard('4. Release',rel.isReleased?'Plan released':summary.releasable?'Ready for supervisor release':'Resolve blockers first',summary.releasable||rel.isReleased?'good':'warn')
+      actionCard('Customer orders',`${rows.length} orders · ${risky.length} need attention`,risky.length?'warn':'neutral','Edit orders','orders'),
+      actionCard('Finished stock','Check what is already available','neutral','Update stock','more'),
+      actionCard('Production',`${result.decisions?.length||0} scheduled runs`,summary.blockedOrders?'warn':'good','Add order','add-order')
     ].join('');
   }
 
@@ -88,11 +89,10 @@
     const box=document.getElementById('simple-energy-fields');
     if(!box||!input?.energy) return;
     const fields=[
-      ['baseKw','Background load','kW'],['peakLimitKw','Peak target','kW'],['monthlyPeakKw','Month peak','kW'],
-      ['rate','Off-peak rate','$/kWh'],['peakRate','Peak rate','$/kWh'],['demandRate','Demand charge','$/kW']
+      ['baseKw','Background load','kW'],['peakLimitKw','Peak target','kW'],
+      ['rate','Off-peak rate','$/kWh'],['peakRate','Peak rate','$/kWh']
     ];
-    box.innerHTML=fields.map(([key,label,unit])=>`<label>${esc(label)}<span>${esc(unit)}</span><input data-energy="${key}" type="number" min="0" step="any" value="${esc(input.energy[key])}"></label>`).join('')+
-      `<label>Peak starts<span>time</span><input data-energy="peakStart" type="time" step="900" value="${esc(input.energy.peakStart||'')}"></label><label>Peak ends<span>time</span><input data-energy="peakEnd" type="time" step="900" value="${esc(input.energy.peakEnd||'')}"></label>`;
+    box.innerHTML=fields.map(([key,label,unit])=>`<label>${esc(label)}<span>${esc(unit)}</span><input data-energy="${key}" type="number" min="0" step="any" required value="${esc(input.energy[key])}"></label>`).join('');
   }
 
   function mins(t){const [h,m]=String(t||'00:00').split(':').map(Number);return h*60+m;}
@@ -143,12 +143,12 @@
       <div><span>Planned peak</span><strong>${fmt(peak)} kW</strong><small>${headroom>=0?'+':''}${fmt(headroom)} kW headroom</small></div>
       <div><span>Energy cost</span><strong>${money(result.proposed.usageCost)}</strong><small>shift estimate</small></div>
       <div><span>Modeled saving</span><strong>${money(saving)}</strong><small>energy + conditional demand</small></div>
-      <div><span>Jobs shifted</span><strong>${shifted}</strong><small>for lower modeled cost</small></div>`;
+      <div><span>Electricity use</span><strong>${fmt(result.proposed.kwh)} kWh</strong><small>${shifted} runs shifted for lower cost</small></div>`;
 
     if(headroom<0) insight.textContent=`Peak target is exceeded by ${fmt(Math.abs(headroom))} kW. Review overlapping high-load runs.`;
     else if(shifted>0&&saving>0) insight.textContent=`Shift ${shifted} production run${shifted===1?'':'s'} to lower-cost timing for ${money(saving)} modeled saving, without worse dispatch performance.`;
     else if(Number(result.comparison?.peakReductionKw||0)>0) insight.textContent=`Recommended sequencing lowers planned peak by ${fmt(result.comparison.peakReductionKw)} kW without dropping scheduled work.`;
-    else insight.textContent='Current timing is already the lowest modeled cost that preserves dispatch performance.';
+    else insight.textContent='No lower-cost schedule was found by this planner while preserving dispatch performance.';
   }
 
   function renderDecisions(){
@@ -156,24 +156,26 @@
     const saving=document.getElementById('simple-saving');
     if(!list||!saving) return;
 
-    const decisions=result?.decisions||[];
+    const decisions=[...(result?.decisions||[])].sort((a,b)=>mins(a.recommendedStart)-mins(b.recommendedStart));
     const total=Number(result?.comparison?.totalModeledOperatingSaving||0);
-    saving.textContent=total>0?`${money(total)} modeled saving`:'Lowest feasible cost';
+    saving.textContent=total>0?`${money(total)} modeled saving`:'Delivery → peak load → energy cost';
     saving.className=`status-pill ${total>0?'good':'neutral'}`;
 
     if(!result){list.innerHTML='<div class="empty">Add orders to generate the production plan.</div>';return;}
     const blocked=result.proposed.unscheduled||[];
-    const holds=blocked.map(j=>`<article class="production-hold"><strong>${esc(j.product)} · ${esc(j.customer)}</strong><p>${esc(j.reason)}</p><button class="quiet" data-simple-go="${String(j.reason).includes('Material shortage')?'buy':'orders'}">Resolve blocker</button></article>`).join('');
+    const holds=blocked.map(j=>`<article class="production-hold"><strong>${esc(j.product)} · ${esc(j.customer)}</strong><p>${esc(j.reason)}</p><button class="quiet" data-simple-go="${String(j.reason).includes('Material shortage')?'buy':'more'}">Resolve blocker</button></article>`).join('');
     if(!decisions.length){list.innerHTML=holds||'<div class="empty">No production is required; current orders can be covered from finished stock.</div>';return;}
 
     list.innerHTML=decisions.map((d,i)=>{
       const moved=Number(d.shiftedMinutes||0)!==0;
+      const job=result.proposed.jobs.find(j=>j.id===d.orderId);
+      const runPeak=Math.max(0,...result.proposed.profile.filter(s=>s.minute>=job?.start&&s.minute<job?.end).map(s=>s.kw));
       return `<article class="simple-decision-row">
         <div class="decision-number">${i+1}</div>
         <div class="decision-product"><strong>${esc(d.product)}</strong><span>${fmt(d.quantity)} ${esc(d.unit)} · ${esc(d.line)}</span></div>
-        <div class="decision-time"><span>Run</span><strong>${esc(d.recommendedStart)}–${esc(d.recommendedEnd)}</strong></div>
+        <div class="decision-time"><span>Start → Finish</span><strong>${esc(d.recommendedStart)}–${esc(d.recommendedEnd)}</strong></div>
         <div class="decision-why"><span>Why</span><strong>${esc(d.reason)}</strong></div>
-        <div class="decision-run-cost"><span>Run energy</span><strong>${money(d.proposedUsageCost||0)}</strong>${moved?`<small>shifted ${Math.abs(Number(d.shiftedMinutes))} min</small>`:''}</div>
+        <div class="decision-run-cost"><span>${fmt(job?.kw)} kW machine · ${fmt(job?.kwh)} kWh</span><strong>${money(d.proposedUsageCost||0)}</strong><small>Factory peak during run: ${fmt(runPeak)} kW</small>${moved?`<small>shifted ${Math.abs(Number(d.shiftedMinutes))} min</small>`:''}</div>
       </article>`;
     }).join('')+holds;
   }
@@ -182,6 +184,6 @@
 
   const priorRecalc=recalc;
   recalc=function(){const v=priorRecalc.apply(this,arguments);render();return v;};
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-simple-go]');if(b)goto(b.dataset.simpleGo);});
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-simple-go]');if(b){if(b.dataset.simpleGo==='add-order')openOrder();else goto(b.dataset.simpleGo);};});
   document.addEventListener('DOMContentLoaded',render);
 })();
