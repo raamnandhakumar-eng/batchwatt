@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.1 schedule-first operator workspace is the default app. V2 remains available for detailed setup.
+// V4.2 schedule-first operator workspace with slate/blue/teal visual theme.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,14 +29,14 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: Today console -> V4 decision layer -> Katana-inspired workspace shell -> neutral default workspace -> read-only Pilot Results.
+// Production UI layers: decision logic -> workspace shell -> neutral default -> final visual theme.
 for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
   );
 }
-for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css']) {
+for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css']) {
   fs.appendFileSync(
     path.join(out, 'ops.css'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.1 assets with a neutral default factory workspace, schedule-first manufacturing UI, energy-aware production table, separate Pilot Results, bulk order intake, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.2 assets with a neutral factory workspace, schedule-first manufacturing UI, slate/blue product theme, teal energy layer, separate Pilot Results, bulk order intake, and V2 preserved.`);
