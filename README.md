@@ -1,48 +1,100 @@
 # BatchWatt
 
-**A production + energy decision-support tool that turns fragmented operating data into a feasible, peak-aware shift plan.**
+**Energy-aware production planning for dairy manufacturers, starting with ghee production.**
 
-BatchWatt combines customer orders, inventory, materials, production capacity and electricity data, then recommends what should **RUN**, **SHIFT**, or **HOLD**.
+BatchWatt answers one operating question:
+
+> **What should we produce today?**
+
+It combines **orders + inventory + production capacity + energy** to recommend the best feasible production plan. Each production requirement is expressed as **RUN**, **SHIFT**, or **HOLD**, with the recommended time, production line, and reason.
 
 **[Open BatchWatt](https://batchwatt.vercel.app/)**
 
-## V6: whole-shift production + energy scheduling
+## Dairy manufacturing focus
 
-The operating workflow is:
+BatchWatt is positioned specifically for **dairy production**, with **ghee manufacturing as the proven starting use case**.
 
-**Factory profile + workspace data → validation → feasibility → whole-shift scheduling → energy / peak evaluation → RUN / SHIFT / HOLD**
+The current product experience is designed around practical ghee-production decisions such as:
 
-A factory profile contains reusable master data such as products, eligible production lines, line power, production rates, materials, BOMs, shift defaults and energy settings. Each factory can have multiple isolated workspaces for daily plans or scenarios; orders, interval energy, inventory state and plan/release state stay separate by workspace.
+- Customer orders for pack-size and bulk ghee products
+- Finished-goods stock
+- Raw-material and packaging availability
+- Batch heating / processing and packing capacity
+- Production-line availability and rates
+- Electricity tariffs and peak-load periods
+- Production sequencing under delivery, material, capacity, and energy constraints
 
-The V6 scheduler no longer evaluates each order only as an isolated greedy decision. It builds candidate whole-shift schedules across eligible machines and 15-minute start times, then compares the resulting plan using this decision hierarchy:
+The underlying scheduling engine remains technically generic enough to support additional manufacturing configurations later. BatchWatt does **not** claim validation across all dairy manufacturing processes.
 
-1. Minimize orders placed on **HOLD**, with higher penalties for higher-priority work.
-2. Minimize **priority-weighted late minutes** and total late minutes.
-3. Avoid the configured **peak-demand target**.
-4. Minimize modeled electricity cost plus conditional incremental demand-charge exposure.
-5. Reduce changeover burden after service and energy requirements are protected.
+## Core workflow
 
-V6 uses a **bounded deterministic beam-search heuristic**. It searches materially more of the whole-shift decision space than the earlier sequential scheduler, but it is not represented as a guaranteed globally optimal mathematical solution.
+The primary workflow is intentionally short:
 
-### RUN / SHIFT / HOLD
+1. **Load orders and plant data**, or use the one-click ghee sample.
+2. **Generate Plan.**
+3. Review the **RUN / SHIFT / HOLD production schedule**.
+4. Review the associated **energy impact**.
 
-Every production requirement is expressed through one action vocabulary:
+The live interface is organized around five areas:
 
-- **RUN** — keep the recommended feasible machine/time assignment.
-- **SHIFT** — change time and/or eligible line because the whole-shift plan improves without worsening protected delivery.
-- **HOLD** — do not schedule the order until a feasibility constraint is resolved.
+**Plan | Orders | Energy | Pilots | Settings**
 
-HOLD reasons are structured, including material, packaging, missing-data/BOM and capacity constraints. Material holds can show a modeled earliest replenishment date from confirmed inbound purchase orders or configured supplier lead time, while unreceived material is never treated as physically available stock.
+The Plan screen focuses on three questions:
+
+- **What should we produce?**
+- **When should we produce it?**
+- **What happens to peak load and cost?**
+
+## RUN / SHIFT / HOLD
+
+Every production requirement uses one action vocabulary:
+
+- **RUN**: keep the recommended feasible production-line and time assignment.
+- **SHIFT**: move production to another feasible time and/or eligible line when the overall plan improves without worsening protected delivery.
+- **HOLD**: do not schedule the requirement until a feasibility constraint is resolved.
+
+HOLD reasons can include raw-material, packaging, missing-data/BOM, and capacity constraints. Unreceived material is never treated as physically available inventory.
+
+## Energy impact
+
+For each 15-minute interval, BatchWatt models:
+
+**facility load = background / baseline load + scheduled production and changeover load**
+
+The Plan and Energy views surface:
+
+- Peak kW before → after
+- Modeled electricity cost before → after
+- Planned kWh
+- Conditional demand-charge exposure
+- Recommended load curve
+
+Moving the same production run to another time does not inherently reduce kWh. Timing benefits come from tariff periods and peak-demand exposure. If the planner selects another eligible production line, modeled kWh may also change because production rate and line power can differ.
+
+The current demand model is:
+
+`incremental demand exposure = max(0, planned peak - monthly peak so far) × demand rate`
+
+Utility-specific ratchets, coincident peaks, minimum billed demand, taxes, and power-factor penalties are outside the current model unless separately implemented.
+
+## Ghee sample
+
+The one-click sample is designed to make the dairy use case immediately understandable.
+
+It uses ghee-focused production concepts already supported by BatchWatt, including pack-size and bulk ghee orders, finished stock, production timing, heating/filling capacity, and configured peak-load periods.
+
+The sample is illustrative. It is **not** represented as a replay of the historical pilot workbooks.
 
 ## Factory and workspace model
 
-BatchWatt separates reusable factory configuration from daily operating state:
+BatchWatt separates reusable plant configuration from daily operating state:
 
 ```text
-Factory
-├── Products and eligible lines
-├── Line kW / product-specific production rates
-├── Materials and BOMs
+Dairy plant
+├── Products and pack sizes
+├── Eligible production / packing lines
+├── Line kW and production rates
+├── Raw materials, packaging and BOMs
 ├── Shift and tariff defaults
 └── Workspaces
     ├── Today
@@ -51,95 +103,91 @@ Factory
     └── Scenario B
 ```
 
-A product may be eligible for more than one line with a different production rate on each line. The planner can therefore compare alternatives such as a faster, higher-power machine against a slower, lower-power machine when both can meet the production requirement.
+Each factory can have multiple isolated workspaces. Orders, interval energy data, inventory state, planning state, release state, and learned factory signals remain separated by workspace/factory as appropriate.
 
-The engine also supports optional line downtime and product-to-product changeover matrices. These refine feasibility and setup time when supplied; legacy single-line products and fixed line changeovers remain supported.
+A product may be eligible for more than one production line with different rates and power requirements. Optional line downtime and product-to-product changeover assumptions refine feasibility when supplied.
 
-## Data integration
+## Data intake
 
-### Order data
+### Orders
 
-Orders can enter BatchWatt in three ways:
+Orders can enter BatchWatt by:
 
-1. Add an order manually.
-2. Paste rows copied from Excel or another structured source.
-3. Upload an `.xlsx`, `.csv`, or `.tsv` file.
+1. Manual entry
+2. Pasting structured rows from Excel or another source
+3. Uploading an `.xlsx`, `.csv`, or `.tsv` file
 
-BatchWatt maps common fields such as Customer, Product, Quantity, Due, Priority and Order/Reference, then validates product matches, quantities, dates, priorities and duplicates before adding rows to the plan.
+BatchWatt maps fields such as Customer, Product, Quantity, Due, Priority, and Order/Reference, then validates product matches, quantities, dates, priorities, and duplicates.
 
-### Energy data
+### Energy
 
-Energy can enter BatchWatt through `.xlsx`, `.csv`, `.tsv`, or pasted spreadsheet rows in two forms.
+Energy data can enter through spreadsheet upload or pasted rows.
 
-**15-minute load profile**
-
-Typical columns:
+For 15-minute load profiles, typical columns are:
 
 `Time | Facility kW | Tariff rate (optional)`
 
-- Times must align to 15-minute intervals.
-- BatchWatt validates duplicate timestamps and numeric load / rate values.
-- The import preview shows valid rows, rejected rows and shift coverage.
-- Imported facility kW overrides configured background load at matching shift intervals.
-- An imported interval tariff rate overrides the configured tariff at that matching interval.
-- Missing intervals fall back to configured background load and tariff settings.
+Imported `Facility kW` represents **background / baseline facility demand before BatchWatt adds schedulable production-line loads**. This prevents production-machine power from being counted twice.
 
-The imported `Facility kW` must represent **background / baseline facility demand before BatchWatt adds schedulable production-line loads**. V6 makes this assumption explicit in the import workflow and blocks total-meter interval data when it is identified as including the production machines, preventing machine power from being counted twice.
-
-**Energy settings**
-
-A one-row spreadsheet can update mapped fields such as:
+A one-row energy-settings file can update:
 
 `Base kW | Peak target kW | Monthly peak kW | Off-peak rate | Peak rate | Peak start | Peak end | Demand charge | Currency`
 
-Only mapped fields are updated, so an already imported interval profile can remain in place.
+## Scheduling engine
 
-## How energy affects scheduling
+The current planner evaluates the whole shift rather than treating each order as an isolated decision.
 
-For each 15-minute slot, BatchWatt models:
+Its decision hierarchy is:
 
-**facility load = background / baseline load + scheduled production and changeover load**
+1. Minimize **HOLDs**, with stronger protection for higher-priority work.
+2. Minimize priority-weighted lateness and total late minutes.
+3. Avoid the configured peak-demand target.
+4. Minimize modeled electricity cost and conditional incremental demand-charge exposure.
+5. Reduce changeover burden after delivery and energy requirements are protected.
 
-The planner compares an **earliest-feasible baseline** against the whole-shift candidate plan. It reports modeled peak kW, kWh, usage cost, conditional demand-charge exposure, late orders, shifted jobs and HOLDs.
+The implementation uses a **bounded deterministic beam-search heuristic** across eligible lines and 15-minute start times. This technical detail is intentionally kept in the repository rather than exposed in the primary product UI. It searches materially more of the shift decision space than the earlier sequential scheduler, but it is not claimed to guarantee a globally optimal solution.
 
-Moving the same machine run to another time does **not** by itself reduce kWh. Savings from timing changes come from tariff timing and peak-demand exposure. If V6 selects a different eligible production line, modeled kWh can also change because that line may have a different power rating and production rate.
+## Factory learning
 
-The current demand model is intentionally simple:
+BatchWatt preserves per-factory learning data and uses learned signals where they can improve future planning.
 
-`incremental demand exposure = max(0, planned peak - monthly peak so far) × demand rate`
+Learning is deliberately not a primary navigation destination. The main operator workflow stays focused on the production decision, while deeper learned signals remain available through secondary product detail.
 
-Utility-specific ratchets, minimum billed demand, coincident peaks, taxes and power-factor penalties are outside the current model unless separately implemented.
+## Historical ghee-factory pilot evidence
 
-## Release behavior
+The **Pilots** tab is separate from live planning.
 
-A material or capacity HOLD on one order does not automatically mean every runnable production job must stop. The V6 browser workflow can show a **partial release** when feasible jobs can proceed while constrained orders remain visibly on HOLD. A critical energy/peak condition can still block release.
+Preserved supplied pilot evidence:
 
-## Integration design
+| Metric | Historical supplied result |
+| --- | ---: |
+| Pilots | **2** |
+| Planning cycles | **19** |
+| Orders | **73** |
+| Risks found | **16** |
+| Sequencing changes | **14** |
+| Planning-time reduction | **62–64%** |
+| Estimated energy reduction | **6.7–8.8%** |
+| Peak-load reduction | **9.0–11.7%** |
 
-Orders, finished stock, recipes, raw materials, eligible production lines, machine downtime, electricity settings, optional 15-minute load/tariff data and workspace state feed one planning model. The console connects material shortages and dispatch risk to production timing, electricity cost, peak-load exposure and supervisor release.
+These figures come from **supplied ghee-factory operational records / pilot workbooks**. They are not independently audited results.
 
-Data is currently saved in the browser for the portfolio implementation. BatchWatt does not imply a live meter, enterprise data pipeline, cloud synchronization or direct machine control.
+Historical pilot evidence is kept separate from synthetic demos and current modeled outputs. New BatchWatt capabilities must not be retroactively attributed to the historical pilots unless separately supported by evidence.
 
-The **Pilots** tab preserves supplied historical description and figures separately from synthetic demos and current modeled results. The original V1 remains on `archive/batchwatt-v1`.
+The canonical resume/application wording and evidence boundaries remain preserved in `docs/RESUME_CLAIMS_LOCK.md`.
 
-## Operational pilot facts
+## Product boundaries
 
-These historical pilot claims remain unchanged and are kept separate from newer product capabilities:
+BatchWatt is currently a **decision-support tool**, not autonomous plant control.
 
-- **Two operational factory pilots in 2026:** RKG Ghee and PR Food Products.
-- Used real **order, stock, production, and energy data** from the pilot environments.
-- Mapped workflows that ran through **WhatsApp, Excel, phone calls, and memory** into a dispatch-first planning product.
-- Across **19 planning cycles and 73 orders**, BatchWatt surfaced **16 dispatch risks** and recorded **14 production-sequencing changes**.
-- Factory teams accepted **44 of 59 recorded recommendations in some form**.
-- Recorded planning-time reduction: approximately **62–64%** across the two pilots.
-- Estimated energy reduction: **6.7–8.8%**.
-- Recorded peak-load reduction: **9.0–11.7%**.
-- Direct WhatsApp API integration was **planned**, not represented as fully deployed in the pilot evidence.
+The portfolio implementation stores data in the browser. It does not imply:
 
-The pilot records are calculated from supplied pilot workbooks. Independent external verification and publication permissions remain pending.
+- Live meter integration
+- Direct PLC or machine control
+- Enterprise cloud synchronization
+- Automatically executed production releases
+- Validation across every dairy manufacturing process
 
-The canonical resume/application wording and claim boundaries are preserved in `docs/RESUME_CLAIMS_LOCK.md`. New product capabilities must not be retroactively represented as capabilities deployed in the two 2026 pilots unless separately verified.
+Energy, scheduling, and savings outputs are modeled from supplied plant configuration and operating data.
 
-## Important note
-
-BatchWatt is decision-support software. Energy, scheduling and savings outputs are modeled estimates from supplied configuration and operating data. A supervisor should review the operating plan before release.
+**Decision-support tool. Supervisor review required before release.**
