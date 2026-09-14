@@ -1,8 +1,8 @@
 {
   "name": "batchwatt",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "private": true,
-  "description": "Operational decision pipeline for order intake, validation, feasibility, risk prioritization, sequencing, and energy-aware factory planning.",
+  "description": "Simple factory planner for order intake, risk prioritization, production sequencing, and energy-aware shift decisions.",
   "scripts": {
     "dev": "vercel dev",
     "test:plan": "node samples/test_plan.js",
