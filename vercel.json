@@ -1,6 +1,6 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "node scripts/build.js",
+  "buildCommand": "node scripts/build-v53.js",
   "outputDirectory": "dist"
 }
