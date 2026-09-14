@@ -16,6 +16,63 @@
 
 .product-explainer{margin-bottom:10px!important;border-color:#e8edf2!important;box-shadow:none!important}.product-explainer.compact{grid-template-columns:1fr!important;padding:7px 9px!important;background:#fbfcfe!important}.product-explainer.compact .product-step,.product-explainer.compact>i{display:none!important}.product-explainer.compact .product-explainer-intro small{display:none}.product-explainer.compact .product-explainer-intro strong{font-size:10.5px!important}.product-explainer.compact .product-explainer-intro:after{content:'Orders + energy → shared model → recommended shift plan';display:block;margin-top:2px;color:#0f766e;font-size:8.5px;font-weight:750}
 
+/* V5 visual palette: deep indigo + pearl + emerald. */
+:root{
+  --bw-bg:#f7f7f4;
+  --bw-surface:#fffefb;
+  --bw-surface-soft:#f3f3ef;
+  --bw-border:#e4e4de;
+  --bw-text:#202431;
+  --bw-muted:#6f7480;
+  --bw-sidebar:#17182b;
+  --bw-sidebar-soft:#242641;
+  --bw-sidebar-text:#f2f1ed;
+  --bw-primary:#4338ca;
+  --bw-primary-hover:#3730a3;
+  --bw-primary-soft:#eeedff;
+  --bw-energy:#047857;
+  --bw-energy-soft:#eaf7f1;
+  --bw-success:#2f7d4f;
+  --bw-success-soft:#edf7f0;
+  --bw-warning:#a86d16;
+  --bw-warning-soft:#fff6e7;
+  --bw-danger:#b42318;
+  --bw-danger-soft:#fdeceb;
+  --kw-sidebar:var(--bw-sidebar);
+  --kw-sidebar-soft:var(--bw-sidebar-soft);
+  --kw-green:var(--bw-primary);
+  --kw-green-soft:var(--bw-primary-soft);
+  --kw-text:var(--bw-text);
+  --kw-muted:var(--bw-muted);
+  --kw-border:var(--bw-border);
+  --kw-bg:var(--bw-bg);
+  --kw-card:var(--bw-surface);
+  --kw-bad:var(--bw-danger);
+  --kw-bad-soft:var(--bw-danger-soft);
+}
+body.workspace-ui{background:var(--bw-bg);color:var(--bw-text)}
+body.workspace-ui .tabs{background:var(--bw-sidebar)}
+.workspace-logo{background:var(--bw-primary);box-shadow:0 6px 16px rgba(67,56,202,.22)}
+body.workspace-ui .tabs a[aria-current="page"]{background:#24213d;color:#fff;box-shadow:inset 3px 0 var(--bw-primary)}
+body.workspace-ui .tabs a[aria-current="page"]:before{color:#c4bfff}
+.workspace-ui .appbar .primary,.workspace-ui .primary,.release-button{background:var(--bw-primary);border-color:var(--bw-primary);color:#fff}
+.workspace-ui .appbar .primary:hover,.workspace-ui .primary:hover,.release-button:hover:not(:disabled){background:var(--bw-primary-hover);border-color:var(--bw-primary-hover)}
+.workspace-ui input:focus,.workspace-ui select:focus,.workspace-ui textarea:focus{border-color:var(--bw-primary);box-shadow:0 0 0 3px rgba(67,56,202,.10)}
+.workspace-ui button:focus-visible,.workspace-ui a:focus-visible,.workspace-ui input:focus-visible,.workspace-ui select:focus-visible,.workspace-ui summary:focus-visible{outline-color:rgba(67,56,202,.32)}
+.make-subnav .active,.make-subnav a:hover,.make-subnav button:hover{color:var(--bw-primary);border-bottom-color:var(--bw-primary)}
+.workspace-ui .next-run-main{background:var(--bw-primary-soft);border-color:#d8d4ff}.workspace-ui .next-run-label,.workspace-ui .next-run-time strong{color:var(--bw-primary)}
+.workspace-ui .next-run-why{background:#f7f6ff;border-color:#e5e2ff}.workspace-ui .decision-logic span{background:#f0efff;color:#5148a5}
+.workspace-ui .simple-energy{border-color:#cfe7dc;border-top-color:var(--bw-energy)}.workspace-ui .simple-energy .eyebrow{color:var(--bw-energy)}.workspace-ui .simple-energy-kpis>div{background:#f8fcfa;border-color:#d8ebe2}.workspace-ui .simple-energy-kpis strong{color:#155f49}.workspace-ui .simple-energy-message{background:var(--bw-energy-soft);color:#145c47;border-color:#cee8dc}.workspace-ui #simple-energy-status.good{background:var(--bw-energy-soft);color:var(--bw-energy)}
+.load-line{stroke:var(--bw-energy)}.peak-shade{fill:rgba(168,109,22,.08)}
+.workflow-title h2,.input-source-card strong,.action-row strong,.scenario-compare-grid strong{color:var(--bw-text)}
+.workflow-title p,.input-source-card small,.action-row small,.scenario-compare-grid small{color:var(--bw-muted)}
+.input-source-card{border-color:var(--bw-border);background:var(--bw-surface)}.input-source-card.energy{background:var(--bw-surface)}.input-source-card.loaded{border-color:#c9ded4;background:#f8fcfa}
+.data-health-wrap,.recommended-actions,.scenario-compare{border-top-color:#ebeae5}.health-item,.scenario-compare-grid>div{background:#f3f3ef}.health-item.ok{background:#edf7f1}.health-item.warn{background:#fff6e8}.health-item.neutral{background:#f3f3ef}
+.action-row{background:#f4f4f0}.action-row.primary,.action-row.info{background:#f3f2ff}.action-row.primary>span,.action-row.info>span{background:#e8e6ff;color:var(--bw-primary)}.action-row.energy{background:#eef8f3}.action-row.energy>span{background:#dff2e9;color:var(--bw-energy)}.action-row.good{background:#eff7f1}.action-row.good>span{background:#e0f0e5;color:var(--bw-success)}.action-row.warn{background:#fff8ec}.action-row.warn>span{background:#ffefcf;color:var(--bw-warning)}
+.product-explainer{border-color:var(--bw-border)!important}.product-explainer.compact{background:#fbfbf8!important}.product-explainer.compact .product-explainer-intro:after{color:var(--bw-energy)}
+.trace-badge{background:var(--bw-energy-soft);color:var(--bw-energy)}.trace-rulebar b{background:var(--bw-primary-soft);color:var(--bw-primary)}.trace-status{color:var(--bw-primary)!important}.workflow-v5 .trace-rulebar{background:#f4f4f0}
+.load-profile-badge{background:var(--bw-primary-soft);color:var(--bw-primary)}.sample-plan-button{border-color:#d7d2ff!important;background:#f7f6ff!important;color:var(--bw-primary)!important}.sample-plan-button:hover{background:#efedff!important}
+
 @media(max-width:1000px){.scenario-compare-grid{grid-template-columns:1fr 1fr}.health-item{min-width:130px}}
 @media(max-width:760px){.workflow-title{align-items:flex-start;flex-direction:column}.workflow-tools{width:100%}.workflow-tools button{flex:1}.input-source-grid{grid-template-columns:1fr}.planner-workflow{padding:0}.input-source-card{align-items:flex-start;flex-direction:column}.input-source-card button{width:100%}.scenario-compare-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.scenario-compare-grid{grid-template-columns:1fr}.workflow-tools{display:grid;grid-template-columns:1fr}.action-row{grid-template-columns:48px 1fr}.health-item{min-width:120px}}
