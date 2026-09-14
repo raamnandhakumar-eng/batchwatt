@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.6 simple planner with integration summary, guided synthetic sample, and visible load profile output.
+// V4.7 simple functional planner with guided sample and visible load profile.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,7 +29,7 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: decision logic -> workspace shell -> neutral default -> simple planner -> integration summary -> final visual theme.
+// Production UI layers: decision logic -> workspace shell -> neutral default -> simple planner -> final product layer.
 for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.6 assets with a simplified Orders -> Attention -> Production -> Energy workflow, shared-model integration summary, guided synthetic sample plan, visible baseline-vs-recommended load profile, separate Pilot Results, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.7 assets with a simple Import/Sample -> Risk -> Production -> Energy workflow, temporary synthetic sample mode, visible baseline-vs-recommended load profile, compact status cards, separate Pilot Results, and V2 preserved.`);
