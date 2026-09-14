@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V5.0 end-to-end functional planner workflow.
+// V5.1 standardized decision workflow.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -32,8 +32,8 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: planning engine -> workspace -> simple workflow -> live decision trace -> final planner experience.
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js', 'planner-experience.js']) {
+// Production UI layers: engine -> workspace -> workflow -> trace -> standardized terminology.
+for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js', 'planner-experience.js', 'standard-logic-ui.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
@@ -54,4 +54,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V5.0 assets with clear inputs, live data health, recommended actions, baseline-vs-recommended scenario comparison, explainable scheduling decisions, downloadable templates, shift-plan export, spreadsheet energy integration, and compact onboarding.`);
+console.log(`Built ${assets.length} BatchWatt V5.1 assets with the standard DATA -> VALIDATE -> FEASIBILITY -> PRIORITIZE -> BASELINE -> ENERGY -> ACTION flow and RUN / SHIFT / HOLD outputs.`);
