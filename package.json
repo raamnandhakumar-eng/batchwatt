@@ -1,6 +1,6 @@
 {
   "name": "batchwatt",
-  "version": "4.6.0",
+  "version": "4.7.0",
   "private": true,
   "description": "Simple operations and energy planner for data integration, risk prioritization, production sequencing, and peak-aware shift decisions.",
   "scripts": {
