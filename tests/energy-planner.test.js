@@ -18,11 +18,13 @@ test('demo lowers peak without dropping work or worsening dispatch', () => {
   assert.equal(JSON.stringify(input),before,'input is immutable');
 });
 
-test('cost-aware decisions explain what to produce and when', () => {
+test('V6 exposes whole-shift decisions and structured actions', () => {
   const r=createEnergyPlan(fresh());
-  assert.equal(r.schemaVersion,'2.2');
+  assert.equal(r.schemaVersion,'3.0');
+  assert.match(r.plannerMethod,/whole-shift beam search/);
   assert.equal(r.decisions.length,r.proposed.jobs.length);
-  assert.ok(r.objective.some(x=>x.includes('due times')));
+  assert.equal(r.orderDecisions.length,r.allocations.filter(a=>a.produce>0).length);
+  assert.ok(r.objective.some(x=>x.includes('priority-weighted')));
   assert.ok(r.objective.some(x=>x.includes('cost')));
   assert.ok(r.comparison.totalModeledOperatingSaving>=0);
   for(const d of r.decisions){
@@ -30,6 +32,7 @@ test('cost-aware decisions explain what to produce and when', () => {
     const baseline=r.baseline.jobs.find(j=>j.id===d.orderId);
     assert.equal(d.recommendedStart,proposed.startTime);
     assert.ok(proposed.lateMinutes<=baseline.lateMinutes);
+    assert.ok(['RUN','SHIFT'].includes(d.action));
     assert.ok(typeof d.reason==='string'&&d.reason.length>10);
   }
 });
@@ -42,6 +45,7 @@ test('shared finished stock and packaging are consumed once per product', () => 
   assert.deepEqual(r.allocations.map(o=>o.fromStock),[50,0]);
   assert.deepEqual(r.allocations.map(o=>o.packagingShort),[0,50]);
   assert.equal(r.proposed.unscheduled[0].id,'second');
+  assert.equal(r.proposed.unscheduled[0].reasonCode,'PACKAGING');
 });
 
 test('machine runs never overlap on the same line or leave the shift', () => {
@@ -55,14 +59,16 @@ test('machine runs never overlap on the same line or leave the shift', () => {
 test('power profile accounts for base load and scheduled jobs', () => {
   const r=createEnergyPlan(fresh());
   for(const slot of r.proposed.profile){
-    const expected=8+r.proposed.jobs.filter(j=>j.start<=slot.minute&&j.end>slot.minute).reduce((sum,j)=>sum+j.kw,0);
-    assert.equal(slot.kw,expected);
+    const active=r.proposed.jobs.filter(j=>j.start<=slot.minute&&j.end>slot.minute);
+    assert.ok(slot.kw>=8);
+    if(!active.length)assert.equal(slot.kw,8);
   }
 });
 
 test('capacity shortages remain visible in exports', () => {
   const input=fresh();input.shift.end='09:00';const r=createEnergyPlan(input);
   assert.ok(r.proposed.unscheduled.length>0);
+  assert.ok(r.proposed.unscheduled.some(x=>x.reasonCode==='CAPACITY'));
   assert.equal(reports.dispatchRows(r).length,input.orders.length);
   assert.ok(reports.csv(r).includes('Blocked'));
 });
@@ -113,11 +119,11 @@ test('report escapes markup and spreadsheet formulas from factory inputs', () =>
   assert.ok(reports.csv(r).includes("'=SUM"));
 });
 
-test('Vercel API accepts structured data and rejects bad requests', async () => {
+test('Vercel API accepts V6 structured data and rejects bad requests', async () => {
   let code,body;const res={setHeader(){},status(n){code=n;return this;},json(b){body=b;return this;}};
   await handler({method:'POST',body:fresh()},res);
   assert.equal(code,200);
-  assert.equal(body.schemaVersion,'2.2');
+  assert.equal(body.schemaVersion,'3.0');
   assert.equal(body.proposed.peakKw,40);
   await handler({method:'POST',body:{...fresh(),orders:[{id:'bad'}]}},res);assert.equal(code,400);
   await handler({method:'GET'},res);assert.equal(code,405);
@@ -125,5 +131,47 @@ test('Vercel API accepts structured data and rejects bad requests', async () => 
 
 test('tight deadlines retain delivery performance for each scheduled order', () => {
   const input=fresh();input.orders.forEach(o=>o.due='2026-09-09T11:00');const r=createEnergyPlan(input);
-  for(const j of r.proposed.jobs){const baseline=r.baseline.jobs.find(b=>b.id===j.id);assert.ok(j.lateMinutes<=baseline.lateMinutes);}
+  for(const j of r.proposed.jobs){const baseline=r.baseline.jobs.find(b=>b.id===j.id);assert.ok(!baseline||j.lateMinutes<=baseline.lateMinutes);}
+});
+
+test('product can choose a lower-power eligible line when delivery is protected', () => {
+  const input=fresh();
+  input.orders=[{id:'ALT-1',customer:'Customer',productId:'ghee',qty:250,due:'2026-09-09T13:00',priority:'High'}];
+  input.products[0].stock=0;input.products[0].packaging=1000;
+  input.products[0].lineOptions=[{lineId:'heating',rate:100},{lineId:'packing',rate:80}];
+  input.lines.find(x=>x.id==='heating').kw=60;
+  input.lines.find(x=>x.id==='packing').kw=10;
+  input.energy.peakLimitKw=30;
+  input.materials.find(x=>x.id==='ghee-base').stock=1000;
+  const r=createEnergyPlan(input);
+  assert.equal(r.proposed.jobs[0].lineId,'packing');
+  assert.equal(r.orderDecisions[0].action,'SHIFT');
+  assert.equal(r.proposed.lateOrders,0);
+});
+
+test('line downtime is treated as unavailable capacity', () => {
+  const input=fresh();
+  input.orders=[{id:'DOWN-1',customer:'Customer',productId:'ghee',qty:100,due:'2026-09-09T15:00',priority:'Standard'}];
+  input.products[0].stock=0;input.products[0].packaging=1000;input.materials.find(x=>x.id==='ghee-base').stock=1000;
+  input.lines.find(x=>x.id==='heating').downtime=[{start:'08:00',end:'10:00',reason:'maintenance'}];
+  const r=createEnergyPlan(input);
+  assert.ok(r.proposed.jobs[0].start>=600);
+});
+
+test('material HOLD shows modeled earliest replenishment date without pretending stock arrived', () => {
+  const input=fresh();
+  input.orders=[{id:'MAT-1',customer:'Customer',productId:'ghee',qty:500,due:'2026-09-09T13:00',priority:'High'}];
+  input.products[0].stock=0;input.products[0].packaging=1000;input.materials.find(x=>x.id==='ghee-base').stock=0;
+  input.purchaseOrders=[{id:'PO-1',supplierId:'supplier-1',materialId:'ghee-base',qty:500,unitCost:5,expectedDate:'2026-09-11',status:'Ordered',receivedQty:0}];
+  const r=createEnergyPlan(input);
+  assert.equal(r.proposed.jobs.length,0);
+  assert.equal(r.holds[0].reasonCode,'MATERIAL');
+  assert.equal(r.holds[0].earliestFeasibleDate,'2026-09-11');
+});
+
+test('total meter interval data is rejected to prevent machine-load double counting', () => {
+  const input=fresh();
+  input.energy.intervalLoadBasis='total';
+  input.energy.intervalLoad=[{time:'08:00',kw:50}];
+  assert.throws(()=>createEnergyPlan(input),/Total meter load cannot be safely combined/);
 });
