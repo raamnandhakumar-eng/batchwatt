@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="BatchWatt is a simple daily production, procurement and energy tool for small factories.">
-  <title>BatchWatt | Today</title>
+  <title>BatchWatt | Production & Energy</title>
   <link rel="stylesheet" href="/ops.css">
   <link rel="stylesheet" href="/order-import.css">
   <script defer src="/lib/procurement.js"></script>
@@ -20,19 +20,19 @@
   <header class="appbar">
     <a class="brand" href="#today" aria-label="BatchWatt home">
       <span class="brand-mark">BW</span>
-      <span><strong>BatchWatt</strong><small>Factory operations</small></span>
+      <span><strong>BatchWatt</strong><small>Production & energy</small></span>
     </a>
     <div class="appbar-right">
-      <span id="save-state" class="save-state">Saved on this device</span>
+      <span id="save-state" class="save-state" role="status">Saved on this device</span>
       <button id="open-order" class="primary">+ Order</button>
     </div>
   </header>
 
   <nav class="tabs" aria-label="BatchWatt sections">
-    <a href="#today" data-nav="today">Today</a>
+    <a href="#today" data-nav="today">Production plan</a>
     <a href="#orders" data-nav="orders">Orders</a>
     <a href="#buy" data-nav="buy">Buying</a>
-    <a href="#more" data-nav="more">More</a>
+    <a href="#more" data-nav="more">Stock & settings</a>
   </nav>
 
   <main class="shell">
@@ -117,9 +117,10 @@
 
     <section class="view" data-view="more" id="more" hidden>
       <div class="page-head">
-        <div><p class="eyebrow">MORE</p><h1>Factory settings</h1><p class="subtle">Daily operators should rarely need this page.</p></div>
+        <div><p class="eyebrow">MORE</p><h1>Factory settings</h1><p class="subtle">Update finished stock, shift hours, and electricity rates.</p></div>
       </div>
 
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">FINISHED STOCK</p><h2>What is available now?</h2><p class="subtle">Enter counted finished goods. These cover orders before new production is scheduled.</p></div></div><div id="stock-inputs" class="settings-grid"></div></section>
       <section class="panel compact-panel">
         <div class="panel-head"><div><p class="eyebrow">ENERGY</p><h2>Power check</h2></div><span id="energy-status" class="status-pill neutral">No plan</span></div>
         <div id="energy-summary" class="stats"></div>
@@ -156,6 +157,7 @@
       <div class="dialog-head"><h2 id="order-dialog-title">Add customer order</h2><button type="button" class="icon-button" data-close="order-dialog" aria-label="Close">×</button></div>
       <label>Customer<input id="order-customer" required></label>
       <label>Product<select id="order-product" required></select></label>
+      <p id="order-product-help" class="input-help"></p>
       <label>Quantity<input id="order-qty" type="number" min="0.01" step="any" required></label>
       <label>Due<input id="order-due" type="datetime-local" required></label>
       <label>Priority<select id="order-priority"><option>Standard</option><option>High</option><option>Urgent</option></select></label>

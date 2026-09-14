@@ -6,81 +6,21 @@ BatchWatt turns customer orders, inventory, production capacity, purchasing need
 
 **[Open BatchWatt](https://batchwatt.vercel.app/)**
 
-## New in V3.8
+## V3.9: orders → production → energy
 
-- Edit customer orders without removing and re-entering them.
-- Search by customer, product, or order ID and filter orders that need attention.
-- Record partial material deliveries; inventory increases only by the received quantity.
-- Compare recommended load against the baseline on the energy chart.
-- See blocked production alongside scheduled runs, with a direct action to resolve it.
+1. **Enter orders and stock.** Add, edit, paste, or import customer orders. Update counted finished stock in Stock & settings.
+2. **Follow the production plan.** See the product, required quantity, line, start and finish time, and timing rationale. Each run shows machine kW, estimated kWh, electricity cost, and total factory peak during that run.
+3. **Review energy.** Compare the recommended and baseline load profiles, estimated shift cost, modeled saving, and peak headroom. Change background load, peak target, and tariffs to recalculate.
 
-## The simple flow
+The planner protects due times first, reduces peak-target breaches second, and minimizes modeled electricity plus conditional demand cost third. It uses a sequential scheduling heuristic, not a guarantee of a globally optimal schedule. An infeasible peak target remains visible and blocks release; it is not silently treated as a safe operating limit.
 
-Daily operators mainly use three places:
+Buying and detailed setup remain available as supporting workflows. The **Pilots** tab preserves the supplied historical description and figures, separately from illustrative demos and current modeled results. The original V1 remains on `archive/batchwatt-v1`.
 
-1. **Today** — the main decision console. See what needs attention, what to produce, when to run it, energy cost/peak insights, and whether the shift is ready to release.
-2. **Orders** — add one order, paste rows, or import Excel/CSV order data.
-3. **Buying** — see material shortages, recommended purchases, purchase orders, and receipts.
+### Integration design
 
-Two supporting tabs stay separate:
+Orders, finished stock, recipes, raw materials, production lines, and electricity assumptions feed the same validated planning model. The console connects material shortages and dispatch risk to production timing, electricity cost, peak-load exposure, and supervisor release. Changes invalidate an earlier release so the updated plan must be reviewed again.
 
-- **Pilot Results** — read-only locked pilot/resume facts plus the two one-click demos.
-- **More** — factory and shift settings plus the detailed V2 planner.
-
-## Today screen
-
-The Today screen is intentionally one integrated dashboard instead of a separate analytics page.
-
-### Decision Console
-
-Shows the operating sequence in plain language:
-
-- Orders — what needs attention.
-- Produce — the next product and recommended start time.
-- Buy — material actions required.
-- Release — whether the shift can be approved.
-
-### Energy Insights
-
-Shows:
-
-- planned peak kW versus the operating target;
-- estimated shift energy cost;
-- modeled electricity + conditional demand-charge saving versus the baseline schedule;
-- number of production runs shifted for lower modeled cost;
-- a 15-minute load chart with the peak tariff window and peak target;
-- a short plain-English recommendation explaining what the energy position means.
-
-Energy assumptions such as background load, peak target, monthly peak, off-peak/peak tariff, demand charge, and peak window remain editable but are collapsed by default.
-
-### What to make and when
-
-For each required production run, BatchWatt shows:
-
-- product and quantity;
-- production line;
-- recommended start and end time;
-- why that timing was selected;
-- modeled run-energy cost;
-- whether it was shifted from the baseline schedule.
-
-The scheduling objective remains deliberately ordered:
-
-1. Protect supplied customer due times.
-2. Avoid peak-demand target breaches.
-3. Minimize modeled electricity and conditional demand-charge cost.
-4. Use finished stock before scheduling new production.
-5. Keep material shortages and replenishment cost visible.
-6. Include line changeover time.
-
-## Two demos
-
-The **Pilot Results** tab contains two one-click illustrative workspaces:
-
-- **RKG Ghee — peak-load + dispatch pressure**
-- **PR Food Products — procurement + production coordination**
-
-The demo workspaces are illustrative. They remain separate from the historical pilot evidence.
+Data is saved in the current browser. This app does not imply a live meter, enterprise data pipeline, or cloud synchronization. The detailed planner remains available for product, line, supplier, and recipe configuration.
 
 ## Customer order inputs
 

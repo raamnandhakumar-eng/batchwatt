@@ -21,27 +21,27 @@
 
     const more=tabs.querySelector('[data-nav="more"]');
     const nav=document.createElement('a');
-    nav.href='#pilot-results'; nav.dataset.nav='pilot-results'; nav.textContent='Pilot Results';
+    nav.href='#pilot-results'; nav.dataset.nav='pilot-results'; nav.textContent='Pilots';
     tabs.insertBefore(nav,more||null);
 
     const section=document.createElement('section');
     section.id='pilot-results'; section.dataset.view='pilot-results'; section.className='view'; section.hidden=true;
     section.innerHTML=`
       <div class="page-head pilot-head">
-        <div><p class="eyebrow">PILOT RESULTS</p><h1>Recorded BatchWatt pilot facts</h1><p class="subtle">Read-only reference. These are the locked facts preserved from the resume/application record.</p></div>
-        <span class="status-pill good">Claims locked</span>
+        <div><p class="eyebrow">PILOT RESULTS</p><h1>Operational pilots</h1><p class="subtle">Historical results from supplied pilot workbooks. Separate from the illustrative planning demos.</p></div>
+        <span class="status-pill good">Historical pilot data</span>
       </div>
 
       <section class="panel locked-claims">
-        <p class="eyebrow">LOCKED RESUME DESCRIPTION</p>
-        <h2>${esc(LOCKED.headline)}</h2>
+        <p class="eyebrow">ENERGY & OPERATIONS</p>
+        <h2>Energy / operations decision-support platform</h2><a href="https://github.com/raamnandhakumar-eng/batchwatt">GitHub</a>
         <ul>${LOCKED.bullets.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
       </section>
 
       <div class="pilot-grid">
         ${LOCKED.pilots.map(p=>`
           <article class="panel pilot-card">
-            <div class="panel-head"><div><p class="eyebrow">OPERATIONAL PILOT</p><h2>${esc(p.name)}</h2></div><button class="primary" data-pilot-demo="${p.key}">Run demo</button></div>
+            <div class="panel-head"><div><p class="eyebrow">OPERATIONAL PILOT</p><h2>${esc(p.name)}</h2></div><button class="primary" data-pilot-demo="${p.key}">Try illustrative demo</button></div>
             <div class="pilot-metrics">
               <div><span>Planning cycles</span><strong>${p.cycles}</strong></div>
               <div><span>Orders</span><strong>${p.orders}</strong></div>
@@ -79,7 +79,7 @@
   showView=function(){
     const view=['today','pilot-results','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';
     document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);
-    document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===view));
+    document.querySelectorAll('[data-nav]').forEach(a=>a.dataset.nav===view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
     window.scrollTo(0,0);
   };
 
