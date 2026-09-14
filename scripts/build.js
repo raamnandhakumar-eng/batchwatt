@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.3 operational decision pipeline with slate/blue/teal visual theme.
+// V4.4 simple planner with slate/blue/teal visual theme.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,7 +29,7 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: decision logic -> workspace shell -> neutral default -> pipeline dashboard -> final visual theme.
+// Production UI layers: decision logic -> workspace shell -> neutral default -> simple planner -> final visual theme.
 for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.3 assets with Excel/CSV/pasted-order intake, validation and mapping, unified operational model, feasibility scheduling, risk scoring, sequencing recommendations, planner dashboard, separate Pilot Results, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.4 assets with a simplified Orders -> Attention -> Production -> Energy workflow, compact risk queue, expandable pipeline details, separate Pilot Results, and V2 preserved.`);
