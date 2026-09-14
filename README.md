@@ -1,28 +1,28 @@
 # BatchWatt
 
-**A simple factory decision console: what to make, when to make it, what to buy, and what it costs.**
+**A simple operations + energy decision console: unify fragmented inputs, prioritize risk, sequence production, and understand peak-load impact.**
 
-BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into one practical shift plan.
+BatchWatt turns customer orders, inventory, production capacity, purchasing needs, and electricity constraints into one practical shift plan through a shared operational model.
 
 **[Open BatchWatt](https://batchwatt.vercel.app/)**
 
-## V4.0: orders → sequence → energy → release
+## V4.4.1: inputs → shared model → decisions
 
-The default Today screen is built around three questions an operator needs answered quickly:
+The default Planner screen is built around three questions an operator needs answered quickly:
 
-1. **What should we produce?** BatchWatt converts orders and available stock into a prioritized production sequence.
-2. **When should we run it?** Each scheduled run shows the product, quantity, line, start and finish time, and the reason for the timing decision.
-3. **What does that do to energy and peak load?** Each run shows machine kW, estimated kWh and modeled energy cost, while the shift view shows planned facility peak and headroom against the configured target.
+1. **What needs attention?** BatchWatt validates incoming order data, checks inventory and production feasibility, and surfaces dispatch risk.
+2. **What should we run next?** It recommends a production sequence using due times, stock, materials, line capacity, and configured power constraints.
+3. **What does that do to energy and peak load?** The shift view shows planned facility peak, headroom against the configured target, estimated kWh, and modeled energy charge.
 
-The workflow is deliberately simple: **Orders → Sequence → Energy → Release**. Buying and detailed setup remain supporting workflows instead of dominating the daily decision screen.
+The visible workflow stays simple: **Orders → Attention → Production → Energy**. The underlying data pipeline remains available under **Data integration + planning logic**.
 
 The planner protects due times first, reduces peak-target breaches second, and minimizes modeled electricity plus conditional demand cost third. It uses a sequential scheduling heuristic, not a guarantee of a globally optimal schedule. An infeasible peak target remains visible and blocks release; it is not silently treated as a safe operating limit.
 
-The **Pilots** tab preserves the supplied historical description and figures separately from illustrative demos and current modeled results. The original V1 remains on `archive/batchwatt-v1`.
+The **Pilots** tab preserves supplied historical description and figures separately from illustrative demos and current modeled results. The original V1 remains on `archive/batchwatt-v1`.
 
 ### Integration design
 
-Orders, finished stock, recipes, raw materials, production lines, and electricity assumptions feed the same validated planning model. The console connects material shortages and dispatch risk to production timing, electricity cost, peak-load exposure, and supervisor release. Changes invalidate an earlier release so the updated plan must be reviewed again.
+Excel/CSV uploads, pasted orders, finished stock, recipes, raw materials, production lines, and electricity assumptions feed one validated operational model. The console connects material shortages and dispatch risk to production timing, electricity cost, peak-load exposure, and supervisor release. Changes invalidate an earlier release so the updated plan must be reviewed again.
 
 Data is saved in the current browser. This app does not imply a live meter, enterprise data pipeline, or cloud synchronization. The detailed planner remains available for product, line, supplier, and recipe configuration.
 
@@ -38,11 +38,11 @@ BatchWatt auto-detects common headers such as Customer, Product, Quantity, Due, 
 
 ## What stays under the hood
 
-V4.0 keeps the production, procurement, inventory, and energy planning engines while presenting them through a simpler operator decision console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
+BatchWatt keeps the production, procurement, inventory, and energy planning engines while presenting them through a simple operator decision console. The detailed V2 planner remains available for recipes, suppliers, lines, products, and deeper configuration. The original V1 is preserved on `archive/batchwatt-v1`.
 
 ## Operational pilot facts
 
-These are the same BatchWatt facts used in the Meta resume/application materials and should remain unchanged:
+These are the same BatchWatt facts used in resume and application materials and should remain unchanged:
 
 - **Two operational factory pilots in 2026:** RKG Ghee and PR Food Products.
 - Used real **order, stock, production, and energy data** from the pilot environments.
