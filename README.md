@@ -26,6 +26,27 @@ The current product experience is designed around practical ghee-production deci
 
 The underlying scheduling engine remains technically generic enough to support additional manufacturing configurations later. BatchWatt does **not** claim validation across all dairy manufacturing processes.
 
+## Proven starting point: two operational pilots
+
+BatchWatt grew out of **two operational factory pilots in 2026: RKG Ghee and PR Food Products**.
+
+The pilots used supplied **order, stock, production, and energy data** from the operating environments. The underlying workflows were fragmented across **WhatsApp, Excel, phone calls, and operator memory**, and BatchWatt was used to bring those inputs into a more structured dispatch and production-planning workflow.
+
+Across the two supplied pilot workbooks:
+
+- **2 operational pilots**
+- **19 planning cycles**
+- **73 orders**
+- **16 at-risk orders / dispatch risks surfaced**
+- **14 production-sequencing changes recorded**
+- **62–64% planning-time reduction**
+- **6.7–8.8% estimated energy reduction**
+- **9.0–11.7% peak-load reduction**
+
+The strongest proven starting point is **ghee production**, with RKG Ghee providing the clearest dairy manufacturing use case. The current product has since evolved beyond the exact feature set used during those pilots, so historical pilot results are kept separate from newer capabilities.
+
+These figures are derived from supplied pilot workbooks and operational records. They are **not independently audited results**, and newer BatchWatt functionality must not be retroactively described as having been deployed during the historical pilots.
+
 ## Core workflow
 
 The primary workflow is intentionally short:
