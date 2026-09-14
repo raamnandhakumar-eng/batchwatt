@@ -29,7 +29,7 @@ test('shift brief identifies material blockers and routes them to buying',()=>{
 });
 test('incoming stock remains a receipt action and does not trigger duplicate buying',()=>{
  const input=structuredClone(demo);input.materials[0].stock=0;input.purchaseOrders=[{id:'PO-test',materialId:input.materials[0].id,supplierId:input.suppliers[0].id,qty:100000,unitCost:1,status:'Ordered',receivedQty:0,expectedDate:input.shift.date}];
- const w=workspace(input);w.run('energyResult=BatchWattEnergy.createEnergyPlan(factoryData);renderBusinessBrief()');const html=w.els.get('business-brief').innerHTML;assert.match(html,/Delivery expected/);assert.match(html,/Receive stock before scheduling/);assert(!html.includes(`data-buy="${input.materials[0].id}"`));
+ const w=workspace(input);w.run('energyResult=BatchWattEnergy.createEnergyPlan(factoryData);renderBusinessBrief()');const html=w.els.get('business-brief').innerHTML;assert.match(html,/Delivery expected/);assert.match(html,/Material shortage:/);assert.match(html,/Earliest modeled replenishment date/);assert(!html.includes(`data-buy="${input.materials[0].id}"`));
 });
 test('default screen shows the shift plan and empty factory has a setup checklist',()=>{
  const w=workspace();w.run('showWorkspaceView()');assert.equal(w.views.find(v=>!v.hidden).dataset.view,'overview');w.run('factoryData.lines=[];factoryData.products=[];energyResult=null;renderBusinessBrief()');assert.equal(w.els.get('setup-guide').hidden,false);assert.match(w.els.get('setup-checklist').innerHTML,/Machines and shift/);
