@@ -3,7 +3,7 @@
 (function(){
   const PROFILE_KEY='batchwatt_v5_factory_profiles';
   const ACTIVE_KEY='batchwatt_v5_active_factory_profile';
-  const escV=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const escV=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let pending=null;
 
   function productOptions(p){
