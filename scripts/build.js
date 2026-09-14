@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V4.9 functional planner with order + energy spreadsheet integration.
+// V5.0 end-to-end functional planner workflow.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -32,14 +32,14 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: planning engine -> workspace -> simple workflow -> integration summary -> live decision trace.
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js']) {
+// Production UI layers: planning engine -> workspace -> simple workflow -> live decision trace -> final planner experience.
+for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js', 'planner-experience.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
   );
 }
-for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css', 'operational-pipeline.css', 'integration-summary.css', 'decision-trace.css']) {
+for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css', 'operational-pipeline.css', 'integration-summary.css', 'decision-trace.css', 'planner-experience.css']) {
   fs.appendFileSync(
     path.join(out, 'ops.css'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
@@ -54,4 +54,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.9 assets with Orders Excel/CSV + Energy Excel/CSV -> validation/mapping -> shared model -> scheduling -> peak/cost decisions, live decision trace, and temporary synthetic sample mode.`);
+console.log(`Built ${assets.length} BatchWatt V5.0 assets with clear inputs, live data health, recommended actions, baseline-vs-recommended scenario comparison, explainable scheduling decisions, downloadable templates, shift-plan export, spreadsheet energy integration, and compact onboarding.`);
