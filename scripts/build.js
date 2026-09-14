@@ -32,13 +32,13 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js', 'operational-pipeline.js', 'integration-summary.js', 'decision-trace.js', 'decision-trace-render.js', 'planner-experience.js', 'standard-logic-ui.js', 'factory-profiles.js', 'factory-profiles-guard.js']) {
+for (const moduleName of ['demo-scenarios.js', 'katana-workspace.js', 'generic-default-workspace.js', 'factory-profiles.js', 'factory-profiles-guard.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
   );
 }
-for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css', 'katana-workspace.css', 'theme-blue.css', 'operational-pipeline.css', 'integration-summary.css', 'decision-trace.css', 'planner-experience.css', 'factory-profiles.css']) {
+for (const styleName of ['katana-workspace.css', 'theme-blue.css', 'factory-profiles.css']) {
   fs.appendFileSync(
     path.join(out, 'ops.css'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
