@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-// V3.9 simplified operator console is the default app. V2 remains available for detailed setup.
+// V4 simple operator console is the default app. V2 remains available for detailed setup.
 const assets = [
   ['ops.html', 'index.html'],
   ['ops.css', 'ops.css'],
@@ -29,14 +29,14 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI: one simple Today console plus a separate read-only Pilot Results tab.
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'pilot-results-tab.js']) {
+// Production UI: simple Today console, V4 decision layer, and separate read-only Pilot Results tab.
+for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
   );
 }
-for (const styleName of ['unified-console.css', 'pilot-results-tab.css']) {
+for (const styleName of ['unified-console.css', 'decision-console-v4.css', 'pilot-results-tab.css']) {
   fs.appendFileSync(
     path.join(out, 'ops.css'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', styleName), 'utf8')}\n`,
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V3.9 assets with one Today decision console, energy chart, cost-aware production timing, two demos in Pilot Results, bulk order intake, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4 assets with a what-to-produce / when-to-run / energy-impact workflow, separate Pilot Results, bulk order intake, and V2 preserved.`);
