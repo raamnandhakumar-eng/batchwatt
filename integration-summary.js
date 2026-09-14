@@ -64,9 +64,9 @@
     const eyebrow=head.querySelector('.eyebrow');
     const title=head.querySelector('h1');
     const copy=head.querySelector('p:not(.eyebrow)');
-    if(eyebrow)eyebrow.textContent='OPERATIONS + ENERGY';
-    if(title)title.textContent='From orders to a production plan';
-    if(copy)copy.textContent='Load demand. BatchWatt checks materials, capacity, due times and power constraints, then recommends what to run and when.';
+    if(eyebrow)eyebrow.textContent='PRODUCTION + ENERGY DECISION SUPPORT';
+    if(title)title.textContent='Turn orders and energy data into a production plan';
+    if(copy)copy.textContent='BatchWatt combines demand, inventory, line capacity and 15-minute energy data to decide what should run, when it should run, and what needs attention.';
 
     const actions=head.querySelector('.pipeline-actions');
     if(actions&&!document.getElementById('sample-plan-button')){
@@ -79,19 +79,35 @@
       actions.appendChild(button);
     }
 
-    let line=document.getElementById('model-line');
-    if(!line){
-      line=document.createElement('div');
-      line.id='model-line';
-      line.className='model-line';
-      line.innerHTML='<strong>Orders + inventory + capacity + energy</strong><span>→ risk + sequence + peak</span>';
-      head.insertAdjacentElement('afterend',line);
-    }
+    document.getElementById('model-line')?.remove();
     document.getElementById('integration-strip')?.remove();
+
+    if(!document.getElementById('product-explainer')){
+      const explainer=document.createElement('section');
+      explainer.id='product-explainer';
+      explainer.className='product-explainer';
+      explainer.innerHTML=`
+        <div class="product-explainer-intro">
+          <span>WHAT BATCHWATT DOES</span>
+          <strong>One shared model for operations and energy.</strong>
+        </div>
+        <div class="product-step">
+          <b>1</b><div><span>INTEGRATE</span><strong>Orders + energy Excel / CSV</strong><small>Validate and map fragmented inputs.</small></div>
+        </div>
+        <i>→</i>
+        <div class="product-step">
+          <b>2</b><div><span>CHECK</span><strong>Materials + capacity + due times + peak</strong><small>Find blockers and operating constraints.</small></div>
+        </div>
+        <i>→</i>
+        <div class="product-step">
+          <b>3</b><div><span>RECOMMEND</span><strong>Sequence + load + modeled cost</strong><small>Produce a decision-ready shift plan.</small></div>
+        </div>`;
+      head.insertAdjacentElement('afterend',explainer);
+    }
   }
 
   function mountSampleNotice(){
-    const anchor=document.getElementById('model-line');
+    const anchor=document.getElementById('product-explainer')||document.querySelector('.simple-planner-head');
     let notice=document.getElementById('sample-plan-notice');
     if(isSample()){
       if(!notice&&anchor){
@@ -154,7 +170,7 @@
     if(summary)summary.textContent='How the plan is calculated';
 
     const context=document.querySelector('.workspace-context span');
-    if(context&&(!location.hash||location.hash==='#today'))context.textContent='Orders → production → energy';
+    if(context&&(!location.hash||location.hash==='#today'))context.textContent='Orders + energy → production plan';
     const brand=document.querySelector('.workspace-brand small');
     if(brand)brand.textContent='Operations + energy';
   }
