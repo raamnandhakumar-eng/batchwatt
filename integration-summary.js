@@ -1,6 +1,8 @@
 /* Product presentation layer: emphasize integration without changing planner logic. */
 'use strict';
 (function(){
+  const fmtOutput=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(Number(n||0));
+
   function buildSample(){
     const d=clone(window.BATCHWATT_DEMO);
     const date=localDate();
@@ -37,12 +39,50 @@
     location.hash='today';
     recalc();
     mount();
+    renderLoadProfileSummary();
   }
 
   function clearSample(){
     try{localStorage.removeItem(DRAFT_KEY);localStorage.removeItem(OPS_KEY);}catch{}
     location.hash='today';
     location.reload();
+  }
+
+  function mountLoadProfile(){
+    const energy=document.querySelector('.simple-energy');
+    const details=energy?.querySelector('.simple-details');
+    const chart=details?.querySelector('.energy-chart-wrap')||document.querySelector('#load-profile-output .energy-chart-wrap');
+    const legend=details?.querySelector('.chart-legend')||document.querySelector('#load-profile-output .chart-legend');
+    const message=document.getElementById('simple-energy-message');
+    if(!energy||!details||!chart||!message)return;
+
+    let output=document.getElementById('load-profile-output');
+    if(!output){
+      output=document.createElement('section');
+      output.id='load-profile-output';
+      output.className='load-profile-output';
+      output.innerHTML='<div class="load-profile-head"><div><p class="eyebrow">LOAD PROFILE</p><h3>Baseline vs recommended power</h3><p>15-minute modeled facility load across the shift.</p></div><span class="load-profile-badge">MODELED</span></div><div id="load-profile-metrics" class="load-profile-metrics"></div>';
+      message.insertAdjacentElement('afterend',output);
+    }
+    if(chart.parentElement!==output)output.appendChild(chart);
+    if(legend&&legend.parentElement!==output)output.appendChild(legend);
+    const summary=details.querySelector('summary');
+    if(summary)summary.textContent='Energy assumptions';
+  }
+
+  function renderLoadProfileSummary(){
+    const box=document.getElementById('load-profile-metrics');
+    if(!box)return;
+    if(!result){
+      box.innerHTML='<div><span>Baseline peak</span><strong>—</strong></div><div><span>Recommended peak</span><strong>—</strong></div><div><span>Peak change</span><strong>—</strong></div>';
+      return;
+    }
+    const baseline=Number(result.baseline?.peakKw||0);
+    const planned=Number(result.proposed?.peakKw||0);
+    const target=Number(input?.energy?.peakLimitKw||0);
+    const reduction=baseline-planned;
+    const change=reduction>0?`${fmtOutput(reduction)} kW lower`:reduction<0?`${fmtOutput(Math.abs(reduction))} kW higher`:'No change';
+    box.innerHTML=`<div><span>Baseline peak</span><strong>${fmtOutput(baseline)} kW</strong></div><div><span>Recommended peak</span><strong>${fmtOutput(planned)} kW</strong><small>Target ${fmtOutput(target)} kW</small></div><div><span>Peak change</span><strong>${change}</strong></div>`;
   }
 
   function mount(){
@@ -96,8 +136,18 @@
 
     const brand=document.querySelector('.workspace-brand small');
     if(brand)brand.textContent='Operations + energy';
+
+    mountLoadProfile();
   }
 
-  document.addEventListener('DOMContentLoaded',mount);
-  window.addEventListener('hashchange',mount);
+  const priorRecalc=recalc;
+  recalc=function(){
+    const value=priorRecalc.apply(this,arguments);
+    mount();
+    renderLoadProfileSummary();
+    return value;
+  };
+
+  document.addEventListener('DOMContentLoaded',()=>{mount();renderLoadProfileSummary();});
+  window.addEventListener('hashchange',()=>{mount();renderLoadProfileSummary();});
 })();
