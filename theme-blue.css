@@ -1,0 +1,122 @@
+/* BatchWatt V4.2 visual theme: slate + electric blue + energy teal. */
+:root{
+  --bw-bg:#f6f8fb;
+  --bw-surface:#ffffff;
+  --bw-surface-soft:#f1f5f9;
+  --bw-border:#e2e8f0;
+  --bw-text:#17212b;
+  --bw-muted:#66758a;
+  --bw-sidebar:#0f172a;
+  --bw-sidebar-soft:#162033;
+  --bw-sidebar-text:#e5edf7;
+  --bw-primary:#2563eb;
+  --bw-primary-hover:#1d4ed8;
+  --bw-primary-soft:#e8f0ff;
+  --bw-energy:#0f766e;
+  --bw-energy-soft:#e6f7f5;
+  --bw-success:#15803d;
+  --bw-success-soft:#e8f7ed;
+  --bw-warning:#b45309;
+  --bw-warning-soft:#fff4e5;
+  --bw-danger:#b42318;
+  --bw-danger-soft:#fdecec;
+
+  /* Remap the workspace tokens used by the V4.1 shell. */
+  --kw-sidebar:var(--bw-sidebar);
+  --kw-sidebar-soft:var(--bw-sidebar-soft);
+  --kw-green:var(--bw-primary);
+  --kw-green-soft:var(--bw-primary-soft);
+  --kw-text:var(--bw-text);
+  --kw-muted:var(--bw-muted);
+  --kw-border:var(--bw-border);
+  --kw-bg:var(--bw-bg);
+  --kw-card:var(--bw-surface);
+  --kw-bad:var(--bw-danger);
+  --kw-bad-soft:var(--bw-danger-soft);
+}
+
+body.workspace-ui{background:var(--bw-bg);color:var(--bw-text)}
+body.workspace-ui .tabs{background:var(--bw-sidebar)}
+.workspace-brand{color:#fff}
+.workspace-logo{background:var(--bw-primary);box-shadow:0 6px 16px rgba(37,99,235,.26)}
+.workspace-brand small{color:#94a3b8}
+.nav-section-label{color:#64748b}
+body.workspace-ui .tabs a{color:#cbd5e1}
+body.workspace-ui .tabs a:before{color:#7f8ea3}
+body.workspace-ui .tabs a:hover{background:var(--bw-sidebar-soft);color:#fff}
+body.workspace-ui .tabs a[aria-current="page"]{background:#172554;color:#fff;box-shadow:inset 3px 0 var(--bw-primary)}
+body.workspace-ui .tabs a[aria-current="page"]:before{color:#93c5fd}
+
+body.workspace-ui .appbar{background:rgba(255,255,255,.97);border-bottom-color:var(--bw-border);backdrop-filter:blur(12px)}
+.workspace-ui .save-state,.workspace-context span,.workspace-ui .subtle{color:var(--bw-muted)}
+.workspace-ui .appbar .primary,.workspace-ui .primary{background:var(--bw-primary);border-color:var(--bw-primary);color:#fff}
+.workspace-ui .appbar .primary:hover,.workspace-ui .primary:hover{background:var(--bw-primary-hover);border-color:var(--bw-primary-hover)}
+.workspace-ui .quiet{background:#fff;border-color:#cfd8e3;color:#334155}
+.workspace-ui .quiet:hover{background:#f8fafc;border-color:#b9c6d4}
+
+.workspace-ui .panel,.workspace-ui .simple-start,.workspace-ui .decision-strip article{background:var(--bw-surface);border-color:var(--bw-border)}
+.workspace-ui .eyebrow{color:#58708f}
+.workspace-ui input,.workspace-ui select,.workspace-ui textarea{background:#fff;border-color:#cbd5e1;color:var(--bw-text)}
+.workspace-ui input:focus,.workspace-ui select:focus,.workspace-ui textarea:focus{border-color:var(--bw-primary);box-shadow:0 0 0 3px rgba(37,99,235,.10);outline:none}
+
+.make-subnav{border-bottom-color:var(--bw-border)}
+.make-subnav button,.make-subnav a{color:#64748b}
+.make-subnav .active{color:var(--bw-primary);border-bottom-color:var(--bw-primary)}
+.make-subnav a:hover,.make-subnav button:hover{color:var(--bw-primary)}
+
+.workspace-ui .decision-strip article:first-child{border-top:3px solid var(--bw-primary)}
+.workspace-ui .decision-strip article:nth-child(2){border-top:3px solid #64748b}
+.workspace-ui .decision-strip article:nth-child(3){border-top:3px solid var(--bw-energy);background:linear-gradient(180deg,#fff 0%,#fbfffe 100%)}
+.workspace-ui .decision-strip article:nth-child(3) span{color:var(--bw-energy)}
+.workspace-ui .decision-strip article.decision-alert{border-color:#efc2bc;background:#fffafa}
+
+.workspace-ui .schedule-panel>.panel-head{background:#fff}
+.workspace-ui .next-run-main{background:var(--bw-primary-soft);border-color:#c7d7fe;color:var(--bw-text)}
+.workspace-ui .next-run-label{color:var(--bw-primary)}
+.workspace-ui .next-run-time span{color:#64748b}
+.workspace-ui .next-run-time strong{color:var(--bw-primary-hover)}
+.workspace-ui .next-run-why{background:#f5f8ff;color:#475569;border:1px solid #e1e9fb}
+.workspace-ui .next-run-meta span{background:#f1f5f9;color:#475569}
+.workspace-ui .decision-logic{background:#f8fafc;border:1px solid var(--bw-border)}
+.workspace-ui .decision-logic span{background:#eef4ff;color:#385a8a}
+
+.production-table th,.workspace-ui table th{background:#f8fafc;color:#6b7b8e;border-bottom-color:var(--bw-border)}
+.production-table td{border-bottom-color:#edf1f6;color:#334155}
+.production-table td strong{color:#1e293b}
+.production-table td small{color:#7c8a9d}
+.production-table tbody tr:hover{background:#f8fbff}
+.drag-handle{color:#a8b3c1}
+.table-status.good{background:var(--bw-success-soft);color:var(--bw-success)}
+.table-status.bad{background:var(--bw-danger-soft);color:var(--bw-danger)}
+
+.workspace-ui .status-pill.good{background:var(--bw-success-soft);color:var(--bw-success)}
+.workspace-ui .status-pill.warn{background:var(--bw-warning-soft);color:var(--bw-warning)}
+.workspace-ui .status-pill.bad{background:var(--bw-danger-soft);color:var(--bw-danger)}
+.blocked-heading span{background:var(--bw-danger-soft);color:var(--bw-danger)}
+.blocked-row{border-color:#f1cbc6;background:#fffafa}
+.blocked-row small,.blocked-row p{color:#7b5a56}
+
+/* Energy is intentionally teal so it reads as a distinct operating layer, not a generic success state. */
+.workspace-ui .simple-energy{border:1px solid #cae9e5;border-top:4px solid var(--bw-energy);background:#fff}
+.workspace-ui .simple-energy .eyebrow{color:var(--bw-energy)}
+.workspace-ui .simple-energy-kpis>div{background:#fbfefd;border-color:#d7ece9}
+.workspace-ui .simple-energy-kpis strong{color:#164e49}
+.workspace-ui .simple-energy-message{background:var(--bw-energy-soft);color:#155e57;border:1px solid #c8e9e4}
+.workspace-ui #simple-energy-status.good{background:var(--bw-energy-soft);color:var(--bw-energy)}
+.energy-chart-wrap{background:#fff;border-color:#d7e4e3}
+.load-line{stroke:var(--bw-energy)}
+.baseline-line{stroke:#94a3b8}
+.limit-line{stroke:var(--bw-danger)}
+.limit-label{fill:var(--bw-danger)}
+.peak-shade{fill:rgba(180,83,9,.08)}
+
+.release-card.ready{border-color:#b9dfc6;background:#f5fcf7}
+.release-card.released{border-color:#b9dfc6;background:#f0f9f3}
+.release-card.blocked{border-color:#efc2bc;background:#fff8f7}
+.release-button{background:var(--bw-primary);border-color:var(--bw-primary);color:#fff}
+.release-button:hover:not(:disabled){background:var(--bw-primary-hover);border-color:var(--bw-primary-hover)}
+
+.workspace-ui a{transition:color .15s ease,background .15s ease,border-color .15s ease}
+.workspace-ui button{transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.workspace-ui button:active{transform:translateY(1px)}
+.workspace-ui button:focus-visible,.workspace-ui a:focus-visible,.workspace-ui input:focus-visible,.workspace-ui select:focus-visible,.workspace-ui summary:focus-visible{outline:3px solid rgba(37,99,235,.32);outline-offset:2px}
