@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="BatchWatt turns customer orders and energy data into an energy-aware factory production plan: what to produce, when to run it, what to buy, and whether the shift stays inside the configured peak-demand target.">
-  <title>BatchWatt | Energy-Aware Production Planner</title>
+  <meta name="description" content="BatchWatt is energy-aware production planning for dairy manufacturers, starting with ghee production.">
+  <title>BatchWatt | Dairy Production Planning</title>
   <link rel="stylesheet" href="/ops.css">
   <link rel="stylesheet" href="/order-import.css">
   <link rel="stylesheet" href="/energy-import.css">
@@ -23,137 +23,153 @@
   <header class="appbar">
     <a class="brand" href="#today" aria-label="BatchWatt home">
       <span class="brand-mark">BW</span>
-      <span><strong>BatchWatt</strong><small>Production & energy</small></span>
+      <span><strong>BatchWatt</strong><small>Dairy production planning</small></span>
     </a>
     <div class="appbar-right">
       <span id="save-state" class="save-state" role="status">Saved on this device</span>
-      <button id="open-order" class="primary">+ Order</button>
     </div>
   </header>
 
   <nav class="tabs" aria-label="BatchWatt sections">
-    <a href="#today" data-nav="today">Today</a>
+    <a href="#today" data-nav="today">Plan</a>
     <a href="#orders" data-nav="orders">Orders</a>
-    <a href="#buy" data-nav="buy">Buying</a>
-    <a href="#more" data-nav="more">Setup</a>
+    <a href="#energy" data-nav="energy">Energy</a>
+    <a href="#pilots" data-nav="pilots">Pilots</a>
+    <a href="#more" data-nav="more">Settings</a>
   </nav>
 
   <main class="shell">
     <div id="error" class="error" role="alert" hidden></div>
 
     <section class="view" data-view="today" id="today">
-      <div class="today-head">
-        <div>
-          <p class="eyebrow">TODAY</p>
-          <h1 id="factory-title">Today's production plan</h1>
-          <p id="shift-label" class="subtle">Current shift</p>
+      <div class="dairy-hero">
+        <p class="eyebrow">TODAY'S PRODUCTION PLAN</p>
+        <div class="dairy-hero-row">
+          <div>
+            <h1>What should we produce today?</h1>
+            <p class="product-line">BatchWatt — Energy-aware production planning for dairy manufacturers, starting with ghee production.</p>
+            <p class="core-line">Orders + inventory + production capacity + energy → best production plan.</p>
+          </div>
+          <span id="plan-status" class="status-pill neutral">Ready</span>
         </div>
-        <span id="plan-status" class="status-pill neutral">Checking plan</span>
       </div>
 
-      <section id="next-action" class="next-card">
-        <div class="next-copy">
-          <p class="eyebrow">DO THIS NEXT</p>
-          <h2 id="next-title">Add your first customer order</h2>
-          <p id="next-detail">BatchWatt will tell you what to buy, what to run, and when.</p>
-        </div>
-        <button id="next-button" class="primary big">Add order</button>
-      </section>
-
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">RUN PLAN</p>
-            <h2>What runs today</h2>
+      <div class="hero-actions dairy-plan-actions">
+        <button id="dairy-sample" class="button-secondary-strong" type="button">Try Sample</button>
+        <button id="dairy-import" class="button-secondary-strong" type="button">Import Data</button>
+        <details class="compact-menu">
+          <summary class="button-secondary-strong">Templates & exports</summary>
+          <div class="compact-menu-pop">
+            <a href="#orders">Order data</a>
+            <a href="#energy">Energy data</a>
+            <a href="#more">Factory settings</a>
           </div>
-          <span id="run-summary" class="subtle"></span>
+        </details>
+        <button id="dairy-generate" class="primary" type="button">Generate Plan</button>
+      </div>
+
+      <div id="dairy-kpis" class="kpi-row" aria-label="Plan summary metrics">
+        <article class="kpi"><span>Orders</span><strong>0</strong></article>
+        <article class="kpi"><span>Holds</span><strong>0</strong></article>
+        <article class="kpi"><span>Shifted</span><strong>0</strong></article>
+        <article class="kpi"><span>Peak kW</span><strong>—</strong></article>
+      </div>
+
+      <section class="dairy-output-section">
+        <div class="section-heading">
+          <div>
+            <h2>Production schedule</h2>
+            <p>What should we produce? When should we produce it?</p>
+          </div>
         </div>
-        <div id="run-list" class="run-list"></div>
+        <div id="dairy-schedule" class="dairy-schedule">
+          <div class="dairy-empty">Try the ghee sample, then click Generate Plan.</div>
+        </div>
       </section>
 
-      <section class="release-card" id="release-card">
-        <div>
-          <p class="eyebrow">SHIFT RELEASE</p>
-          <h2 id="release-title">Review required</h2>
-          <p id="release-detail">Resolve blockers before releasing the plan.</p>
+      <section class="dairy-output-section">
+        <div class="section-heading">
+          <div>
+            <h2>Energy Impact</h2>
+            <p>What happens to peak load and cost?</p>
+          </div>
         </div>
-        <button id="release-plan" class="release-button">Release shift</button>
+        <div id="dairy-energy-card" class="energy-impact">
+          <div class="dairy-empty">Energy impact appears after Generate Plan.</div>
+        </div>
       </section>
 
-      <details class="panel issues-panel" id="issues-panel">
-        <summary><span>Issues to fix</span><strong id="issue-count">0</strong></summary>
-        <div id="issue-list" class="issue-list"></div>
+      <details class="data-checks">
+        <summary>Data checks</summary>
+        <p id="dairy-data-checks">Load a sample or import plant data to validate orders, finished stock, packaging, materials, production lines, and energy inputs.</p>
       </details>
+
+      <div class="legacy-today" aria-hidden="true">
+        <div class="today-head">
+          <div><p class="eyebrow">TODAY</p><h1 id="factory-title">Today's production plan</h1><p id="shift-label" class="subtle">Current shift</p></div>
+        </div>
+        <section id="next-action" class="next-card"><div class="next-copy"><p class="eyebrow">DO THIS NEXT</p><h2 id="next-title">Add your first customer order</h2><p id="next-detail"></p></div><button id="next-button" class="primary big">Add order</button></section>
+        <section class="panel"><div class="panel-head"><div><p class="eyebrow">RUN PLAN</p><h2>What runs today</h2></div><span id="run-summary" class="subtle"></span></div><div id="run-list" class="run-list"></div></section>
+        <section class="release-card" id="release-card"><div><p class="eyebrow">SHIFT RELEASE</p><h2 id="release-title">Review required</h2><p id="release-detail">Resolve blockers before releasing the plan.</p></div><button id="release-plan" class="release-button">Release shift</button></section>
+        <details class="panel issues-panel" id="issues-panel"><summary><span>Issues to fix</span><strong id="issue-count">0</strong></summary><div id="issue-list" class="issue-list"></div></details>
+      </div>
     </section>
 
     <section class="view" data-view="orders" id="orders" hidden>
       <div class="page-head">
-        <div><p class="eyebrow">ORDERS</p><h1>Customer orders</h1><p class="subtle">What ships from stock, what needs production, and what is blocked.</p></div>
-        <button id="open-order-2" class="primary">+ Order</button>
+        <div><p class="eyebrow">ORDERS</p><h1>Orders & data intake</h1><p class="subtle">Import or review customer orders for the current dairy plant workspace.</p></div>
+        <button id="open-order-2" class="quiet">Add order manually</button>
       </div>
       <section class="panel">
         <div class="order-toolbar"><label>Search orders<input id="order-search" type="search" placeholder="Customer, product or order ID"></label><label>Show<select id="order-status-filter"><option value="all">All orders</option><option value="attention">Needs attention</option></select></label><p id="order-count" class="subtle" role="status"></p></div>
         <div class="mobile-cards" id="orders-cards"></div>
-        <div class="table-wrap desktop-table">
-          <table>
-            <thead><tr><th>Customer</th><th>Product</th><th>Qty</th><th>Due</th><th>Status</th><th></th></tr></thead>
-            <tbody id="orders-table"></tbody>
-          </table>
-        </div>
+        <div class="table-wrap desktop-table"><table><thead><tr><th>Customer</th><th>Product</th><th>Qty</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="orders-table"></tbody></table></div>
       </section>
+    </section>
+
+    <section class="view" data-view="energy" id="energy" hidden>
+      <div class="page-head dairy-page-head">
+        <div><p class="eyebrow">ENERGY</p><h1>Energy impact</h1><p class="subtle">Review peak load, modeled electricity cost, kWh, demand-charge exposure, tariffs, and load data.</p></div>
+      </div>
+      <div id="dairy-energy-page" class="energy-impact"><div class="dairy-empty">Generate a plan to see energy impact.</div></div>
+    </section>
+
+    <section class="view" data-view="pilots" id="pilots" hidden>
+      <div class="page-head dairy-page-head">
+        <div><p class="eyebrow">PILOTS</p><h1>Ghee-factory pilot evidence</h1><p class="subtle">Historical results from supplied ghee-factory operational records / pilot workbooks. Not independently audited.</p></div>
+      </div>
+      <div class="pilot-summary-grid">
+        <article><span>Pilots</span><strong>2</strong></article>
+        <article><span>Planning cycles</span><strong>19</strong></article>
+        <article><span>Orders</span><strong>73</strong></article>
+        <article><span>Risks found</span><strong>16</strong></article>
+        <article><span>Sequencing changes</span><strong>14</strong></article>
+        <article><span>Planning-time reduction</span><strong>62–64%</strong></article>
+        <article><span>Estimated energy reduction</span><strong>6.7–8.8%</strong></article>
+        <article><span>Peak-load reduction</span><strong>9.0–11.7%</strong></article>
+      </div>
+      <p class="pilot-boundary">These are supplied pilot results from ghee-factory operational records / pilot workbooks. They are preserved as historical evidence and must not be retroactively attributed to newer BatchWatt features.</p>
     </section>
 
     <section class="view" data-view="buy" id="buy" hidden>
-      <div class="page-head">
-        <div><p class="eyebrow">BUYING</p><h1>Materials to buy</h1><p class="subtle">Only the material actions needed for the loaded orders and buffer.</p></div>
-        <button id="open-po" class="primary">+ Purchase order</button>
-      </div>
+      <div class="page-head"><div><p class="eyebrow">MATERIALS</p><h1>Materials to buy</h1><p class="subtle">Raw material and packaging actions needed for loaded orders.</p></div><button id="open-po" class="quiet">+ Purchase order</button></div>
       <div id="buy-summary" class="summary-strip"></div>
-      <section class="panel">
-        <div id="buy-list" class="buy-list"></div>
-      </section>
-      <details class="panel">
-        <summary>Open purchase orders</summary>
-        <div id="purchase-list" class="purchase-list"></div>
-      </details>
+      <section class="panel"><div id="buy-list" class="buy-list"></div></section>
+      <details class="panel"><summary>Open purchase orders</summary><div id="purchase-list" class="purchase-list"></div></details>
     </section>
 
     <section class="view" data-view="more" id="more" hidden>
-      <div class="page-head">
-        <div><p class="eyebrow">SETUP</p><h1>Factory settings</h1><p class="subtle">Update finished stock, shift hours, production assumptions, and electricity rates.</p></div>
-      </div>
-
-      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">FINISHED STOCK</p><h2>What is available now?</h2><p class="subtle">Enter counted finished goods. These cover orders before new production is scheduled.</p></div></div><div id="stock-inputs" class="settings-grid"></div></section>
-      <section class="panel compact-panel">
-        <div class="panel-head"><div><p class="eyebrow">ENERGY</p><h2>Power check</h2></div><span id="energy-status" class="status-pill neutral">No plan</span></div>
-        <div id="energy-summary" class="stats"></div>
-        <details>
-          <summary>Edit tariff and peak settings</summary>
-          <div id="energy-settings" class="settings-grid"></div>
-        </details>
-      </section>
-
-      <section class="panel compact-panel">
-        <div class="panel-head"><div><p class="eyebrow">SHIFT</p><h2>Basic setup</h2></div></div>
-        <div class="settings-grid">
-          <label>Factory name<input id="factory-name"></label>
-          <label>Date<input id="shift-date" type="date"></label>
-          <label>Starts<input id="shift-start" type="time" step="900"></label>
-          <label>Ends<input id="shift-end" type="time" step="900"></label>
-        </div>
-      </section>
-
-      <section class="panel compact-panel">
-        <div class="panel-head"><div><p class="eyebrow">TOOLS</p><h2>Workspace</h2></div></div>
-        <div class="tool-grid">
-          <button id="load-demo" class="quiet">Load demo</button>
-          <button id="new-workspace" class="quiet">Start clean workspace</button>
-          <a class="quiet button-link" href="/planner-v2.html">Detailed planner</a>
-          <a class="quiet button-link" href="https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1">Version 1 archive</a>
-        </div>
-      </section>
+      <div class="page-head"><div><p class="eyebrow">SETTINGS</p><h1>Dairy plant settings</h1><p class="subtle">Finished stock, packaging, raw materials, production lines, tariffs, changeovers, and workspace assumptions.</p></div></div>
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">FINISHED STOCK</p><h2>Finished stock</h2><p class="subtle">Counted finished goods available before new ghee production is scheduled.</p></div></div><div id="stock-inputs" class="settings-grid"></div></section>
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">ENERGY</p><h2>Tariffs & peak settings</h2></div><span id="energy-status" class="status-pill neutral">No plan</span></div><div id="energy-summary" class="stats"></div><details><summary>Edit tariff and peak settings</summary><div id="energy-settings" class="settings-grid"></div></details></section>
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">SHIFT</p><h2>Plant & shift</h2></div></div><div class="settings-grid"><label>Dairy plant name<input id="factory-name"></label><label>Date<input id="shift-date" type="date"></label><label>Starts<input id="shift-start" type="time" step="900"></label><label>Ends<input id="shift-end" type="time" step="900"></label></div></section>
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">TOOLS</p><h2>Workspace</h2></div></div><div class="tool-grid"><button id="load-demo" class="quiet">Load demo</button><button id="new-workspace" class="quiet">Start clean workspace</button><a class="quiet button-link" href="/planner-v2.html">Detailed planner</a><a class="quiet button-link" href="https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1">Version 1 archive</a></div></section>
     </section>
   </main>
+
+  <footer class="footer-note">Decision-support tool. Supervisor review required before release.</footer>
+
+  <button id="open-order" hidden type="button"></button>
 
   <dialog id="order-dialog">
     <form id="order-form">
@@ -179,7 +195,8 @@
       <button class="primary big" type="submit">Save purchase order</button>
     </form>
   </dialog>
-<dialog id="receipt-dialog"><form id="receipt-form">
+
+  <dialog id="receipt-dialog"><form id="receipt-form">
     <div class="dialog-head"><h2>Receive material</h2><button type="button" class="icon-button" data-close="receipt-dialog" aria-label="Close">×</button></div>
     <p id="receipt-detail" class="subtle"></p>
     <label>Quantity received<input id="receipt-qty" type="number" min="0.000001" step="any" required></label>
