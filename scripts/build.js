@@ -29,8 +29,8 @@ for (const [source, destination] of assets) {
   fs.copyFileSync(path.join(__dirname, '..', source), target);
 }
 
-// Production UI layers: Today console -> V4 decision layer -> Katana-inspired workspace shell -> read-only Pilot Results.
-for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js']) {
+// Production UI layers: Today console -> V4 decision layer -> Katana-inspired workspace shell -> neutral default workspace -> read-only Pilot Results.
+for (const moduleName of ['demo-scenarios.js', 'unified-console.js', 'decision-console-v4.js', 'pilot-results-tab.js', 'katana-workspace.js', 'generic-default-workspace.js']) {
   fs.appendFileSync(
     path.join(out, 'ops-app.js'),
     `\n\n${fs.readFileSync(path.join(__dirname, '..', moduleName), 'utf8')}\n`,
@@ -51,4 +51,4 @@ for (const htmlName of ['index.html', 'planner-v2.html']) {
   fs.writeFileSync(htmlPath, portable);
 }
 
-console.log(`Built ${assets.length} BatchWatt V4.1 assets with a schedule-first manufacturing workspace, energy-aware production table, separate Pilot Results, bulk order intake, and V2 preserved.`);
+console.log(`Built ${assets.length} BatchWatt V4.1 assets with a neutral default factory workspace, schedule-first manufacturing UI, energy-aware production table, separate Pilot Results, bulk order intake, and V2 preserved.`);
