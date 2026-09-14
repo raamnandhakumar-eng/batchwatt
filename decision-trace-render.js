@@ -8,20 +8,24 @@
   function renderHealth(){
     const box=document.getElementById('integration-health');
     if(!box)return;
-    const orders=input?.orders?.length||0, products=input?.products?.length||0, lines=input?.lines?.length||0, materials=input?.materials?.length||0;
+    const orders=input?.orders?.length||0,products=input?.products?.length||0,lines=input?.lines?.length||0,materials=input?.materials?.length||0;
     const energyReady=!!(input?.energy&&Number(input.energy.peakLimitKw)>0);
-    const blockers=result?.proposed?.unscheduled?.length||0, warnings=result?.warnings?.length||0;
-    box.innerHTML=`<div><span>ORDER DATA</span><strong>${orders}</strong><small>${orders?'Loaded':'Waiting for input'}</small></div><div><span>SHARED MODEL</span><strong>${products} products · ${lines} lines</strong><small>${materials} material records</small></div><div><span>ENERGY MODEL</span><strong>${energyReady?'Ready':'Needs setup'}</strong><small>${energyReady?`${fmt(input.energy.peakLimitKw)} kW peak target`:'Set target and rates'}</small></div><div class="${blockers||warnings?'trace-warn':'trace-good'}"><span>PLAN HEALTH</span><strong>${result?(blockers||warnings?'Review':'Ready'):'Waiting'}</strong><small>${result?`${blockers} blocked · ${warnings} warning${warnings===1?'':'s'}`:'Run after loading orders'}</small></div>`;
+    const intervals=input?.energy?.intervalLoad?.length||0;
+    const used=result?.energyInput?.intervalsUsed||0,shiftIntervals=result?.energyInput?.shiftIntervals||0;
+    const blockers=result?.proposed?.unscheduled?.length||0,warnings=result?.warnings?.length||0;
+    const energyLabel=intervals?`${intervals} intervals`:(energyReady?'Settings only':'Needs setup');
+    const energyDetail=intervals?`${used}/${shiftIntervals||'—'} shift intervals used · ${fmt(input.energy.peakLimitKw)} kW target`:(energyReady?`${fmt(input.energy.peakLimitKw)} kW peak target`:'Import energy or set target and rates');
+    box.innerHTML=`<div><span>ORDER DATA</span><strong>${orders}</strong><small>${orders?'Loaded into shared model':'Waiting for Excel, CSV, paste or manual input'}</small></div><div><span>SHARED MODEL</span><strong>${products} products · ${lines} lines</strong><small>${materials} material records</small></div><div><span>ENERGY DATA</span><strong>${energyLabel}</strong><small>${energyDetail}</small></div><div class="${blockers||warnings?'trace-warn':'trace-good'}"><span>PLAN HEALTH</span><strong>${result?(blockers||warnings?'Review':'Ready'):'Waiting'}</strong><small>${result?`${blockers} blocked · ${warnings} warning${warnings===1?'':'s'}`:'Run after loading orders'}</small></div>`;
   }
 
   function renderSummary(){
     const box=document.getElementById('trace-summary');
     if(!box)return;
-    if(!result){box.innerHTML='<div class="trace-empty"><strong>No plan yet.</strong><span>Load an order to run feasibility, capacity, peak and cost checks.</span></div>';return;}
-    const basePeak=Number(result.baseline?.peakKw||0), planPeak=Number(result.proposed?.peakKw||0), target=Number(input?.energy?.peakLimitKw||0);
+    if(!result){box.innerHTML='<div class="trace-empty"><strong>No plan yet.</strong><span>Load orders and energy data to run feasibility, capacity, peak and cost checks.</span></div>';return;}
+    const basePeak=Number(result.baseline?.peakKw||0),planPeak=Number(result.proposed?.peakKw||0),target=Number(input?.energy?.peakLimitKw||0);
     const baseCost=Number(result.baseline?.usageCost||0)+Number(result.baseline?.demandExposure||0);
     const planCost=Number(result.proposed?.usageCost||0)+Number(result.proposed?.demandExposure||0);
-    const shifted=Number(result.comparison?.shiftedJobs||0), late=Number(result.proposed?.lateOrders||0)+Number(result.proposed?.overdueStockOrders||0);
+    const shifted=Number(result.comparison?.shiftedJobs||0),late=Number(result.proposed?.lateOrders||0)+Number(result.proposed?.overdueStockOrders||0);
     box.innerHTML=`<div><span>PEAK</span><strong>${fmt(basePeak)} → ${fmt(planPeak)} kW</strong><small>Target ${fmt(target)} kW</small></div><div><span>MODELED COST</span><strong>${moneyT(baseCost)} → ${moneyT(planCost)}</strong><small>Energy + conditional demand exposure</small></div><div><span>SCHEDULE</span><strong>${shifted} shifted</strong><small>${late} late against supplied due times</small></div>`;
   }
 
@@ -31,7 +35,7 @@
     if(!result){box.innerHTML='';return;}
     const jobs=new Map((result.proposed?.jobs||[]).map(j=>[j.id,j]));
     const rows=(result.decisions||[]).map((d,i)=>{
-      const j=jobs.get(d.orderId), shifted=Number(d.shiftedMinutes||0);
+      const j=jobs.get(d.orderId),shifted=Number(d.shiftedMinutes||0);
       const timing=d.baselineStart&&d.baselineStart!==d.recommendedStart?`${escT(d.baselineStart)} → ${escT(d.recommendedStart)}`:escT(d.recommendedStart||'—');
       return `<div class="trace-row"><div><span class="trace-status">RUN ${i+1}</span><strong>${escT(d.product)}</strong><small>${escT(d.customer||d.orderId)} · due ${escT(String(d.due||'').replace('T',' '))}</small></div><div><span>TIME</span><strong>${timing}</strong><small>${shifted?`${Math.abs(shifted)} min ${shifted>0?'later':'earlier'}`:'Earliest feasible slot retained'}</small></div><div><span>POWER</span><strong>${fmt(j?.kw)} kW</strong><small>${fmt(j?.kwh)} kWh</small></div><div class="trace-reason"><span>WHY</span><strong>${escT(d.reason||'Scheduled under current constraints.')}</strong></div></div>`;
     }).join('');
