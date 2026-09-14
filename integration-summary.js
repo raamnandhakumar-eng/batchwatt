@@ -1,16 +1,26 @@
-/* Product presentation layer: emphasize integration without changing planner logic. */
+/* Final product layer: simple input -> decision -> energy workflow. */
 'use strict';
 (function(){
   const fmtOutput=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(Number(n||0));
+  let sampleSession=false;
+
+  const priorPersist=persist;
+  persist=function(){
+    const sample=sampleSession||String(input?.factory||'').toLowerCase().includes('demo workspace');
+    if(sample){
+      const save=document.getElementById('save-state');
+      if(save)save.textContent='Sample mode — changes are not saved';
+      return;
+    }
+    return priorPersist.apply(this,arguments);
+  };
 
   function buildSample(){
     const d=clone(window.BATCHWATT_DEMO);
     const date=localDate();
     d.factory='Demo workspace — synthetic';
-    d.shift.date=date;
-    d.shift.start='08:00';
-    d.shift.end='18:00';
-    d.energy={...d.energy,baseKw:16,peakLimitKw:60,monthlyPeakKw:54,rate:0.13,peakRate:0.25,peakStart:'16:00',peakEnd:'19:00',demandRate:15};
+    d.shift={...d.shift,date,start:'08:00',end:'18:00'};
+    d.energy={...d.energy,baseKw:16,peakLimitKw:60,monthlyPeakKw:54,rate:0.13,peakRate:0.32,peakStart:'10:00',peakEnd:'13:00',demandRate:15};
 
     const productNames={ghee:'Product A',spice:'Product B',snack:'Product C',bulk:'Product D'};
     (d.products||[]).forEach(p=>{if(productNames[p.id])p.name=productNames[p.id];});
@@ -31,21 +41,68 @@
     return d;
   }
 
-  function isSample(){return String(input?.factory||'').toLowerCase().includes('demo workspace');}
+  function isSample(){return sampleSession||String(input?.factory||'').toLowerCase().includes('demo workspace');}
 
   function loadSample(){
+    sampleSession=true;
     input=buildSample();
     workflow={items:{},release:null};
     location.hash='today';
     recalc();
-    mount();
-    renderLoadProfileSummary();
   }
 
   function clearSample(){
+    sampleSession=false;
     try{localStorage.removeItem(DRAFT_KEY);localStorage.removeItem(OPS_KEY);}catch{}
     location.hash='today';
     location.reload();
+  }
+
+  function mountHeader(){
+    const head=document.querySelector('.simple-planner-head');
+    if(!head)return;
+    const eyebrow=head.querySelector('.eyebrow');
+    const title=head.querySelector('h1');
+    const copy=head.querySelector('p:not(.eyebrow)');
+    if(eyebrow)eyebrow.textContent='OPERATIONS + ENERGY';
+    if(title)title.textContent='From orders to a production plan';
+    if(copy)copy.textContent='Load demand. BatchWatt checks materials, capacity, due times and power constraints, then recommends what to run and when.';
+
+    const actions=head.querySelector('.pipeline-actions');
+    if(actions&&!document.getElementById('sample-plan-button')){
+      const button=document.createElement('button');
+      button.id='sample-plan-button';
+      button.className='quiet sample-plan-button';
+      button.type='button';
+      button.textContent='Try sample';
+      button.addEventListener('click',loadSample);
+      actions.appendChild(button);
+    }
+
+    let line=document.getElementById('model-line');
+    if(!line){
+      line=document.createElement('div');
+      line.id='model-line';
+      line.className='model-line';
+      line.innerHTML='<strong>Orders + inventory + capacity + energy</strong><span>→ risk + sequence + peak</span>';
+      head.insertAdjacentElement('afterend',line);
+    }
+    document.getElementById('integration-strip')?.remove();
+  }
+
+  function mountSampleNotice(){
+    const anchor=document.getElementById('model-line');
+    let notice=document.getElementById('sample-plan-notice');
+    if(isSample()){
+      if(!notice&&anchor){
+        notice=document.createElement('div');
+        notice.id='sample-plan-notice';
+        notice.className='sample-plan-notice';
+        notice.innerHTML='<div><strong>Synthetic sample</strong><span>Change an order or peak target to see the plan recalculate.</span></div><button class="quiet" type="button">Reset</button>';
+        notice.querySelector('button').addEventListener('click',clearSample);
+        anchor.insertAdjacentElement('afterend',notice);
+      }
+    }else if(notice){notice.remove();}
   }
 
   function mountLoadProfile(){
@@ -61,7 +118,7 @@
       output=document.createElement('section');
       output.id='load-profile-output';
       output.className='load-profile-output';
-      output.innerHTML='<div class="load-profile-head"><div><p class="eyebrow">LOAD PROFILE</p><h3>Baseline vs recommended power</h3><p>15-minute modeled facility load across the shift.</p></div><span class="load-profile-badge">MODELED</span></div><div id="load-profile-metrics" class="load-profile-metrics"></div>';
+      output.innerHTML='<div class="load-profile-head"><div><p class="eyebrow">POWER PROFILE</p><h3>Baseline vs recommended load</h3></div><span class="load-profile-badge">MODELED</span></div><div id="load-profile-metrics" class="load-profile-metrics"></div>';
       message.insertAdjacentElement('afterend',output);
     }
     if(chart.parentElement!==output)output.appendChild(chart);
@@ -71,73 +128,42 @@
   }
 
   function renderLoadProfileSummary(){
+    const output=document.getElementById('load-profile-output');
     const box=document.getElementById('load-profile-metrics');
-    if(!box)return;
-    if(!result){
-      box.innerHTML='<div><span>Baseline peak</span><strong>—</strong></div><div><span>Recommended peak</span><strong>—</strong></div><div><span>Peak change</span><strong>—</strong></div>';
-      return;
-    }
+    if(!output||!box)return;
+    output.hidden=!result;
+    if(!result)return;
+
     const baseline=Number(result.baseline?.peakKw||0);
     const planned=Number(result.proposed?.peakKw||0);
     const target=Number(input?.energy?.peakLimitKw||0);
     const reduction=baseline-planned;
-    const change=reduction>0?`${fmtOutput(reduction)} kW lower`:reduction<0?`${fmtOutput(Math.abs(reduction))} kW higher`:'No change';
-    box.innerHTML=`<div><span>Baseline peak</span><strong>${fmtOutput(baseline)} kW</strong></div><div><span>Recommended peak</span><strong>${fmtOutput(planned)} kW</strong><small>Target ${fmtOutput(target)} kW</small></div><div><span>Peak change</span><strong>${change}</strong></div>`;
+    box.innerHTML=`
+      <div><span>Baseline</span><strong>${fmtOutput(baseline)} kW</strong></div>
+      <div><span>Recommended</span><strong>${fmtOutput(planned)} kW</strong><small>Target ${fmtOutput(target)} kW</small></div>
+      <div><span>Peak change</span><strong>${reduction>0?`${fmtOutput(reduction)} kW lower`:reduction<0?`${fmtOutput(Math.abs(reduction))} kW higher`:'No change'}</strong></div>`;
+  }
+
+  function simplifyLayout(){
+    const details=document.querySelector('.pipeline-details');
+    const release=document.querySelector('.release-card');
+    const energy=document.querySelector('.simple-energy');
+    const anchor=release||energy;
+    if(details&&anchor&&details.previousElementSibling!==anchor)anchor.insertAdjacentElement('afterend',details);
+    const summary=details?.querySelector('summary');
+    if(summary)summary.textContent='How the plan is calculated';
+
+    const context=document.querySelector('.workspace-context span');
+    if(context&&(!location.hash||location.hash==='#today'))context.textContent='Orders → production → energy';
+    const brand=document.querySelector('.workspace-brand small');
+    if(brand)brand.textContent='Operations + energy';
   }
 
   function mount(){
-    const head=document.querySelector('.simple-planner-head');
-    if(head){
-      const eyebrow=head.querySelector('.eyebrow');
-      const title=head.querySelector('h1');
-      const copy=head.querySelector('p:not(.eyebrow)');
-      if(eyebrow)eyebrow.textContent='OPERATIONS + ENERGY INTEGRATION';
-      if(title)title.textContent='Turn fragmented operating data into one decision-ready plan';
-      if(copy)copy.textContent='BatchWatt unifies orders, inventory, production capacity and energy assumptions from spreadsheets, CSV files and pasted inputs into one shared operational model, then surfaces dispatch risk, recommended sequencing and peak-load impact.';
-
-      const actions=head.querySelector('.pipeline-actions');
-      if(actions&&!document.getElementById('sample-plan-button')){
-        const button=document.createElement('button');
-        button.id='sample-plan-button';
-        button.className='quiet sample-plan-button';
-        button.type='button';
-        button.textContent='Try sample plan';
-        button.addEventListener('click',loadSample);
-        actions.appendChild(button);
-      }
-
-      if(!document.getElementById('integration-strip')){
-        const strip=document.createElement('section');
-        strip.id='integration-strip';
-        strip.className='integration-strip';
-        strip.innerHTML='<div><span>INPUTS</span><strong>Excel · CSV · pasted orders</strong></div><i>→</i><div><span>SHARED MODEL</span><strong>Demand · stock · lines · energy</strong></div><i>→</i><div><span>DECISIONS</span><strong>Risk · sequence · peak load</strong></div>';
-        head.insertAdjacentElement('afterend',strip);
-      }
-    }
-
-    const strip=document.getElementById('integration-strip');
-    let notice=document.getElementById('sample-plan-notice');
-    if(isSample()){
-      if(!notice&&strip){
-        notice=document.createElement('div');
-        notice.id='sample-plan-notice';
-        notice.className='sample-plan-notice';
-        notice.innerHTML='<div><strong>Synthetic sample scenario</strong><span>Explore the model, change an order or peak target, and BatchWatt will recalculate the plan.</span></div><button class="quiet" type="button">Reset workspace</button>';
-        notice.querySelector('button').addEventListener('click',clearSample);
-        strip.insertAdjacentElement('afterend',notice);
-      }
-    }else if(notice){notice.remove();}
-
-    const details=document.querySelector('.pipeline-details > summary');
-    if(details)details.textContent='Data integration + planning logic';
-
-    const context=document.querySelector('.workspace-context span');
-    if(context&&(!location.hash||location.hash==='#today'))context.textContent='Operations + energy integration';
-
-    const brand=document.querySelector('.workspace-brand small');
-    if(brand)brand.textContent='Operations + energy';
-
+    mountHeader();
+    mountSampleNotice();
     mountLoadProfile();
+    simplifyLayout();
   }
 
   const priorRecalc=recalc;
