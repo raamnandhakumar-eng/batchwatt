@@ -5,7 +5,7 @@
   const ACTIVE_WS='batchwatt_v53_active_workspaces';
   const ACTIVE_FACTORY='batchwatt_v5_active_factory_profile';
   const PROFILES='batchwatt_v5_factory_profiles';
-  let restoring=false;
+  let restoring=false,switchingFactory=false;
   const copy=x=>JSON.parse(JSON.stringify(x));
   const read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??f;}catch{return f;}};
   const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
@@ -35,7 +35,7 @@
     let a=activeId(id);if(!items.some(w=>w.id===a)){a=items[0].id;setActive(id,a);}return items.find(w=>w.id===a)||items[0];
   }
   function save(){
-    if(restoring||!input)return;const id=factoryId();if(!id)return;const ws=ensure(id,input);if(!ws)return;const items=list(id),i=items.findIndex(w=>w.id===ws.id);if(i<0)return;items[i]={...items[i],state:stateFromInput(input),workflow:copy(workflow||{items:{},release:null}),updatedAt:new Date().toISOString()};setList(id,items);
+    if(restoring||switchingFactory||!input)return;const id=factoryId();if(!id)return;const ws=ensure(id,input);if(!ws)return;const items=list(id),i=items.findIndex(w=>w.id===ws.id);if(i<0)return;items[i]={...items[i],state:stateFromInput(input),workflow:copy(workflow||{items:{},release:null}),updatedAt:new Date().toISOString()};setList(id,items);
   }
   function load(wsId,id=factoryId(),navigate=true,saveBefore=true){
     const p=profile(id),ws=list(id).find(w=>w.id===wsId);if(!p||!ws)return;if(saveBefore)save();setActive(id,wsId);restoring=true;input=inputFromState(p,ws.state);workflow=copy(ws.workflow||{items:{},release:null});input.suppliers||=[];input.materials||=[];input.recipes||=[];input.purchaseOrders||=[];input.orders||=[];result=null;restoring=false;recalc();window.BatchWattWorkspaceUI?.render();if(navigate)location.hash='#today';
@@ -52,7 +52,11 @@
 
   const priorPersist=persist;persist=function(){const v=priorPersist.apply(this,arguments);save();return v;};
   const priorRecalc=recalc;recalc=function(){const v=priorRecalc.apply(this,arguments);window.BatchWattWorkspaceUI?.render();return v;};
-  document.addEventListener('change',e=>{if(e.target?.id==='factory-profile-select'||e.target?.id==='fp-profile-select'){save();setTimeout(syncFactory,0);}},true);
+  document.addEventListener('change',e=>{
+    if(e.target?.id==='factory-profile-select'||e.target?.id==='fp-profile-select'){
+      save();switchingFactory=true;setTimeout(()=>{syncFactory();switchingFactory=false;},0);
+    }
+  },true);
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{const id=factoryId();if(id){ensure(id,input);const a=activeId(id);if(a)load(a,id,false,false);}},0));
   window.BatchWattWorkspaces={list:()=>copy(list()),activeId:()=>activeId(),active:()=>copy(list().find(w=>w.id===activeId())||null),save,load,create,rename,duplicate,remove,ensure,syncFactory};
 })();
