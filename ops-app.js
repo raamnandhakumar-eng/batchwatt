@@ -29,9 +29,11 @@ function loadState(){
   input.suppliers ||= []; input.materials ||= []; input.recipes ||= []; input.purchaseOrders ||= [];
 }
 function persist(){
-  localStorage.setItem(DRAFT_KEY,JSON.stringify({input,isDemo:false}));
-  localStorage.setItem(OPS_KEY,JSON.stringify(workflow));
-  $('save-state').textContent='Saved on this device';
+  try {
+    localStorage.setItem(DRAFT_KEY,JSON.stringify({input,isDemo:false}));
+    localStorage.setItem(OPS_KEY,JSON.stringify(workflow));
+    $('save-state').textContent='Saved on this device';
+  } catch { $('save-state').textContent='Not saved: device storage unavailable. Keep this tab open.'; }
 }
 function fail(message){ $('error').hidden=!message; $('error').textContent=message||''; }
 function recalc(){
@@ -142,17 +144,18 @@ function renderBuy(){
 }
 
 function renderMore(){
+  $('stock-inputs').innerHTML=(input.products||[]).map(p=>`<label>${esc(p.name)} (${esc(p.unit)})<input data-stock="${esc(p.id)}" aria-label="${esc(p.name)} finished stock" type="number" min="0" step="any" required value="${esc(p.stock||0)}"></label>`).join('');
   $('factory-name').value=input.factory||'';$('shift-date').value=input.shift.date;$('shift-start').value=input.shift.start;$('shift-end').value=input.shift.end;
   const fields=[['baseKw','Background load (kW)','number'],['peakLimitKw','Peak target (kW)','number'],['monthlyPeakKw','Month peak so far (kW)','number'],['rate','Off-peak USD/kWh','number'],['peakRate','Peak USD/kWh','number'],['demandRate','Demand USD/kW','number'],['peakStart','Peak starts','time'],['peakEnd','Peak ends','time']];
-  $('energy-settings').innerHTML=fields.map(([key,label,type])=>`<label>${label}<input data-energy="${key}" type="${type}" ${type==='time'?'step="900"':'min="0" step="any"'} value="${esc(input.energy[key])}"></label>`).join('');
+  $('energy-settings').innerHTML=fields.map(([key,label,type])=>`<label>${label}<input data-energy="${key}" type="${type}" required ${type==='time'?'step="900"':'min="0" step="any"'} value="${esc(input.energy[key])}"></label>`).join('');
   if(!result){$('energy-status').textContent='No plan';$('energy-status').className='status-pill neutral';$('energy-summary').innerHTML='<div class="stat"><span>Peak</span><strong>—</strong></div><div class="stat"><span>Energy</span><strong>—</strong></div><div class="stat"><span>Shift cost</span><strong>—</strong></div>';return;}
   const within=result.proposed.peakKw<=input.energy.peakLimitKw;
   $('energy-status').textContent=within?'Within peak target':'Above peak target';$('energy-status').className='status-pill '+(within?'good':'bad');
   $('energy-summary').innerHTML=`<div class="stat"><span>Planned peak</span><strong>${result.proposed.peakKw} kW</strong></div><div class="stat"><span>Shift energy</span><strong>${result.proposed.kwh} kWh</strong></div><div class="stat"><span>Shift cost</span><strong>${money(result.proposed.usageCost)}</strong></div>`;
 }
 
-function renderAll(){renderToday();renderOrders();renderBuy();renderMore();showView();}
-function showView(){const view=['today','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.toggleAttribute('aria-current',a.dataset.nav===view));window.scrollTo(0,0);}
+function renderAll(){renderToday();renderOrders();renderBuy();renderMore();}
+function showView(){const view=['today','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.dataset.nav===view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));window.scrollTo(0,0);}
 function openOrder(orderId=null){
   if(!input.products?.length){goto('more');fail('Add products in the detailed planner before creating orders.');return;}
   const order=typeof orderId==='string'?input.orders.find(o=>o.id===orderId):null;
@@ -166,7 +169,12 @@ function openOrder(orderId=null){
   $('order-qty').value=order?.qty||1;
   $('order-due').value=order?.due||`${input.shift.date}T${input.shift.end}`;
   $('order-priority').value=order?.priority||'Standard';
+  orderProductHelp();
   $('order-dialog').showModal();
+}
+function orderProductHelp(){
+  const p=input.products.find(p=>p.id===$('order-product').value);
+  $('order-product-help').textContent=p?`Quantity in ${p.unit}. ${p.stock||0} ${p.unit} in finished stock. Production rate: ${p.rate} ${p.unit}/hour.`:'';
 }
 function openReceipt(id){
   const po=input.purchaseOrders.find(p=>p.id===id);
@@ -183,7 +191,8 @@ function openPo(materialId='',qty=''){if(!input.suppliers.length||!input.materia
 function releaseShift(){const summary=ops();if(!summary.releasable)return;workflow.release={fingerprint:BatchWattOperations.planFingerprint(input),at:new Date().toISOString(),actor:actor()};persist();recalc();}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  loadState();recalc();window.addEventListener('hashchange',showView);
+  loadState();recalc();showView();window.addEventListener('hashchange',showView);
+  $('order-product').onchange=orderProductHelp;
   $('order-search').oninput=renderOrders;$('order-status-filter').onchange=renderOrders;
   $('order-customer').oninput=()=> $('order-customer').setCustomValidity('');
   $('receipt-form').onsubmit=e=>{e.preventDefault();try{input=BatchWattProcurement.receivePurchase(input,$('receipt-form').dataset.poId,Number($('receipt-qty').value));$('receipt-dialog').close();recalc();}catch(err){$('receipt-error').textContent=err.message;}};
@@ -195,7 +204,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('order-form').onsubmit=e=>{e.preventDefault();const order={id:editingOrderId||uid('ORD'),customer:$('order-customer').value.trim(),productId:$('order-product').value,qty:Number($('order-qty').value),due:$('order-due').value,priority:$('order-priority').value};if(!order.customer){$('order-customer').setCustomValidity('Enter a customer name.');$('order-customer').reportValidity();return;}const index=input.orders.findIndex(o=>o.id===editingOrderId);if(index>=0)input.orders[index]={...input.orders[index],...order};else input.orders.push(order);editingOrderId=null;$('order-dialog').close();recalc();goto('today');};
   $('po-form').onsubmit=e=>{e.preventDefault();const po={id:uid('PO'),supplierId:$('po-supplier').value,materialId:$('po-material').value,qty:Number($('po-qty').value),unitCost:Number($('po-cost').value),expectedDate:$('po-date').value,status:'Draft',receivedQty:0,notes:'',receipts:[]};input.purchaseOrders.push(po);$('po-dialog').close();recalc();goto('buy');};
   document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go){goto(go.dataset.go);return;}const create=e.target.closest('[data-create-po]');if(create){openPo(create.dataset.createPo,create.dataset.qty);return;}const edit=e.target.closest('[data-edit-order]');if(edit){openOrder(edit.dataset.editOrder);return;}const del=e.target.closest('[data-delete-order]');if(del){if(!confirm('Remove this order from the plan?'))return;input.orders=input.orders.filter(o=>o.id!==del.dataset.deleteOrder);workflow.release=null;recalc();return;}const po=e.target.closest('[data-po-action]');if(po){const row=input.purchaseOrders.find(x=>x.id===po.dataset.id);if(!row)return;if(po.dataset.poAction==='order')row.status='Ordered';else{openReceipt(row.id);return;}recalc();}});
-  document.addEventListener('change',e=>{if(e.target.dataset.energy){input.energy[e.target.dataset.energy]=e.target.type==='number'?Number(e.target.value):e.target.value;recalc();}});
+  document.addEventListener('change',e=>{if(e.target.dataset.stock){if(!e.target.reportValidity())return;const product=input.products.find(p=>p.id===e.target.dataset.stock);if(product){product.stock=Number(e.target.value);recalc();}return;}if(e.target.dataset.energy){if(!e.target.value || !e.target.reportValidity())return;input.energy[e.target.dataset.energy]=e.target.type==='number'?Number(e.target.value):e.target.value;recalc();}});
   const setupChange=()=>{input.factory=$('factory-name').value.trim()||'My factory';input.shift.date=$('shift-date').value;input.shift.start=$('shift-start').value;input.shift.end=$('shift-end').value;recalc();};
   ['factory-name','shift-date','shift-start','shift-end'].forEach(id=>$(id).addEventListener('change',setupChange));
   $('po-material').addEventListener('change',()=>{const m=input.materials.find(x=>x.id===$('po-material').value);if(m){$('po-cost').value=m.unitCost;if(m.supplierId)$('po-supplier').value=m.supplierId;}});
