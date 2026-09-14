@@ -2,6 +2,7 @@
 'use strict';
 (function(){
   function intervalMode(){return document.querySelector('[data-energy-mode="interval"]')?.classList.contains('active');}
+  function liveInput(){return typeof input!=='undefined'?input:null;}
   function mount(){
     const hint=document.getElementById('energy-format-hint');
     if(!hint||document.getElementById('v6-energy-basis'))return;
@@ -29,7 +30,7 @@
     if(e.target?.id==='confirm-energy-import'&&intervalMode()){
       const basis=document.querySelector('input[name="v6-energy-basis"]:checked')?.value||'background';
       if(basis==='total'){e.preventDefault();e.stopImmediatePropagation();return;}
-      if(window.input?.energy)input.energy.intervalLoadBasis='background';
+      const state=liveInput();if(state?.energy)state.energy.intervalLoadBasis='background';
     }
   },true);
   document.addEventListener('change',e=>{if(e.target?.matches('[data-energy-map],#energy-import-file'))setTimeout(sync,0);},true);
