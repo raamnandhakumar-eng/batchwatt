@@ -6,7 +6,7 @@
 
   function sectionName(){
     const view=location.hash.slice(1)||'today';
-    return ({today:['Make','Production schedule'],orders:['Orders','Customer demand'],buy:['Buy','Materials & purchasing'],more:['Settings','Factory configuration'],'pilot-results':['Pilots','Historical results']})[view]||['Make','Production schedule'];
+    return ({today:['Make','Production schedule'],orders:['Orders','Customer demand'],energy:['Energy','Load, cost and delivery'],pilots:['Pilots','Historical evidence'],buy:['Buy','Materials & purchasing'],more:['Settings','Factory configuration'],'pilot-results':['Pilots','Historical results']})[view]||['Make','Production schedule'];
   }
 
   function mountShell(){
@@ -25,7 +25,7 @@
       brand.insertAdjacentElement('afterend',label);
     }
 
-    const labels={today:'Make',orders:'Orders',buy:'Buy','pilot-results':'Pilots',more:'Settings'};
+    const labels={today:'Make',orders:'Orders',energy:'Energy',pilots:'Pilots',buy:'Buy','pilot-results':'Pilots',more:'Settings'};
     nav.querySelectorAll('[data-nav]').forEach(a=>{
       const key=a.dataset.nav;
       if(labels[key])a.textContent=labels[key];

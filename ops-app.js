@@ -155,7 +155,7 @@ function renderMore(){
 }
 
 function renderAll(){renderToday();renderOrders();renderBuy();renderMore();}
-function showView(){const view=['today','orders','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.dataset.nav===view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));window.scrollTo(0,0);}
+function showView(){const view=['today','orders','energy','pilots','buy','more'].includes(location.hash.slice(1))?location.hash.slice(1):'today';document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);document.querySelectorAll('[data-nav]').forEach(a=>a.dataset.nav===view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));window.scrollTo(0,0);}
 function openOrder(orderId=null){
   if(!input.products?.length){goto('more');fail('Add products in the detailed planner before creating orders.');return;}
   const order=typeof orderId==='string'?input.orders.find(o=>o.id===orderId):null;

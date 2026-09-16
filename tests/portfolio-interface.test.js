@@ -28,3 +28,12 @@ test('empty state remains useful and warnings are escaped',()=>{
   assert.ok(!html.includes('<img'));
   assert.ok(html.includes('&lt;img'));
 });
+test('base router keeps Energy and Pilots visible after hash changes',()=>{
+  const views=['today','energy','pilots','orders','more'].map(view=>({dataset:{view},hidden:true}));
+  const ctx={document:{getElementById(){},addEventListener(){},querySelectorAll:selector=>selector==='[data-view]'?views:[]},window:{scrollTo(){}},location:{hash:'#energy'}};
+  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../ops-app.js'),'utf8'),ctx);
+  vm.runInContext('showView()',ctx);
+  assert.deepEqual(views.filter(v=>!v.hidden).map(v=>v.dataset.view),['energy']);
+  ctx.location.hash='#pilots';vm.runInContext('showView()',ctx);
+  assert.deepEqual(views.filter(v=>!v.hidden).map(v=>v.dataset.view),['pilots']);
+});

@@ -7,7 +7,7 @@
   let sampleReady=false;
 
   function route(){
-    const allowed=['today','orders','energy','pilots','more'];
+    const allowed=['today','orders','energy','pilots','buy','more'];
     const view=allowed.includes(location.hash.slice(1))?location.hash.slice(1):'today';
     document.querySelectorAll('[data-view]').forEach(x=>x.hidden=x.dataset.view!==view);
     document.querySelectorAll('[data-nav]').forEach(a=>a.dataset.nav===view?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
