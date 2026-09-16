@@ -51,3 +51,18 @@
   .integration-story{grid-template-columns:1fr;gap:7px}.integration-story>i{display:none}.integration-story small{white-space:normal}
   .learning-peek{align-items:flex-start;flex-direction:column;gap:7px}.learning-peek-arrow{align-self:flex-end}
 }
+
+/* Energy comparisons keep delivery, assumptions and evidence next to the numbers. */
+.energy-impact{padding:20px;background:#fff;border:1px solid #e4e7ec;border-radius:12px}
+.energy-model-label{font-size:13px;color:#526176;margin:0 0 16px}
+.energy-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.energy-metrics>div{padding:12px;background:#f6f8fc;border-radius:8px}
+.energy-metrics span,.energy-metrics strong{display:block}.energy-metrics span{font-size:12px;color:#526176}.energy-metrics strong{font-size:20px;margin-top:8px}
+.energy-tradeoff{padding:14px;background:#f2f7fc;border-left:3px solid #2457d6;font-size:13px;line-height:1.6}.energy-tradeoff.needs-review{background:#fff7eb;border-color:#ad5418}
+.energy-comparison{width:100%;border-collapse:collapse;font-size:13px}.energy-comparison th,.energy-comparison td{padding:12px;text-align:left;border-bottom:1px solid #e4e7ec}.energy-comparison thead{background:#f6f8fc}.energy-comparison caption{text-align:left;color:#526176;padding:12px 0;font-size:12px}
+.energy-load-chart{margin:20px 0}.energy-load-chart svg{width:100%;min-width:300px;display:block}.energy-load-chart text{font:12px system-ui;fill:#526176}.energy-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12px;color:#526176}
+.energy-assumption-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.energy-assumption-grid dt{font-size:12px;color:#526176}.energy-assumption-grid dd{margin:5px 0;font-weight:650;font-size:14px}.energy-assumptions p{font-size:13px;line-height:1.6}
+.energy-quality{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}.energy-quality article{padding:14px;border:1px solid #e4e7ec;border-radius:8px}.energy-quality strong{display:block;font-size:14px}.energy-quality span{display:inline-block;font-size:12px;color:#795315;background:#fff7eb;padding:3px 7px;margin-top:8px;border-radius:4px}.energy-quality p{font-size:13px;line-height:1.5;color:#526176;margin-bottom:0}
+.energy-quality-title{margin-top:26px}.inventory-count-date{display:block;max-width:420px;margin:16px 0}.inventory-count-date small{display:block;font-size:12px;color:#526176;margin-top:6px}
+.pilot-evidence-cards{display:grid;gap:18px;margin-top:24px}.pilot-evidence-cards p,.pilot-method p{font-size:14px;line-height:1.6}.energy-detail-link{display:inline-block;margin-top:4px}
+@media(max-width:760px){.energy-metrics,.energy-assumption-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.energy-quality{grid-template-columns:1fr}.energy-impact{padding:14px}.energy-metrics strong{font-size:17px}.energy-comparison th,.energy-comparison td{padding:9px}.energy-load-chart{overflow-x:auto}}

@@ -6,7 +6,7 @@ BatchWatt answers one operating question:
 
 > **What should we produce today?**
 
-It combines **orders + inventory + production capacity + energy** to recommend the best feasible production plan. Each production requirement is expressed as **RUN**, **SHIFT**, or **HOLD**, with the recommended time, production line, and reason.
+It combines **orders + inventory + production capacity + energy** to recommend a feasible production and energy plan. Each production requirement is expressed as **RUN**, **SHIFT**, or **HOLD**, with the recommended time, production line, and reason.
 
 **[Open BatchWatt](https://batchwatt.vercel.app/)**
 
@@ -97,6 +97,21 @@ The current demand model is:
 `incremental demand exposure = max(0, planned peak - monthly peak so far) × demand rate`
 
 Utility-specific ratchets, coincident peaks, minimum billed demand, taxes, and power-factor penalties are outside the current model unless separately implemented.
+
+## Energy decision review
+
+The Energy tab compares the earliest-feasible baseline and recommended schedule for the same shift:
+
+- Peak demand, kWh, usage cost and conditional demand exposure
+- On-time orders (including eligible finished stock), late production orders and HOLDs
+- Both 15-minute load curves on the same kW scale, with the peak target and configured peak tariff hours
+- Configured tariff assumptions, imported-data coverage and stock-count freshness
+
+The comparison flags changes in the set of scheduled production orders, so lower consumption from doing less work is not presented as pure efficiency savings. Usage-cost differences and conditional monthly demand differences are shown separately. These are modeled outcomes, not proof of execution or bill savings.
+
+Stock-count timestamps are user supplied, scoped to the daily workspace and assessed against shift start. Counts more than 24 hours old are flagged for review; an absent date is unknown, not a pass. Supplied machine power and tariff values are not represented as meter-verified inputs.
+
+The Pilots tab includes per-pilot baseline values and methodology links. Historical workbook outcomes remain separate from current planning outputs and illustrative samples.
 
 ## Ghee sample
 

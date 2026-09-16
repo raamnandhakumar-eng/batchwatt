@@ -48,7 +48,7 @@
           <div>
             <h1>What should we produce today?</h1>
             <p class="product-line">BatchWatt — Energy-aware production planning for dairy manufacturers, starting with ghee production.</p>
-            <p class="core-line">Orders + inventory + production capacity + energy → best production plan.</p>
+            <p class="core-line">Orders + inventory + production capacity + energy → a feasible production and energy plan.</p>
           </div>
           <span id="plan-status" class="status-pill neutral">Ready</span>
         </div>
@@ -101,7 +101,7 @@
 
       <details class="data-checks">
         <summary>Data checks</summary>
-        <p id="dairy-data-checks">Load a sample or import plant data to validate orders, finished stock, packaging, materials, production lines, and energy inputs.</p>
+        <div id="dairy-data-checks">Load a sample or import plant data to validate orders, finished stock, packaging, materials, production lines, and energy inputs.</div>
       </details>
 
       <div class="legacy-today" aria-hidden="true">
@@ -136,7 +136,7 @@
 
     <section class="view" data-view="pilots" id="pilots" hidden>
       <div class="page-head dairy-page-head">
-        <div><p class="eyebrow">PILOTS</p><h1>Ghee-factory pilot evidence</h1><p class="subtle">Historical results from supplied ghee-factory operational records / pilot workbooks. Not independently audited.</p></div>
+        <div><p class="eyebrow">PILOTS</p><h1>Operational pilot evidence</h1><p class="subtle">Historical results from supplied operational records / pilot workbooks. Not independently audited.</p></div>
       </div>
       <div class="pilot-summary-grid">
         <article><span>Pilots</span><strong>2</strong></article>
@@ -148,7 +148,12 @@
         <article><span>Estimated energy reduction</span><strong>6.7–8.8%</strong></article>
         <article><span>Peak-load reduction</span><strong>9.0–11.7%</strong></article>
       </div>
-      <p class="pilot-boundary">These are supplied pilot results from ghee-factory operational records / pilot workbooks. They are preserved as historical evidence and must not be retroactively attributed to newer BatchWatt features.</p>
+      <div class="pilot-evidence-cards">
+        <article class="panel"><p class="eyebrow">July 7–20, 2026</p><h2>RKG Ghee</h2><p>Ghee processing and packing · 10 cycles · 32 orders · 9 risks · 7 sequencing changes</p><div class="table-wrap"><table class="energy-comparison"><caption>Historical workbook results</caption><thead><tr><th>Metric</th><th>Baseline</th><th>With BatchWatt</th><th>Reduction</th></tr></thead><tbody><tr><th>Planning time (min)</th><td>95.91</td><td>34.37</td><td>64.2%</td></tr><tr><th>Estimated energy (kWh)</th><td>5,187.6</td><td>4,733.4</td><td>8.8%</td></tr><tr><th>Recorded peak (kW)</th><td>131.2</td><td>115.8</td><td>11.7%</td></tr></tbody></table></div><a href="https://github.com/raamnandhakumar-eng/batchwatt/blob/main/docs/pilots/rkg-ghee-pilot.md" target="_blank" rel="noopener">Read pilot source summary</a></article>
+        <article class="panel"><p class="eyebrow">July 14–25, 2026</p><h2>PR Food Products</h2><p>Packaged-food production · 9 cycles · 41 orders · 7 risks · 7 sequencing changes</p><div class="table-wrap"><table class="energy-comparison"><caption>Historical workbook results</caption><thead><tr><th>Metric</th><th>Baseline</th><th>With BatchWatt</th><th>Reduction</th></tr></thead><tbody><tr><th>Planning time (min)</th><td>120.96</td><td>45.63</td><td>62.3%</td></tr><tr><th>Estimated energy (kWh)</th><td>6,133.0</td><td>5,720.5</td><td>6.7%</td></tr><tr><th>Recorded peak (kW)</th><td>156.5</td><td>142.4</td><td>9.0%</td></tr></tbody></table></div><a href="https://github.com/raamnandhakumar-eng/batchwatt/blob/main/docs/pilots/pr-food-products-pilot.md" target="_blank" rel="noopener">Read pilot source summary</a></article>
+      </div>
+      <section class="panel pilot-method"><h2>How to read this evidence</h2><p>Reduction = (baseline − with BatchWatt) / baseline × 100. Planning time is the cycle average. Energy uses aggregate kWh from the pilot records. Peak compares maximum concurrent equipment demand.</p><p><strong>Estimated:</strong> energy outcomes are modeled from production and operational records. <strong>Recorded:</strong> planning time and peak values come from supplied workbooks. Independent meter verification is not attached.</p><p>Recommendations included moving high-load equipment, grouping compatible products, reducing changeover or idle time, and prioritizing near-due orders. Records include accepted, adjusted, executed and reviewed-only responses.</p><p>Source attachments, timestamped run logs and company confirmation remain pending in the pilot summaries. The sample is illustrative, not a replay of these pilots. Current planner features are separate from historical results.</p><a href="https://github.com/raamnandhakumar-eng/batchwatt/blob/main/docs/pilots/pilot-methodology.md" target="_blank" rel="noopener">Read methodology and evidence status</a></section>
+      <p class="pilot-boundary">These are supplied pilot results from operational records / pilot workbooks. They are preserved as historical evidence and must not be retroactively attributed to newer BatchWatt features.</p>
     </section>
 
     <section class="view" data-view="buy" id="buy" hidden>
@@ -160,7 +165,7 @@
 
     <section class="view" data-view="more" id="more" hidden>
       <div class="page-head"><div><p class="eyebrow">SETTINGS</p><h1>Dairy plant settings</h1><p class="subtle">Finished stock, packaging, raw materials, production lines, tariffs, changeovers, and workspace assumptions.</p></div></div>
-      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">FINISHED STOCK</p><h2>Finished stock</h2><p class="subtle">Counted finished goods available before new ghee production is scheduled.</p></div></div><div id="stock-inputs" class="settings-grid"></div></section>
+      <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">FINISHED STOCK</p><h2>Finished stock</h2><p class="subtle">Counted finished goods available before new ghee production is scheduled.</p></div></div><label class="inventory-count-date">Inventory counted at<input id="inventory-counted-at" type="datetime-local"><small>Record when the finished-goods, packaging and material counts were checked.</small></label><div id="stock-inputs" class="settings-grid"></div></section>
       <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">ENERGY</p><h2>Tariffs & peak settings</h2></div><span id="energy-status" class="status-pill neutral">No plan</span></div><div id="energy-summary" class="stats"></div><details><summary>Edit tariff and peak settings</summary><div id="energy-settings" class="settings-grid"></div></details></section>
       <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">SHIFT</p><h2>Plant & shift</h2></div></div><div class="settings-grid"><label>Dairy plant name<input id="factory-name"></label><label>Date<input id="shift-date" type="date"></label><label>Starts<input id="shift-start" type="time" step="900"></label><label>Ends<input id="shift-end" type="time" step="900"></label></div></section>
       <section class="panel compact-panel"><div class="panel-head"><div><p class="eyebrow">TOOLS</p><h2>Workspace</h2></div></div><div class="tool-grid"><button id="load-demo" class="quiet">Load demo</button><button id="new-workspace" class="quiet">Start clean workspace</button><a class="quiet button-link" href="/planner-v2.html">Detailed planner</a><a class="quiet button-link" href="https://github.com/raamnandhakumar-eng/batchwatt/tree/archive/batchwatt-v1">Version 1 archive</a></div></section>

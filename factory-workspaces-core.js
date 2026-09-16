@@ -19,10 +19,10 @@
   const activeId=(id=factoryId())=>activeMap()[id]||'';
 
   function inventory(rows,fields){const out={};for(const r of rows||[]){out[r.id]={};for(const f of fields)out[r.id][f]=r[f];}return out;}
-  function stateFromInput(src){return {shift:copy(src?.shift||{}),energy:copy(src?.energy||{}),orders:copy(src?.orders||[]),purchaseOrders:copy(src?.purchaseOrders||[]),productState:inventory(src?.products,['stock','packaging']),materialState:inventory(src?.materials,['stock'])};}
+  function stateFromInput(src){return {inventoryCountedAt:src?.inventoryCountedAt||'',shift:copy(src?.shift||{}),energy:copy(src?.energy||{}),orders:copy(src?.orders||[]),purchaseOrders:copy(src?.purchaseOrders||[]),productState:inventory(src?.products,['stock','packaging']),materialState:inventory(src?.materials,['stock'])};}
   function freshState(p){const m=copy(p?.master||{});return stateFromInput({...m,factory:p?.name||m.factory||'Factory',shift:{...(m.shift||{}),date:localDate()},energy:{...(m.energy||{})},orders:[],purchaseOrders:[]});}
   function inputFromState(p,state){
-    const m=copy(p?.master||{});const next={...m,factory:p?.name||m.factory||'Factory',shift:{...(m.shift||{}),...(state?.shift||{}),date:state?.shift?.date||localDate()},energy:{...(m.energy||{}),...(state?.energy||{})},lines:copy(m.lines||[]),products:copy(m.products||[]),suppliers:copy(m.suppliers||[]),materials:copy(m.materials||[]),recipes:copy(m.recipes||[]),orders:copy(state?.orders||[]),purchaseOrders:copy(state?.purchaseOrders||[])};
+    const m=copy(p?.master||{});const next={...m,inventoryCountedAt:state?.inventoryCountedAt||'',factory:p?.name||m.factory||'Factory',shift:{...(m.shift||{}),...(state?.shift||{}),date:state?.shift?.date||localDate()},energy:{...(m.energy||{}),...(state?.energy||{})},lines:copy(m.lines||[]),products:copy(m.products||[]),suppliers:copy(m.suppliers||[]),materials:copy(m.materials||[]),recipes:copy(m.recipes||[]),orders:copy(state?.orders||[]),purchaseOrders:copy(state?.purchaseOrders||[])};
     for(const pdt of next.products){const s=state?.productState?.[pdt.id];if(s){if(s.stock!==undefined)pdt.stock=s.stock;if(s.packaging!==undefined)pdt.packaging=s.packaging;}}
     for(const mat of next.materials){const s=state?.materialState?.[mat.id];if(s&&s.stock!==undefined)mat.stock=s.stock;}
     return next;
