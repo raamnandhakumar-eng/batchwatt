@@ -212,6 +212,12 @@ Historical pilot evidence is kept separate from synthetic demos and current mode
 
 The canonical resume/application wording and evidence boundaries remain preserved in `docs/RESUME_CLAIMS_LOCK.md`.
 
+## AI analyst for the current shift
+
+The **AI Analyst** tab provides a portfolio-style view of the active factory workspace. It ranks HOLDs, late orders, peak-target exceptions and input-quality warnings. It compares the earliest-feasible baseline with the recommended plan, shows SKU concentration by **order count**, and answers common operational questions from calculated plan data.
+
+This first version uses an **explainable, local rules-based analysis engine**, not a connected generative AI model. Questions and plant data stay in the browser. It does not execute production changes or automatically release a shift. Cost and peak outputs are modeled. Demand-charge exposure is conditional on the billing month, and a difference between schedules with different production-order sets is **not** described as an efficiency saving. The analyst does not claim to have validated pilot outcomes or historical factory trends.
+
 ## Product boundaries
 
 BatchWatt is currently a **decision-support tool**, not autonomous plant control.
