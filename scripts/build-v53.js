@@ -12,11 +12,13 @@ fs.copyFileSync(
   path.join(out, 'lib', 'energy-planner.js'),
 );
 
-for (const file of ['lib/energy-review.js', 'lib/factory-learning.js', 'factory-workspaces-core.js', 'factory-workspaces-ui.js', 'release-policy-v6.js', 'factory-v6-config.js', 'energy-basis-v6.js', 'factory-learning-ui.js', 'portfolio-interface.js', 'lib/shift-analyst.js', 'shift-analyst-ui.js']) {
+for (const file of ['lib/energy-review.js', 'lib/factory-learning.js', 'factory-workspaces-core.js', 'factory-workspaces-ui.js', 'release-policy-v6.js', 'factory-v6-config.js', 'energy-basis-v6.js', 'factory-learning-ui.js', 'portfolio-interface.js', 'lib/shift-analyst.js', 'shift-analyst-ui.js', 'lib/shift-ai-context.js', 'shift-local-ai.js']) {
   fs.appendFileSync(path.join(out, 'ops-app.js'), `\n\n${fs.readFileSync(path.join(root, file), 'utf8')}\n`);
 }
 for (const file of ['factory-workspaces.css', 'factory-v6-config.css', 'energy-basis-v6.css', 'factory-learning.css', 'portfolio-interface.css', 'shift-analyst.css']) {
   fs.appendFileSync(path.join(out, 'ops.css'), `\n\n${fs.readFileSync(path.join(root, file), 'utf8')}\n`);
 }
+
+fs.copyFileSync(path.join(root, 'shift-ai-worker.js'), path.join(out, 'shift-ai-worker.js'));
 
 console.log('Added BatchWatt V6 whole-shift scheduling, partial release, multi-factory workspaces, multi-line product configuration, energy-load basis protection, per-factory order learning and the decision-first portfolio interface.');
