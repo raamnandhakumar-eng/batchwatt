@@ -79,8 +79,8 @@
       '<section class="bw-ai-panel bw-ai-ask"><div class="bw-ai-panel-head"><div>' +
       '<p>ASK THE ANALYST</p><h2>Ask about the current shift</h2></div>' +
       '<span>Explainable, local analysis</span></div>' +
-      '<p class="bw-ai-disclosure">This analyst answers from calculated plan data using transparent rules. ' +
-      'It is not connected to a generative AI model, and it does not automatically change or release a plan.</p>' +
+      '<p class="bw-ai-disclosure">These instant answers use calculated plan data and transparent rules. ' +
+      'You can optionally load an on-device generative AI below. Neither tool changes or releases a plan.</p>' +
       '<div class="bw-ai-questions">' + questions.map(q =>
         '<button type="button" class="bw-ai-question" data-bw-question="' + escapeHtml(q) + '">' +
         escapeHtml(q) + '</button>').join('') + '</div>' +
